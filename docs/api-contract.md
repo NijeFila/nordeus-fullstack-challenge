@@ -28,8 +28,8 @@ No parameters. No body.
 {
   "runId": "run-2026-04-21-abcdef",
   "hero": {
-    "id": "hero",
-    "name": "Hero",
+    "id": "knight",
+    "name": "Knight",
     "level": 1,
     "xp": 0,
     "stats": {
@@ -38,49 +38,49 @@ No parameters. No body.
       "defense": 15,
       "magic": 20
     },
-    "equippedMoves": ["tackle", "ember", "guard", "spark"],
-    "learnedMovePool": ["tackle", "ember", "guard", "spark"]
+    "equippedMoves": ["sword_strike", "shield_bash", "holy_light", "guard_stance"],
+    "learnedMovePool": ["sword_strike", "shield_bash", "holy_light", "guard_stance"]
   },
   "encounters": [
-    { "index": 0, "monsterId": "slime",    "level": 1 },
-    { "index": 1, "monsterId": "wolf",     "level": 2 },
-    { "index": 2, "monsterId": "golem",    "level": 3 },
-    { "index": 3, "monsterId": "wraith",   "level": 4 },
-    { "index": 4, "monsterId": "dragon",   "level": 5 }
+    { "index": 0, "monsterId": "goblin_warrior", "level": 1 },
+    { "index": 1, "monsterId": "goblin_mage",    "level": 2 },
+    { "index": 2, "monsterId": "giant_spider",   "level": 3 },
+    { "index": 3, "monsterId": "witch",          "level": 4 },
+    { "index": 4, "monsterId": "dragon",         "level": 5 }
   ],
   "monsters": [
     {
-      "id": "slime",
-      "name": "Slime",
+      "id": "goblin_warrior",
+      "name": "Goblin Warrior",
       "baseStats": {
         "maxHealth": 60,
-        "attack": 10,
+        "attack": 12,
         "defense": 8,
-        "magic": 6
+        "magic": 4
       },
-      "moves": ["tackle", "slam"]
+      "moves": ["rusty_slash", "reckless_charge"]
     }
   ],
   "moves": [
     {
-      "id": "tackle",
-      "name": "Tackle",
+      "id": "sword_strike",
+      "name": "Sword Strike",
       "category": "Physical",
       "power": 20,
       "effect": null,
-      "description": "A straightforward physical hit."
+      "description": "A clean sword hit."
     },
     {
-      "id": "ember",
-      "name": "Ember",
+      "id": "holy_light",
+      "name": "Holy Light",
       "category": "Magic",
       "power": 22,
       "effect": null,
-      "description": "A small burst of magical fire."
+      "description": "A burst of radiant energy."
     },
     {
-      "id": "guard",
-      "name": "Guard",
+      "id": "guard_stance",
+      "name": "Guard Stance",
       "category": "Buff",
       "power": 0,
       "effect": {
@@ -128,7 +128,7 @@ Query parameters (preferred for a GET):
 
 | Param              | Type   | Description                                            |
 |--------------------|--------|--------------------------------------------------------|
-| `monsterId`        | string | Id from the run config (e.g. `wolf`).                  |
+| `monsterId`        | string | Id from the run config (e.g. `goblin_warrior`).        |
 | `monsterLevel`     | int    | Level of the monster in the current encounter.         |
 | `monsterHealth`    | int    | Current HP.                                            |
 | `monsterMaxHealth` | int    | Max HP.                                                |
@@ -138,14 +138,14 @@ Query parameters (preferred for a GET):
 
 Example:
 ```
-GET /battle/next-move?monsterId=wolf&monsterLevel=2&monsterHealth=30&monsterMaxHealth=70&heroHealth=80&heroMaxHealth=100&turn=3
+GET /battle/next-move?monsterId=goblin_warrior&monsterLevel=1&monsterHealth=30&monsterMaxHealth=60&heroHealth=80&heroMaxHealth=100&turn=3
 ```
 
 **Response (200 OK)**
 
 ```json
 {
-  "moveId": "bite"
+  "moveId": "rusty_slash"
 }
 ```
 
@@ -168,7 +168,7 @@ GET /battle/next-move?monsterId=wolf&monsterLevel=2&monsterHealth=30&monsterMaxH
 - All UI and navigation (Main Menu, Run Overview, Move Management, Battle, Post-Battle).
 - Turn flow and input handling.
 - Damage, healing, and buff resolution using the formulas and constants supplied by the server.
-- Local tracking of hero HP, XP, level, equipped moves, and learned move pool during a run.
-- Advancing through the encounter list and ending the run on hero defeat or final victory.
+- Local tracking of hero XP, level, equipped moves, and learned move pool during a run. Hero HP is reset to full at the start of each battle and is not tracked between encounters.
+- Advancing through the encounter list on victory, or replaying the same encounter on defeat. The run ends only when the final encounter is cleared.
 
 The server is stateless between calls: `/run/config` returns a self-contained snapshot, and `/battle/next-move` is answered purely from the inputs in the request plus the server's static catalog.

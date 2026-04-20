@@ -62,18 +62,22 @@ Fields:
 
 Monsters are scaled to an encounter's level on the client using the same per-level gains as the hero.
 
+The monster catalog for the prototype: Goblin Warrior, Goblin Mage, Giant Spider, Witch, Dragon.
+
 ## Hero
 
-Role: the player-controlled entity, persistent across the run.
+Role: the player-controlled entity, persistent across the run. In the prototype the hero is the Knight.
 
 Fields:
-- `id` (string) — constant, e.g. `"hero"`.
+- `id` (string) — constant, e.g. `"knight"`.
 - `name` (string)
 - `level` (int)
 - `xp` (int) — progress toward the next level.
 - `stats` (Stats) — current stats including level-up gains.
 - `equippedMoves` (string[]) — ids of moves usable in battle; up to `equippedMoveSlots` entries (4 in the prototype).
 - `learnedMovePool` (string[]) — ids of every move the hero has ever learned.
+
+The hero's current HP is not stored on this object between battles; it is reset to `stats.maxHealth` at the start of every encounter.
 
 ## EquippedMoveSet
 
@@ -134,4 +138,5 @@ Fields:
 - `leveledUp` (bool)
 - `newLevel` (int | null)
 - `learnedMoveId` (string | null) — a move learned after victory, if any.
-- `heroHealthRemaining` (int) — carried into the next encounter on victory.
+
+On `Defeat`, no progression is applied and the same encounter remains the current one, available to replay. On `Victory`, the client advances to the next encounter; if there is none, the run is complete.

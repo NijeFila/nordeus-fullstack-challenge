@@ -4,7 +4,7 @@ The rules the prototype follows. Formulas are kept simple, explicit, and integer
 
 ## Turn Flow
 
-1. A battle begins with the hero and monster at full or carried-over HP (hero HP carries between encounters; monster always starts at full).
+1. A battle begins with both the hero and the monster at full HP. Hero HP is reset to `stats.maxHealth` at the start of every encounter; there is no HP carry-over between battles.
 2. Each turn has two phases, resolved in order:
    1. **Hero phase** — the player picks one of the hero's equipped moves. The move resolves immediately.
    2. **Monster phase** — the client calls `GET /battle/next-move` with the current state and resolves the returned move.
@@ -69,12 +69,11 @@ Result: a buff or debuff cast on turn N is active for turn N and turn N+1, then 
 
 ## Win / Loss Conditions
 
-- **Battle victory** — monster HP reaches `0`.
-- **Battle defeat** — hero HP reaches `0`.
-- **Run victory** — the hero wins the final encounter in `RunConfig.encounters`.
-- **Run defeat** — the hero is defeated in any encounter. The run ends; the player returns to the Main Menu.
+- **Battle victory** — monster HP reaches `0`. The hero advances to the next encounter.
+- **Battle defeat** — hero HP reaches `0`. The run does not end: the same encounter remains the current one and can be replayed. Nothing permanent is lost on defeat — the hero keeps their level, XP, stats, learned moves, and equipped moves. No XP is awarded.
+- **Run victory** — the hero wins the final encounter in `RunConfig.encounters`. The run ends successfully.
 
-Hero HP carries over between encounters on victory; it is not auto-restored.
+The hero's HP is always reset to full at the start of each encounter, including replays.
 
 ## XP and Leveling
 
@@ -82,10 +81,9 @@ Hero HP carries over between encounters on victory; it is not auto-restored.
 - On defeat, no XP is awarded.
 - When `hero.xp >= rules.xpPerLevel` (default 100):
   - `hero.level` increases by 1.
-  - `hero.xp` is reduced by `xpPerLevel` (carry-over preserved).
+  - `hero.xp` is reduced by `xpPerLevel`; any remainder carries over toward the next level.
   - Each stat in `hero.stats` increases by the corresponding entry in `rules.statGainPerLevel`.
-  - `hero.health` is fully restored to the new `maxHealth`.
-- Only one level-up is granted per battle. Any additional XP beyond one level's worth is discarded for the prototype.
+- For simplicity, at most one level-up is resolved per battle. If the hero would have enough XP for more than one level-up in a single battle (rare with the default numbers), the remaining XP is retained and a further level-up is resolved after the next victory. No XP is discarded.
 
 ## Move Learning After Victory
 
@@ -116,7 +114,8 @@ Intentional simplifications for the challenge scope:
 - No turn-order stat (speed); hero always acts first.
 - Integer math throughout, with `max(1, …)` floors on damage.
 - Buffs/debuffs have a fixed 2-turn duration and do not stack beyond one instance per `(source, kind)` pair.
-- Only one level-up is granted per battle; overflow XP is dropped.
-- Hero HP carries between battles but is restored on level-up; there is no separate healing mechanic between encounters.
+- At most one level-up is resolved per battle; any remaining XP carries over to the next victory rather than being discarded.
+- Hero HP is reset to full at the start of every encounter. There is no HP carry-over and no between-battle healing mechanic.
+- Defeat does not end the run. The current encounter is simply replayed. No XP is gained, and no progression is rolled back.
 - Monster move selection is deliberately shallow — a low-HP heal rule plus uniform random — so behavior is easy to reason about and extend.
 - No persistence: starting a new run always begins from the server's default configuration.
