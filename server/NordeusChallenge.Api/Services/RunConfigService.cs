@@ -29,10 +29,10 @@ public class RunConfigService
     {
         var equipped = new List<string>
         {
-            "sword_strike",
-            "shield_bash",
-            "holy_light",
-            "guard_stance"
+            "slash",
+            "shield_up",
+            "battle_cry",
+            "second_wind"
         };
 
         return new Hero
@@ -69,78 +69,54 @@ public class RunConfigService
             Id = "goblin_warrior",
             Name = "Goblin Warrior",
             BaseStats = new Stats { MaxHealth = 60, Attack = 12, Defense = 8, Magic = 4 },
-            Moves = new List<string> { "rusty_slash", "reckless_charge" }
+            Moves = new List<string> { "rusty_blade", "dirty_kick", "frenzy", "headbutt" }
         },
         new Monster
         {
             Id = "goblin_mage",
             Name = "Goblin Mage",
             BaseStats = new Stats { MaxHealth = 55, Attack = 6, Defense = 6, Magic = 14 },
-            Moves = new List<string> { "fire_bolt", "hex" }
+            Moves = new List<string> { "firebolt", "arcane_surge", "mana_drain", "hex_shield" }
         },
         new Monster
         {
             Id = "giant_spider",
             Name = "Giant Spider",
             BaseStats = new Stats { MaxHealth = 75, Attack = 14, Defense = 10, Magic = 4 },
-            Moves = new List<string> { "bite", "web_shot" }
+            Moves = new List<string> { "bite", "web_throw", "pounce", "skitter" }
         },
         new Monster
         {
             Id = "witch",
             Name = "Witch",
             BaseStats = new Stats { MaxHealth = 80, Attack = 8, Defense = 8, Magic = 18 },
-            Moves = new List<string> { "curse", "dark_blast", "mend" }
+            Moves = new List<string> { "shadow_bolt", "drain_life", "curse", "dark_pact" }
         },
         new Monster
         {
             Id = "dragon",
             Name = "Dragon",
             BaseStats = new Stats { MaxHealth = 120, Attack = 18, Defense = 14, Magic = 16 },
-            Moves = new List<string> { "claw", "fire_breath", "roar" }
+            Moves = new List<string> { "flame_breath", "claw_swipe", "intimidate", "dragon_scales" }
         }
     };
 
     private static List<Move> BuildMoves() => new()
     {
-        // Hero moves
+        // ---------- Hero: Knight ----------
         new Move
         {
-            Id = "sword_strike",
-            Name = "Sword Strike",
+            Id = "slash",
+            Name = "Slash",
             Category = "Physical",
             Power = 20,
             Effect = null,
-            Description = "A clean sword hit."
+            Description = "A direct sword strike."
         },
         new Move
         {
-            Id = "shield_bash",
-            Name = "Shield Bash",
-            Category = "Physical",
-            Power = 14,
-            Effect = new MoveEffect
-            {
-                Kind = "DebuffAttack",
-                Amount = 3,
-                DurationTurns = 2,
-                Target = "Opponent"
-            },
-            Description = "A shield hit that lowers the opponent's Attack for 2 turns."
-        },
-        new Move
-        {
-            Id = "holy_light",
-            Name = "Holy Light",
-            Category = "Magic",
-            Power = 22,
-            Effect = null,
-            Description = "A burst of radiant energy."
-        },
-        new Move
-        {
-            Id = "guard_stance",
-            Name = "Guard Stance",
+            Id = "shield_up",
+            Name = "Shield Up",
             Category = "Buff",
             Power = 0,
             Effect = new MoveEffect
@@ -150,49 +126,112 @@ public class RunConfigService
                 DurationTurns = 2,
                 Target = "Self"
             },
-            Description = "Raises Defense for 2 turns."
-        },
-
-        // Goblin Warrior
-        new Move
-        {
-            Id = "rusty_slash",
-            Name = "Rusty Slash",
-            Category = "Physical",
-            Power = 12,
-            Effect = null,
-            Description = "A crude physical slash."
+            Description = "Raises the Knight's Defense for 2 turns."
         },
         new Move
         {
-            Id = "reckless_charge",
-            Name = "Reckless Charge",
-            Category = "Physical",
-            Power = 18,
+            Id = "battle_cry",
+            Name = "Battle Cry",
+            Category = "Buff",
+            Power = 0,
             Effect = new MoveEffect
             {
-                Kind = "DebuffDefense",
-                Amount = 3,
+                Kind = "BuffAttack",
+                Amount = 5,
                 DurationTurns = 2,
                 Target = "Self"
             },
-            Description = "A strong charge that leaves the attacker exposed."
+            Description = "A rallying shout that raises Attack for 2 turns."
         },
-
-        // Goblin Mage
         new Move
         {
-            Id = "fire_bolt",
-            Name = "Fire Bolt",
+            Id = "second_wind",
+            Name = "Second Wind",
+            Category = "Heal",
+            Power = 0,
+            Effect = new MoveEffect
+            {
+                Kind = "Heal",
+                Amount = 25,
+                DurationTurns = 0,
+                Target = "Self"
+            },
+            Description = "Restores a portion of the Knight's HP."
+        },
+
+        // ---------- Goblin Warrior ----------
+        new Move
+        {
+            Id = "rusty_blade",
+            Name = "Rusty Blade",
+            Category = "Physical",
+            Power = 14,
+            Effect = null,
+            Description = "A crude physical swing."
+        },
+        new Move
+        {
+            Id = "dirty_kick",
+            Name = "Dirty Kick",
+            Category = "Physical",
+            Power = 10,
+            Effect = new MoveEffect
+            {
+                Kind = "DebuffAttack",
+                Amount = 3,
+                DurationTurns = 2,
+                Target = "Opponent"
+            },
+            Description = "A low blow that lowers the opponent's Attack for 2 turns."
+        },
+        new Move
+        {
+            Id = "frenzy",
+            Name = "Frenzy",
+            Category = "Buff",
+            Power = 0,
+            Effect = new MoveEffect
+            {
+                Kind = "BuffAttack",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Self"
+            },
+            Description = "Works itself into a rage, raising Attack for 2 turns."
+        },
+        new Move
+        {
+            Id = "headbutt",
+            Name = "Headbutt",
+            Category = "Physical",
+            Power = 18,
+            Effect = null,
+            Description = "A reckless headfirst charge."
+        },
+
+        // ---------- Goblin Mage ----------
+        new Move
+        {
+            Id = "firebolt",
+            Name = "Firebolt",
             Category = "Magic",
-            Power = 16,
+            Power = 18,
             Effect = null,
             Description = "A small bolt of fire."
         },
         new Move
         {
-            Id = "hex",
-            Name = "Hex",
+            Id = "arcane_surge",
+            Name = "Arcane Surge",
+            Category = "Magic",
+            Power = 22,
+            Effect = null,
+            Description = "A burst of raw arcane energy."
+        },
+        new Move
+        {
+            Id = "mana_drain",
+            Name = "Mana Drain",
             Category = "Debuff",
             Power = 0,
             Effect = new MoveEffect
@@ -202,10 +241,25 @@ public class RunConfigService
                 DurationTurns = 2,
                 Target = "Opponent"
             },
-            Description = "Lowers the opponent's Magic for 2 turns."
+            Description = "Saps the opponent's Magic for 2 turns."
+        },
+        new Move
+        {
+            Id = "hex_shield",
+            Name = "Hex Shield",
+            Category = "Buff",
+            Power = 0,
+            Effect = new MoveEffect
+            {
+                Kind = "BuffDefense",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Self"
+            },
+            Description = "A warded barrier that raises Defense for 2 turns."
         },
 
-        // Giant Spider
+        // ---------- Giant Spider ----------
         new Move
         {
             Id = "bite",
@@ -213,12 +267,12 @@ public class RunConfigService
             Category = "Physical",
             Power = 16,
             Effect = null,
-            Description = "A sharp bite."
+            Description = "A sharp venomous bite."
         },
         new Move
         {
-            Id = "web_shot",
-            Name = "Web Shot",
+            Id = "web_throw",
+            Name = "Web Throw",
             Category = "Debuff",
             Power = 0,
             Effect = new MoveEffect
@@ -230,8 +284,56 @@ public class RunConfigService
             },
             Description = "Entangles the target, lowering their Attack for 2 turns."
         },
+        new Move
+        {
+            Id = "pounce",
+            Name = "Pounce",
+            Category = "Physical",
+            Power = 20,
+            Effect = null,
+            Description = "A leaping strike from above."
+        },
+        new Move
+        {
+            Id = "skitter",
+            Name = "Skitter",
+            Category = "Buff",
+            Power = 0,
+            Effect = new MoveEffect
+            {
+                Kind = "BuffDefense",
+                Amount = 3,
+                DurationTurns = 2,
+                Target = "Self"
+            },
+            Description = "Darts around erratically, raising Defense for 2 turns."
+        },
 
-        // Witch
+        // ---------- Witch ----------
+        new Move
+        {
+            Id = "shadow_bolt",
+            Name = "Shadow Bolt",
+            Category = "Magic",
+            Power = 20,
+            Effect = null,
+            Description = "A bolt of shadow energy."
+        },
+        new Move
+        {
+            Id = "drain_life",
+            Name = "Drain Life",
+            Category = "Heal",
+            Power = 0,
+            Effect = new MoveEffect
+            {
+                Kind = "Heal",
+                Amount = 18,
+                DurationTurns = 0,
+                Target = "Self"
+            },
+            Description = "Siphons vitality, restoring the caster's HP."
+        },
         new Move
         {
             Id = "curse",
@@ -249,43 +351,25 @@ public class RunConfigService
         },
         new Move
         {
-            Id = "dark_blast",
-            Name = "Dark Blast",
-            Category = "Magic",
-            Power = 20,
-            Effect = null,
-            Description = "A blast of dark energy."
-        },
-        new Move
-        {
-            Id = "mend",
-            Name = "Mend",
-            Category = "Heal",
+            Id = "dark_pact",
+            Name = "Dark Pact",
+            Category = "Buff",
             Power = 0,
             Effect = new MoveEffect
             {
-                Kind = "Heal",
-                Amount = 20,
-                DurationTurns = 0,
+                Kind = "BuffMagic",
+                Amount = 5,
+                DurationTurns = 2,
                 Target = "Self"
             },
-            Description = "Restores HP to the caster."
+            Description = "A dark bargain that raises Magic for 2 turns."
         },
 
-        // Dragon
+        // ---------- Dragon ----------
         new Move
         {
-            Id = "claw",
-            Name = "Claw",
-            Category = "Physical",
-            Power = 20,
-            Effect = null,
-            Description = "A heavy claw swipe."
-        },
-        new Move
-        {
-            Id = "fire_breath",
-            Name = "Fire Breath",
+            Id = "flame_breath",
+            Name = "Flame Breath",
             Category = "Magic",
             Power = 24,
             Effect = null,
@@ -293,18 +377,42 @@ public class RunConfigService
         },
         new Move
         {
-            Id = "roar",
-            Name = "Roar",
+            Id = "claw_swipe",
+            Name = "Claw Swipe",
+            Category = "Physical",
+            Power = 20,
+            Effect = null,
+            Description = "A heavy swipe with razor claws."
+        },
+        new Move
+        {
+            Id = "intimidate",
+            Name = "Intimidate",
+            Category = "Debuff",
+            Power = 0,
+            Effect = new MoveEffect
+            {
+                Kind = "DebuffAttack",
+                Amount = 5,
+                DurationTurns = 2,
+                Target = "Opponent"
+            },
+            Description = "A fearsome display that lowers the opponent's Attack for 2 turns."
+        },
+        new Move
+        {
+            Id = "dragon_scales",
+            Name = "Dragon Scales",
             Category = "Buff",
             Power = 0,
             Effect = new MoveEffect
             {
-                Kind = "BuffAttack",
-                Amount = 4,
+                Kind = "BuffDefense",
+                Amount = 5,
                 DurationTurns = 2,
                 Target = "Self"
             },
-            Description = "A mighty roar that raises Attack for 2 turns."
+            Description = "Hardens scales, raising Defense for 2 turns."
         }
     };
 
