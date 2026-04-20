@@ -38,8 +38,8 @@ No parameters. No body.
       "defense": 15,
       "magic": 20
     },
-    "equippedMoves": ["sword_strike", "shield_bash", "holy_light", "guard_stance"],
-    "learnedMovePool": ["sword_strike", "shield_bash", "holy_light", "guard_stance"]
+    "equippedMoves": ["slash", "shield_up", "battle_cry", "second_wind"],
+    "learnedMovePool": ["slash", "shield_up", "battle_cry", "second_wind"]
   },
   "encounters": [
     { "index": 0, "monsterId": "goblin_warrior", "level": 1 },
@@ -58,29 +58,31 @@ No parameters. No body.
         "defense": 8,
         "magic": 4
       },
-      "moves": ["rusty_slash", "reckless_charge"]
+      "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"]
+    },
+    {
+      "id": "witch",
+      "name": "Witch",
+      "baseStats": {
+        "maxHealth": 80,
+        "attack": 8,
+        "defense": 8,
+        "magic": 18
+      },
+      "moves": ["shadow_bolt", "drain_life", "curse", "dark_pact"]
     }
   ],
   "moves": [
     {
-      "id": "sword_strike",
-      "name": "Sword Strike",
+      "id": "slash",
+      "name": "Slash",
       "category": "Physical",
       "power": 20,
-      "effect": null,
-      "description": "A clean sword hit."
+      "description": "A direct sword strike."
     },
     {
-      "id": "holy_light",
-      "name": "Holy Light",
-      "category": "Magic",
-      "power": 22,
-      "effect": null,
-      "description": "A burst of radiant energy."
-    },
-    {
-      "id": "guard_stance",
-      "name": "Guard Stance",
+      "id": "shield_up",
+      "name": "Shield Up",
       "category": "Buff",
       "power": 0,
       "effect": {
@@ -89,7 +91,27 @@ No parameters. No body.
         "durationTurns": 2,
         "target": "Self"
       },
-      "description": "Raises Defense for 2 turns."
+      "description": "Raises the Knight's Defense for 2 turns."
+    },
+    {
+      "id": "second_wind",
+      "name": "Second Wind",
+      "category": "Heal",
+      "power": 0,
+      "effect": {
+        "kind": "Heal",
+        "amount": 25,
+        "durationTurns": 0,
+        "target": "Self"
+      },
+      "description": "Restores a portion of the Knight's HP."
+    },
+    {
+      "id": "shadow_bolt",
+      "name": "Shadow Bolt",
+      "category": "Magic",
+      "power": 20,
+      "description": "A bolt of shadow energy."
     }
   ],
   "rules": {
@@ -109,8 +131,10 @@ No parameters. No body.
 
 **Notes**
 - The full `moves` catalog is returned once so the client never has to look up a move by id out-of-band.
+- The example above shows a subset of monsters and moves for brevity. The real response includes every monster referenced by `encounters` and every move referenced by the hero or any monster.
 - `encounters` is ordered; the client advances through it one battle at a time.
 - `rules` carries the tunable numbers so the client and server agree on formulas without hard-coding them on the client.
+- Fields with a `null` value (e.g. `effect` on a pure damage move) are omitted from the JSON response.
 
 ---
 
@@ -138,19 +162,19 @@ Query parameters (preferred for a GET):
 
 Example:
 ```
-GET /battle/next-move?monsterId=goblin_warrior&monsterLevel=1&monsterHealth=30&monsterMaxHealth=60&heroHealth=80&heroMaxHealth=100&turn=3
+GET /battle/next-move?monsterId=witch&monsterLevel=4&monsterHealth=20&monsterMaxHealth=80&heroHealth=70&heroMaxHealth=100&turn=3
 ```
 
 **Response (200 OK)**
 
 ```json
 {
-  "moveId": "rusty_slash"
+  "moveId": "drain_life"
 }
 ```
 
 **Errors**
-- `400 Bad Request` — unknown `monsterId` or missing required parameters.
+- `400 Bad Request` — unknown `monsterId`, missing required parameters, non-positive `monsterMaxHealth` or `heroMaxHealth`, or `turn < 1`.
 
 **Notes**
 - The server selects from the monster's declared `moves` in the run config. No move is returned that the monster does not own.
