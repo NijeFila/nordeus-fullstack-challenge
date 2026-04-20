@@ -14,6 +14,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddSingleton<RunConfigService>();
+builder.Services.AddSingleton<BattleService>();
 
 var app = builder.Build();
 
@@ -25,5 +26,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapRunEndpoints();
+app.MapBattleEndpoints();
 
 app.Run();
