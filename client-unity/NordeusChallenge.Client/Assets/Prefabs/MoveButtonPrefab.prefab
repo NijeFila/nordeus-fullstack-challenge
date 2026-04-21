@@ -149,7 +149,6 @@ GameObject:
   - component: {fileID: 115574162315701634}
   - component: {fileID: 3619097389571337297}
   - component: {fileID: 9074218281786744113}
-  - component: {fileID: 5397952222646050330}
   m_Layer: 5
   m_Name: MoveButtonPrefab
   m_TagString: Untagged
@@ -259,17 +258,3 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &5397952222646050330
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7328427318109353163}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a03de5f8ddcb1ec4e84b42e1ace466bf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NordeusChallenge.Client.UI.Battle.MoveButtonView
-  button: {fileID: 9074218281786744113}
-  label: {fileID: 7501497868236039423}

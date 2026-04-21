@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/RunOverview.unity
     guid: 0fce3713bd63cc148994a9ed8fb9be9b
   - enabled: 1
+    path: Assets/Scenes/MoveManagement.unity
+    guid: e5121ffd579686b40b8efef48112e379
+  - enabled: 1
     path: Assets/Scenes/Battle.unity
     guid: 02888b42e38b0414eafe1982763523a3
   m_configObjects:

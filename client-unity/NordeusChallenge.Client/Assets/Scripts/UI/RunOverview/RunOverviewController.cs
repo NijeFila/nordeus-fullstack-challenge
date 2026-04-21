@@ -5,6 +5,7 @@ using NordeusChallenge.Client.Runtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace NordeusChallenge.Client.UI.RunOverview
 {
@@ -13,6 +14,7 @@ namespace NordeusChallenge.Client.UI.RunOverview
         [Header("Hero / Moves")]
         [SerializeField] private TMP_Text heroText;
         [SerializeField] private TMP_Text equippedMovesText;
+        [SerializeField] private Button moveManagementButton;
 
         [Header("Encounters")]
         [SerializeField] private Transform encountersContainer;
@@ -20,6 +22,11 @@ namespace NordeusChallenge.Client.UI.RunOverview
 
         private void Start()
         {
+            if (moveManagementButton != null)
+            {
+                moveManagementButton.onClick.AddListener(OnMoveManagementClicked);
+            }
+
             if (GameSession.Instance == null || GameSession.Instance.CurrentRun == null)
             {
                 SetHeroText("No active run.");
@@ -113,6 +120,19 @@ namespace NordeusChallenge.Client.UI.RunOverview
                 var view = Instantiate(encounterButtonPrefab, encountersContainer);
                 view.Bind(encounter.index, label, unlocked, OnEncounterSelected);
             }
+        }
+
+        private void OnDestroy()
+        {
+            if (moveManagementButton != null)
+            {
+                moveManagementButton.onClick.RemoveListener(OnMoveManagementClicked);
+            }
+        }
+
+        private void OnMoveManagementClicked()
+        {
+            SceneManager.LoadScene(SceneNames.MoveManagement);
         }
 
         private void OnEncounterSelected(int encounterIndex)
