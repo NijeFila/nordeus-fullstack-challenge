@@ -13,7 +13,7 @@ namespace NordeusChallenge.Client.UI.RunOverview
         private int _encounterIndex;
         private Action<int> _onClick;
 
-        public void Bind(int encounterIndex, string labelText, Action<int> onClick)
+        public void Bind(int encounterIndex, string labelText, bool interactable, Action<int> onClick)
         {
             _encounterIndex = encounterIndex;
             _onClick = onClick;
@@ -26,7 +26,11 @@ namespace NordeusChallenge.Client.UI.RunOverview
             if (button != null)
             {
                 button.onClick.RemoveAllListeners();
-                button.onClick.AddListener(OnClicked);
+                button.interactable = interactable;
+                if (interactable)
+                {
+                    button.onClick.AddListener(OnClicked);
+                }
             }
         }
 

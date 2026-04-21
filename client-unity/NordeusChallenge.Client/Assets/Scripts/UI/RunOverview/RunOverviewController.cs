@@ -29,8 +29,10 @@ namespace NordeusChallenge.Client.UI.RunOverview
             }
 
             var run = GameSession.Instance.CurrentRun;
-            RenderHero(run.hero);
-            RenderEquippedMoves(run);
+            var hero = GameSession.Instance.CurrentHero ?? run.hero;
+
+            RenderHero(hero);
+            RenderEquippedMoves(hero);
             RenderEncounters(run);
         }
 
@@ -52,9 +54,9 @@ namespace NordeusChallenge.Client.UI.RunOverview
             SetHeroText(sb.ToString());
         }
 
-        private void RenderEquippedMoves(RunConfigResponseDto run)
+        private void RenderEquippedMoves(HeroDto hero)
         {
-            if (run.hero == null || run.hero.equippedMoves == null || run.hero.equippedMoves.Count == 0)
+            if (hero == null || hero.equippedMoves == null || hero.equippedMoves.Count == 0)
             {
                 SetEquippedMovesText("No equipped moves.");
                 return;
@@ -63,9 +65,9 @@ namespace NordeusChallenge.Client.UI.RunOverview
             var sb = new StringBuilder();
             sb.AppendLine("Equipped Moves:");
 
-            for (int i = 0; i < run.hero.equippedMoves.Count; i++)
+            for (int i = 0; i < hero.equippedMoves.Count; i++)
             {
-                string moveId = run.hero.equippedMoves[i];
+                string moveId = hero.equippedMoves[i];
                 var move = GameSession.Instance.GetMoveById(moveId);
 
                 if (move == null)
@@ -94,21 +96,33 @@ namespace NordeusChallenge.Client.UI.RunOverview
                 return;
             }
 
+            var session = GameSession.Instance;
+
             for (int i = 0; i < run.encounters.Count; i++)
             {
                 var encounter = run.encounters[i];
-                var monster = GameSession.Instance.GetMonsterById(encounter.monsterId);
+                var monster = session.GetMonsterById(encounter.monsterId);
                 string monsterName = monster != null ? monster.name : encounter.monsterId;
-                string label = $"{encounter.index + 1}. {monsterName} (Lv {encounter.level})";
+
+                bool unlocked = session.IsEncounterUnlocked(encounter.index);
+                bool cleared = session.IsEncounterCleared(encounter.index);
+
+                string status = !unlocked ? "Locked" : (cleared ? "Cleared" : "Available");
+                string label = $"{encounter.index + 1}. {monsterName} (Lv {encounter.level}) - {status}";
 
                 var view = Instantiate(encounterButtonPrefab, encountersContainer);
-                view.Bind(encounter.index, label, OnEncounterSelected);
+                view.Bind(encounter.index, label, unlocked, OnEncounterSelected);
             }
         }
 
         private void OnEncounterSelected(int encounterIndex)
         {
             if (GameSession.Instance == null)
+            {
+                return;
+            }
+
+            if (!GameSession.Instance.IsEncounterUnlocked(encounterIndex))
             {
                 return;
             }

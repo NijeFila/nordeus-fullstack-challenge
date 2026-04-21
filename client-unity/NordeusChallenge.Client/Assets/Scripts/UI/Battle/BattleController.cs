@@ -78,6 +78,7 @@ namespace NordeusChallenge.Client.UI.Battle
             }
 
             var run = GameSession.Instance.CurrentRun;
+            _hero = GameSession.Instance.CurrentHero ?? run.hero;
             _encounter = GameSession.Instance.GetEncounterByIndex(GameSession.Instance.SelectedEncounterIndex);
             if (_encounter == null)
             {
@@ -92,7 +93,6 @@ namespace NordeusChallenge.Client.UI.Battle
                 return;
             }
 
-            _hero = run.hero;
             _turn = 1;
             _monsterScaledStats = ScaleMonsterStats(_monster.baseStats, _encounter.level, run.rules);
 
@@ -485,11 +485,64 @@ namespace NordeusChallenge.Client.UI.Battle
             _battleOver = true;
             SetMovesInteractable(false);
 
-            string message = heroWon
-                ? $"Victory against {_monster.name}."
-                : $"Defeated by {_monster.name}.";
-            SetStatus(message);
-            AppendLog(message);
+            if (heroWon)
+            {
+                string headline = $"Victory against {_monster.name}.";
+                AppendLog(headline);
+
+                var reward = GameSession.Instance != null
+                    ? GameSession.Instance.ApplyVictoryRewards(_encounter.index)
+                    : null;
+
+                SetStatus(BuildVictorySummary(headline, reward));
+
+                if (reward != null)
+                {
+                    AppendLog($"+{reward.XpGained} XP.");
+                    if (reward.LeveledUp)
+                    {
+                        AppendLog($"Level up! Now Lv {reward.NewLevel}.");
+                    }
+                    if (reward.NewMoveLearned)
+                    {
+                        string equippedNote = reward.AutoEquipped ? " (auto-equipped)" : "";
+                        AppendLog($"Learned {reward.LearnedMoveName}.{equippedNote}");
+                    }
+                    if (reward.UnlockedNextEncounter)
+                    {
+                        AppendLog($"Encounter {reward.NextUnlockedIndex + 1} unlocked.");
+                    }
+                }
+            }
+            else
+            {
+                string message = $"Defeated by {_monster.name}.";
+                SetStatus(message);
+                AppendLog(message);
+            }
+        }
+
+        private static string BuildVictorySummary(string headline, VictoryRewardResult reward)
+        {
+            if (reward == null)
+            {
+                return headline;
+            }
+
+            var sb = new StringBuilder();
+            sb.Append(headline);
+            sb.Append($" +{reward.XpGained} XP.");
+            if (reward.LeveledUp)
+            {
+                sb.Append($" Level up to Lv {reward.NewLevel}.");
+            }
+            if (reward.NewMoveLearned)
+            {
+                sb.Append(reward.AutoEquipped
+                    ? $" Learned {reward.LearnedMoveName} (auto-equipped)."
+                    : $" Learned {reward.LearnedMoveName}.");
+            }
+            return sb.ToString();
         }
 
         private void OnBackClicked()
