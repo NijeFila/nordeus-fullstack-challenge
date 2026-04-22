@@ -953,7 +953,7 @@ MonoBehaviour:
   monsterStatsText: {fileID: 658285236}
   monsterHealthText: {fileID: 964585914}
   movesContainer: {fileID: 2141439060}
-  moveButtonPrefab: {fileID: 5397952222646050330, guid: b2c75c3533f106b4ca8fa5be6295cfbf, type: 3}
+  moveButtonPrefab: {fileID: -8596564582446997911, guid: b2c75c3533f106b4ca8fa5be6295cfbf, type: 3}
   statusText: {fileID: 215757226}
   logText: {fileID: 1332438498}
   backButton: {fileID: 937912093}
