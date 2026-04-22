@@ -194,7 +194,7 @@ namespace NordeusChallenge.Client.UI.MoveManagement
 
             if (string.IsNullOrEmpty(_selectedMoveId))
             {
-                selectedMoveText.text = "Selected: none";
+                selectedMoveText.text = "Select a learned move to see details.";
                 return;
             }
 
@@ -202,11 +202,25 @@ namespace NordeusChallenge.Client.UI.MoveManagement
                 ? GameSession.Instance.GetMoveById(_selectedMoveId)
                 : null;
 
-            string name = move != null ? move.name : _selectedMoveId;
-            string description = (move != null && !string.IsNullOrEmpty(move.description))
-                ? $" - {move.description}"
-                : string.Empty;
-            selectedMoveText.text = $"Selected: {name}{description}";
+            if (move == null)
+            {
+                selectedMoveText.text = $"<b>{_selectedMoveId}</b>";
+                return;
+            }
+
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"<b>{move.name}</b>  ({move.category}");
+            if (move.power > 0)
+            {
+                sb.Append($", Pow {move.power}");
+            }
+            sb.Append(")");
+            if (!string.IsNullOrEmpty(move.description))
+            {
+                sb.AppendLine();
+                sb.Append(move.description);
+            }
+            selectedMoveText.text = sb.ToString();
         }
 
         private static string FormatMoveLine(MoveDto move, string fallbackId)

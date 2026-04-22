@@ -30,6 +30,7 @@ namespace NordeusChallenge.Client.UI.Battle
         [Header("Moves")]
         [SerializeField] private Transform movesContainer;
         [SerializeField] private MoveButtonView moveButtonPrefab;
+        [SerializeField] private TMP_Text moveInfoText;
 
         [Header("Status")]
         [SerializeField] private TMP_Text statusText;
@@ -68,6 +69,7 @@ namespace NordeusChallenge.Client.UI.Battle
             }
 
             SetStatus(string.Empty);
+            SetMoveInfo(string.Empty);
             _log.Clear();
             SetLog(string.Empty);
 
@@ -447,7 +449,7 @@ namespace NordeusChallenge.Client.UI.Battle
                 }
 
                 var view = Instantiate(moveButtonPrefab, movesContainer);
-                view.Bind(move, OnMoveSelected);
+                view.Bind(move, OnMoveSelected, OnMoveHovered);
                 _spawnedMoveButtons.Add(view);
             }
         }
@@ -609,6 +611,37 @@ namespace NordeusChallenge.Client.UI.Battle
             if (logText != null)
             {
                 logText.text = value;
+            }
+        }
+
+        private void OnMoveHovered(MoveDto move)
+        {
+            if (move == null)
+            {
+                SetMoveInfo(string.Empty);
+                return;
+            }
+
+            var sb = new StringBuilder();
+            sb.Append($"<b>{move.name}</b>  ({move.category}");
+            if (move.power > 0)
+            {
+                sb.Append($", Pow {move.power}");
+            }
+            sb.Append(")");
+            if (!string.IsNullOrEmpty(move.description))
+            {
+                sb.AppendLine();
+                sb.Append(move.description);
+            }
+            SetMoveInfo(sb.ToString());
+        }
+
+        private void SetMoveInfo(string value)
+        {
+            if (moveInfoText != null)
+            {
+                moveInfoText.text = value;
             }
         }
     }
