@@ -947,15 +947,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NordeusChallenge.Client.UI.Battle.BattleController
   baseUrl: http://localhost:5046
+  visualCatalog: {fileID: 11400000, guid: 338248d6387423a43bf5c03d64b04cc6, type: 2}
   heroNameText: {fileID: 585928472}
   heroStatsText: {fileID: 544491071}
   heroHealthText: {fileID: 620913932}
+  heroHpBar: {fileID: 0}
+  heroVisuals:
+    portrait: {fileID: 0}
+    shakeRoot: {fileID: 0}
+    floatingTextAnchor: {fileID: 0}
   monsterNameText: {fileID: 1576089416}
   monsterStatsText: {fileID: 658285236}
   monsterHealthText: {fileID: 964585914}
+  monsterHpBar: {fileID: 0}
+  monsterVisuals:
+    portrait: {fileID: 0}
+    shakeRoot: {fileID: 0}
+    floatingTextAnchor: {fileID: 0}
   movesContainer: {fileID: 2141439060}
   moveButtonPrefab: {fileID: -8596564582446997911, guid: b2c75c3533f106b4ca8fa5be6295cfbf, type: 3}
   moveInfoText: {fileID: 843073762}
+  moveInfoPanel: {fileID: 0}
+  feedbackView: {fileID: 0}
   statusText: {fileID: 215757226}
   logText: {fileID: 1332438498}
   backButton: {fileID: 937912093}

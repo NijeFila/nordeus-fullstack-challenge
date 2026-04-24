@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c243a2769032360489f22fa70cbafa42, type: 3}
+  m_Name: VisualCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::NordeusChallenge.Client.Visual.VisualCatalog
+  defaultPortrait: {fileID: 0}
+  defaultMoveIcon: {fileID: 0}
+  defaultEffectIcon: {fileID: 0}
+  heroPortraits:
+  - id: 1
+    sprite: {fileID: -5918137915363136097, guid: 953c1d6867dacec468afc8f8f0651b85, type: 3}
+  - id: 2
+    sprite: {fileID: -1662613486703163539, guid: 953c1d6867dacec468afc8f8f0651b85, type: 3}
+  monsterPortraits:
+  - id: 1
+    sprite: {fileID: 3891796401534313901, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
+  - id: 2
+    sprite: {fileID: 5751508951580130967, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
+  - id: 3
+    sprite: {fileID: 2520108084128459728, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
+  - id: 4
+    sprite: {fileID: -367161223939785014, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
+  moveIcons:
+  - id: 1
+    sprite: {fileID: -2031392749538720379, guid: 2f9aebbcba2f42f41a55ab95c9ebb721, type: 3}
+  effectIcons:
+  - id: 1
+    sprite: {fileID: -2292452165054022121, guid: d24616571224da942a96fecd276d16b2, type: 3}

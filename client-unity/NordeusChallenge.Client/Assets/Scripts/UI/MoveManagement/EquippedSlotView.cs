@@ -10,6 +10,7 @@ namespace NordeusChallenge.Client.UI.MoveManagement
         [SerializeField] private Button assignButton;
         [SerializeField] private Button clearButton;
         [SerializeField] private TMP_Text label;
+        [SerializeField] private Image icon;
 
         private int _slotIndex;
         private Action<int> _onAssign;
@@ -18,6 +19,7 @@ namespace NordeusChallenge.Client.UI.MoveManagement
         public void Bind(
             int slotIndex,
             string labelText,
+            Sprite iconSprite,
             bool hasMove,
             bool assignEnabled,
             Action<int> onAssign,
@@ -30,6 +32,12 @@ namespace NordeusChallenge.Client.UI.MoveManagement
             if (label != null)
             {
                 label.text = labelText;
+            }
+
+            if (icon != null)
+            {
+                icon.sprite = iconSprite;
+                icon.enabled = iconSprite != null;
             }
 
             if (assignButton != null)

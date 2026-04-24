@@ -11,12 +11,13 @@ namespace NordeusChallenge.Client.UI.Battle
     {
         [SerializeField] private Button button;
         [SerializeField] private TMP_Text label;
+        [SerializeField] private Image icon;
 
         private MoveDto _move;
         private Action<MoveDto> _onClick;
         private Action<MoveDto> _onHover;
 
-        public void Bind(MoveDto move, Action<MoveDto> onClick, Action<MoveDto> onHover = null)
+        public void Bind(MoveDto move, Sprite iconSprite, Action<MoveDto> onClick, Action<MoveDto> onHover = null)
         {
             _move = move;
             _onClick = onClick;
@@ -25,6 +26,12 @@ namespace NordeusChallenge.Client.UI.Battle
             if (label != null)
             {
                 label.text = move != null ? move.name : string.Empty;
+            }
+
+            if (icon != null)
+            {
+                icon.sprite = iconSprite;
+                icon.enabled = iconSprite != null;
             }
 
             if (button != null)

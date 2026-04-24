@@ -255,10 +255,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 247140c7b97e8ec4c87d16367f18b1ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NordeusChallenge.Client.UI.MoveManagement.MoveManagementController
+  visualCatalog: {fileID: 11400000, guid: 338248d6387423a43bf5c03d64b04cc6, type: 2}
   equippedContainer: {fileID: 1240945556}
   equippedSlotPrefab: {fileID: 7266433161917280307, guid: b18231d0ce410184b9a8b43280bdefbd, type: 3}
   learnedContainer: {fileID: 616336862}
   learnedItemPrefab: {fileID: 7819110517140480907, guid: c52333a7ff3efff499d4b768a1743c8a, type: 3}
+  selectedMovePanel: {fileID: 0}
   selectedMoveText: {fileID: 242500648}
   statusText: {fileID: 1136156773}
   backButton: {fileID: 2029174264}

@@ -5,6 +5,8 @@ using NordeusChallenge.Client.Core;
 using NordeusChallenge.Client.Models;
 using NordeusChallenge.Client.Networking;
 using NordeusChallenge.Client.Runtime;
+using NordeusChallenge.Client.UI.Common;
+using NordeusChallenge.Client.Visual;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -17,20 +19,31 @@ namespace NordeusChallenge.Client.UI.Battle
         [Header("Server")]
         [SerializeField] private string baseUrl = "http://localhost:5046";
 
+        [Header("Visual")]
+        [SerializeField] private VisualCatalog visualCatalog;
+
         [Header("Hero UI")]
         [SerializeField] private TMP_Text heroNameText;
         [SerializeField] private TMP_Text heroStatsText;
         [SerializeField] private TMP_Text heroHealthText;
+        [SerializeField] private HpBarView heroHpBar;
+        [SerializeField] private CombatantVisuals heroVisuals;
 
         [Header("Monster UI")]
         [SerializeField] private TMP_Text monsterNameText;
         [SerializeField] private TMP_Text monsterStatsText;
         [SerializeField] private TMP_Text monsterHealthText;
+        [SerializeField] private HpBarView monsterHpBar;
+        [SerializeField] private CombatantVisuals monsterVisuals;
 
         [Header("Moves")]
         [SerializeField] private Transform movesContainer;
         [SerializeField] private MoveButtonView moveButtonPrefab;
         [SerializeField] private TMP_Text moveInfoText;
+        [SerializeField] private MoveInfoPanelView moveInfoPanel;
+
+        [Header("Feedback")]
+        [SerializeField] private BattleFeedbackView feedbackView;
 
         [Header("Status")]
         [SerializeField] private TMP_Text statusText;
@@ -105,6 +118,8 @@ namespace NordeusChallenge.Client.UI.Battle
 
             RenderHero();
             RenderMonster();
+            if (heroHpBar != null) heroHpBar.SetImmediate(_heroHealth, _heroMaxHealth);
+            if (monsterHpBar != null) monsterHpBar.SetImmediate(_monsterHealth, _monsterMaxHealth);
             RenderMoves(_hero);
             AppendLog($"A wild {_monster.name} appears.");
         }
@@ -219,6 +234,7 @@ namespace NordeusChallenge.Client.UI.Battle
                 {
                     int damage = Mathf.Max(1, move.power + attackerAttack - defenderDefense);
                     ApplyDamage(isHeroAttacker, damage);
+                    PlayDamageFeedback(isHeroAttacker, damage);
                     AppendLog($"{attackerName} used {move.name}. {defenderName} took {damage} damage.");
                     break;
                 }
@@ -226,12 +242,14 @@ namespace NordeusChallenge.Client.UI.Battle
                 {
                     int damage = move.power + attackerMagic;
                     ApplyDamage(isHeroAttacker, damage);
+                    PlayDamageFeedback(isHeroAttacker, damage);
                     AppendLog($"{attackerName} used {move.name}. {defenderName} took {damage} damage.");
                     break;
                 }
                 case "Heal":
                 {
                     int healed = ApplyHeal(isHeroAttacker, move, attackerMagic);
+                    PlayHealFeedback(isHeroAttacker, healed);
                     AppendLog($"{attackerName} used {move.name}. Restored {healed} HP.");
                     break;
                 }
@@ -377,6 +395,12 @@ namespace NordeusChallenge.Client.UI.Battle
             {
                 heroNameText.text = $"{_hero.name} (Lv {_hero.level})";
             }
+            if (heroVisuals != null && heroVisuals.portrait != null && visualCatalog != null)
+            {
+                var sprite = visualCatalog.GetHeroPortrait(_hero.id);
+                heroVisuals.portrait.sprite = sprite;
+                heroVisuals.portrait.enabled = sprite != null;
+            }
             UpdateHeroStatsText();
             UpdateHeroHealthText();
         }
@@ -386,6 +410,12 @@ namespace NordeusChallenge.Client.UI.Battle
             if (monsterNameText != null)
             {
                 monsterNameText.text = $"{_monster.name} (Lv {_encounter.level})";
+            }
+            if (monsterVisuals != null && monsterVisuals.portrait != null && visualCatalog != null)
+            {
+                var sprite = visualCatalog.GetMonsterPortrait(_monster.id);
+                monsterVisuals.portrait.sprite = sprite;
+                monsterVisuals.portrait.enabled = sprite != null;
             }
             UpdateMonsterStatsText();
             UpdateMonsterHealthText();
@@ -397,6 +427,22 @@ namespace NordeusChallenge.Client.UI.Battle
             UpdateMonsterStatsText();
             UpdateHeroHealthText();
             UpdateMonsterHealthText();
+            if (heroHpBar != null) heroHpBar.SetValue(_heroHealth, _heroMaxHealth);
+            if (monsterHpBar != null) monsterHpBar.SetValue(_monsterHealth, _monsterMaxHealth);
+        }
+
+        private void PlayDamageFeedback(bool isHeroAttacker, int damage)
+        {
+            if (feedbackView == null || damage <= 0) return;
+            var target = isHeroAttacker ? monsterVisuals : heroVisuals;
+            feedbackView.PlayHit(target, damage);
+        }
+
+        private void PlayHealFeedback(bool isHeroAttacker, int amount)
+        {
+            if (feedbackView == null || amount <= 0) return;
+            var target = isHeroAttacker ? heroVisuals : monsterVisuals;
+            feedbackView.PlayHeal(target, amount);
         }
 
         private void UpdateHeroStatsText()
@@ -449,7 +495,8 @@ namespace NordeusChallenge.Client.UI.Battle
                 }
 
                 var view = Instantiate(moveButtonPrefab, movesContainer);
-                view.Bind(move, OnMoveSelected, OnMoveHovered);
+                Sprite iconSprite = visualCatalog != null ? visualCatalog.GetMoveIcon(move.id) : null;
+                view.Bind(move, iconSprite, OnMoveSelected, OnMoveHovered);
                 _spawnedMoveButtons.Add(view);
             }
         }
@@ -616,9 +663,27 @@ namespace NordeusChallenge.Client.UI.Battle
 
         private void OnMoveHovered(MoveDto move)
         {
+            if (moveInfoPanel != null)
+            {
+                if (move == null)
+                {
+                    moveInfoPanel.Clear();
+                }
+                else
+                {
+                    Sprite iconSprite = visualCatalog != null ? visualCatalog.GetMoveIcon(move.id) : null;
+                    moveInfoPanel.Show(move, iconSprite);
+                }
+            }
+
+            if (moveInfoText == null)
+            {
+                return;
+            }
+
             if (move == null)
             {
-                SetMoveInfo(string.Empty);
+                moveInfoText.text = string.Empty;
                 return;
             }
 
@@ -634,7 +699,7 @@ namespace NordeusChallenge.Client.UI.Battle
                 sb.AppendLine();
                 sb.Append(move.description);
             }
-            SetMoveInfo(sb.ToString());
+            moveInfoText.text = sb.ToString();
         }
 
         private void SetMoveInfo(string value)
@@ -642,6 +707,10 @@ namespace NordeusChallenge.Client.UI.Battle
             if (moveInfoText != null)
             {
                 moveInfoText.text = value;
+            }
+            if (moveInfoPanel != null && string.IsNullOrEmpty(value))
+            {
+                moveInfoPanel.Clear();
             }
         }
     }

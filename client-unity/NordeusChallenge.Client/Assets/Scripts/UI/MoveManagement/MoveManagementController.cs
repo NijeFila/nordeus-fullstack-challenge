@@ -1,6 +1,8 @@
 using NordeusChallenge.Client.Core;
 using NordeusChallenge.Client.Models;
 using NordeusChallenge.Client.Runtime;
+using NordeusChallenge.Client.UI.Common;
+using NordeusChallenge.Client.Visual;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,6 +12,9 @@ namespace NordeusChallenge.Client.UI.MoveManagement
 {
     public class MoveManagementController : MonoBehaviour
     {
+        [Header("Visual")]
+        [SerializeField] private VisualCatalog visualCatalog;
+
         [Header("Equipped")]
         [SerializeField] private Transform equippedContainer;
         [SerializeField] private EquippedSlotView equippedSlotPrefab;
@@ -18,8 +23,11 @@ namespace NordeusChallenge.Client.UI.MoveManagement
         [SerializeField] private Transform learnedContainer;
         [SerializeField] private MoveListItemView learnedItemPrefab;
 
-        [Header("UI")]
+        [Header("Selected Move")]
+        [SerializeField] private MoveInfoPanelView selectedMovePanel;
         [SerializeField] private TMP_Text selectedMoveText;
+
+        [Header("UI")]
         [SerializeField] private TMP_Text statusText;
         [SerializeField] private Button backButton;
 
@@ -52,13 +60,13 @@ namespace NordeusChallenge.Client.UI.MoveManagement
                 SetStatus("No active run.");
                 ClearContainer(equippedContainer);
                 ClearContainer(learnedContainer);
-                UpdateSelectedMoveText();
+                UpdateSelectedMove();
                 return;
             }
 
             RenderEquipped();
             RenderLearned();
-            UpdateSelectedMoveText();
+            UpdateSelectedMove();
         }
 
         private void RenderEquipped()
@@ -80,20 +88,16 @@ namespace NordeusChallenge.Client.UI.MoveManagement
                     ? hero.equippedMoves[i]
                     : null;
 
-                string labelText;
                 bool hasMove = !string.IsNullOrEmpty(moveId);
-                if (hasMove)
-                {
-                    var move = GameSession.Instance.GetMoveById(moveId);
-                    labelText = $"Slot {i + 1}: {FormatMoveLine(move, moveId)}";
-                }
-                else
-                {
-                    labelText = $"Slot {i + 1}: Empty";
-                }
+                MoveDto move = hasMove ? GameSession.Instance.GetMoveById(moveId) : null;
+
+                string labelText = hasMove
+                    ? $"Slot {i + 1}: {FormatMoveLine(move, moveId)}"
+                    : $"Slot {i + 1}: Empty";
+                Sprite iconSprite = (hasMove && visualCatalog != null) ? visualCatalog.GetMoveIcon(moveId) : null;
 
                 var view = Instantiate(equippedSlotPrefab, equippedContainer);
-                view.Bind(i, labelText, hasMove, canAssign, OnAssignSlot, OnClearSlot);
+                view.Bind(i, labelText, iconSprite, hasMove, canAssign, OnAssignSlot, OnClearSlot);
             }
         }
 
@@ -117,9 +121,10 @@ namespace NordeusChallenge.Client.UI.MoveManagement
                 var move = GameSession.Instance.GetMoveById(moveId);
                 string labelText = FormatMoveLine(move, moveId);
                 bool isSelected = moveId == _selectedMoveId;
+                Sprite iconSprite = visualCatalog != null ? visualCatalog.GetMoveIcon(moveId) : null;
 
                 var view = Instantiate(learnedItemPrefab, learnedContainer);
-                view.Bind(moveId, labelText, isSelected, OnLearnedMoveSelected);
+                view.Bind(moveId, labelText, iconSprite, isSelected, OnLearnedMoveSelected);
             }
         }
 
@@ -185,27 +190,43 @@ namespace NordeusChallenge.Client.UI.MoveManagement
             SceneManager.LoadScene(SceneNames.RunOverview);
         }
 
-        private void UpdateSelectedMoveText()
+        private void UpdateSelectedMove()
         {
-            if (selectedMoveText == null)
+            MoveDto move = null;
+            if (!string.IsNullOrEmpty(_selectedMoveId) && GameSession.Instance != null)
             {
-                return;
+                move = GameSession.Instance.GetMoveById(_selectedMoveId);
             }
 
-            if (string.IsNullOrEmpty(_selectedMoveId))
-            {
-                selectedMoveText.text = "Select a learned move to see details.";
-                return;
-            }
-
-            var move = GameSession.Instance != null
-                ? GameSession.Instance.GetMoveById(_selectedMoveId)
+            Sprite iconSprite = (move != null && visualCatalog != null)
+                ? visualCatalog.GetMoveIcon(move.id)
                 : null;
 
+            if (selectedMovePanel != null)
+            {
+                if (move == null)
+                {
+                    selectedMovePanel.Clear();
+                }
+                else
+                {
+                    selectedMovePanel.Show(move, iconSprite);
+                }
+            }
+
+            if (selectedMoveText != null)
+            {
+                selectedMoveText.text = BuildSelectedMoveText(move);
+            }
+        }
+
+        private string BuildSelectedMoveText(MoveDto move)
+        {
             if (move == null)
             {
-                selectedMoveText.text = $"<b>{_selectedMoveId}</b>";
-                return;
+                return string.IsNullOrEmpty(_selectedMoveId)
+                    ? "Select a learned move to see details."
+                    : $"<b>{_selectedMoveId}</b>";
             }
 
             var sb = new System.Text.StringBuilder();
@@ -220,7 +241,7 @@ namespace NordeusChallenge.Client.UI.MoveManagement
                 sb.AppendLine();
                 sb.Append(move.description);
             }
-            selectedMoveText.text = sb.ToString();
+            return sb.ToString();
         }
 
         private static string FormatMoveLine(MoveDto move, string fallbackId)
@@ -230,7 +251,9 @@ namespace NordeusChallenge.Client.UI.MoveManagement
                 return fallbackId;
             }
 
-            return $"{move.name} ({move.category}, Pow {move.power})";
+            return move.power > 0
+                ? $"{move.name} ({move.category}, Pow {move.power})"
+                : $"{move.name} ({move.category})";
         }
 
         private static void ClearContainer(Transform container)
