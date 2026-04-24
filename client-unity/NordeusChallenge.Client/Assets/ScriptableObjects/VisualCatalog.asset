@@ -16,22 +16,80 @@ MonoBehaviour:
   defaultMoveIcon: {fileID: 0}
   defaultEffectIcon: {fileID: 0}
   heroPortraits:
-  - id: 1
+  - id: knight
     sprite: {fileID: -5918137915363136097, guid: 953c1d6867dacec468afc8f8f0651b85, type: 3}
-  - id: 2
-    sprite: {fileID: -1662613486703163539, guid: 953c1d6867dacec468afc8f8f0651b85, type: 3}
   monsterPortraits:
-  - id: 1
+  - id: goblin_warrior
     sprite: {fileID: 3891796401534313901, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
-  - id: 2
+  - id: goblin_mage
     sprite: {fileID: 5751508951580130967, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
-  - id: 3
-    sprite: {fileID: 2520108084128459728, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
-  - id: 4
-    sprite: {fileID: -367161223939785014, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
+  - id: giant_spider
+    sprite: {fileID: -2856217466817918920, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
+  - id: witch
+    sprite: {fileID: -5996608079194875224, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
+  - id: dragon
+    sprite: {fileID: 118213427929379182, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
   moveIcons:
-  - id: 1
-    sprite: {fileID: -2031392749538720379, guid: 2f9aebbcba2f42f41a55ab95c9ebb721, type: 3}
+  - id: slash
+    sprite: {fileID: -6064256052270767026, guid: 5198b1f8e902f2c41a9de7962423d558, type: 3}
+  - id: shield_up
+    sprite: {fileID: 8523165583125524347, guid: a8947d81fd6808a44a6c3422a7534dbe, type: 3}
+  - id: battle_cry
+    sprite: {fileID: -2232967803460972840, guid: 89b771091b6583b4583a587e97b81b1f, type: 3}
+  - id: second_wind
+    sprite: {fileID: -7030609315507195921, guid: 24238d735b524464bba973a95326caf9, type: 3}
+  - id: shadow_bolt
+    sprite: {fileID: 3462130806948771480, guid: 0917ae1fc1faafb4ca37dba41b2c71a3, type: 3}
+  - id: drain_life
+    sprite: {fileID: 6853590317991079710, guid: 891bbfb6323939e4ea0cb73602e77620, type: 3}
+  - id: curse
+    sprite: {fileID: -5928894558842119981, guid: afc541c4a8b5b9a499a5a88da50ff08b, type: 3}
+  - id: dark_pact
+    sprite: {fileID: -8587584959687585492, guid: cf1be0772b5d2454c81dc28d0810a297, type: 3}
+  - id: bite
+    sprite: {fileID: -4807577179329902404, guid: b2918df8da9c51d44b4755bc91bc5c47, type: 3}
+  - id: web_throw
+    sprite: {fileID: 7049877138854363180, guid: 6801178f675ab2a4d9420f7f04658204, type: 3}
+  - id: pounce
+    sprite: {fileID: -4657217449802702222, guid: 2d01cee477dac0f43a89b156975275b1, type: 3}
+  - id: skitter
+    sprite: {fileID: 128777755333162953, guid: 9457735dab074794496040461b042f0d, type: 3}
+  - id: flame_breath
+    sprite: {fileID: -2925290275843476097, guid: 1ea10969166e7ab49879e3f43ace6467, type: 3}
+  - id: claw_swipe
+    sprite: {fileID: 611679936735782167, guid: e5ac3f1df2084b34e955221ae2540e4f, type: 3}
+  - id: intimidate
+    sprite: {fileID: -1152173298736564254, guid: 0f19012cdc814864e9420c86abe4e893, type: 3}
+  - id: dragon_scales
+    sprite: {fileID: -4854997984412664789, guid: 2e4c1e577244a804cbae1ad920a17208, type: 3}
+  - id: rusty_blade
+    sprite: {fileID: -5832170835056961910, guid: 88dbc3f69dfeaa7458a89367a790244b, type: 3}
+  - id: dirty_kick
+    sprite: {fileID: 8837743337478535082, guid: d558d8a4834c22d4f98e8fca9c8b459b, type: 3}
+  - id: frenzy
+    sprite: {fileID: 3924247579675412406, guid: ac095d2763123504580aea2f925ba00f, type: 3}
+  - id: headbutt
+    sprite: {fileID: -8004700745276310438, guid: 5d195f2f5d0c7304083177987326a66c, type: 3}
+  - id: firebolt
+    sprite: {fileID: -4227823899056910989, guid: 3423ada11c1f1cc4ebb303c6d4f13856, type: 3}
+  - id: arcane_surge
+    sprite: {fileID: -7928023631775268641, guid: 2d7fcaf79591fbd4abd7e4bc7b7e6b93, type: 3}
+  - id: mana_drain
+    sprite: {fileID: -8188798609868112713, guid: 7962e76e5f537f7419f96fd67106bee2, type: 3}
+  - id: hex_shield
+    sprite: {fileID: -2192278396201434872, guid: 1cb71fb42e0e2564fab9e06df6f00264, type: 3}
   effectIcons:
-  - id: 1
-    sprite: {fileID: -2292452165054022121, guid: d24616571224da942a96fecd276d16b2, type: 3}
+  - id: BuffAttack
+    sprite: {fileID: -1400734978927520801, guid: 4f55c33e0ee756546ab952a1a13155c1, type: 3}
+  - id: BuffDefense
+    sprite: {fileID: -1659448182526270457, guid: aee0ed1d6f7d6da4faf97fdfd53b18a5, type: 3}
+  - id: BuffMagic
+    sprite: {fileID: 7956240034694478096, guid: 0e8c6b71619a1e8498353c059e5e7790, type: 3}
+  - id: DebuffAttack
+    sprite: {fileID: -352986352355011529, guid: b54614835e251b64f9197c3923bbbc59, type: 3}
+  - id: DebuffDefense
+    sprite: {fileID: -505287451008008514, guid: d24f4db59955e4a41bb45a3e28846854, type: 3}
+  - id: DebuffMagic
+    sprite: {fileID: -8188798609868112713, guid: 7962e76e5f537f7419f96fd67106bee2, type: 3}
+  - id: Heal
+    sprite: {fileID: 2166299480135756165, guid: 038a5cce39c5be54d977bea0af7e2700, type: 3}
