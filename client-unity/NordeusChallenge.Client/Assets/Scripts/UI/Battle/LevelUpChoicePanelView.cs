@@ -27,11 +27,13 @@ namespace NordeusChallenge.Client.UI.Battle
 
         private void Awake()
         {
-            if (root != null) root.SetActive(false);
+            // Do not toggle active state here. The panel root is disabled in
+            // the editor by default; if we forced it off in Awake we would
+            // immediately re-disable the root the first time Show() activates
+            // it (Awake fires the moment the GameObject becomes active).
             if (continueButton != null)
             {
                 continueButton.onClick.AddListener(OnContinueClicked);
-                continueButton.gameObject.SetActive(false);
             }
         }
 
