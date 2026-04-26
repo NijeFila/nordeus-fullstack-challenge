@@ -92,6 +92,19 @@ Result: a buff or debuff cast on turn N is active for turn N and turn N+1, then 
 
 `DamageIncrease` and `DamageReduction` are buff-shaped effects that do not change a base stat. Instead, they adjust the final damage of a Physical or Magic move at the moment it resolves (see the Damage section). They follow the same duration rules as other buffs.
 
+## Battle Environments
+
+Each encounter declares an `environmentId` that resolves to a `BattleEnvironment` from `RunConfig.environments`. The Unity client applies the matching environment's modifiers during that battle only; nothing about the environment is sent back to the server. Modifiers are intentionally simple flat integers so they slot into the existing formulas without new math:
+
+- `physicalDamageBonus` and `magicDamageBonus` are added to outgoing damage of the matching category, after the standard `DamageIncrease` / `DamageReduction` adjustment, and the final value is still floored at `1`.
+- `healingBonus` is added to the `healed` amount in the Healing formula. It can be negative; healing is floored at `0` so a dampening environment never deals damage.
+- `endOfTurnDamage` is applied to both combatants at end-of-turn, alongside DoT ticks. It bypasses Defense and `DamageReduction`. HP is clamped to `0`.
+- `poisonBonusTurns` is added to the `durationTurns` of newly applied `Poison` effects on this battlefield.
+- `bleedBonusDamage` is added to each `Bleed` tick's per-turn damage.
+- `manaRegenBonus` is added to both combatants' mana at end-of-turn, clamped to `maxMana`. Entities with `maxMana = 0` do not regenerate.
+
+Environments apply symmetrically to both combatants — they describe a place, not a buff. If `environmentId` is unknown to the client (older bundle), it falls back to "no environment" and combat resolves as before.
+
 ## Win / Loss Conditions
 
 - **Battle victory** — monster HP reaches `0`. The hero advances to the next encounter.
@@ -146,4 +159,5 @@ Intentional simplifications for the challenge scope:
 - Hero HP is reset to full at the start of every encounter. There is no HP carry-over and no between-battle healing mechanic.
 - Defeat does not end the run. The current encounter is simply replayed. No XP is gained, and no progression is rolled back.
 - Monster move selection is deliberately shallow — a low-HP heal rule plus uniform random — so behavior is easy to reason about and extend.
+- Environment effects are flat integers and apply to both sides; the server does not factor environments into `/battle/next-move`, keeping the bot's contract unchanged.
 - No persistence: starting a new run always begins from the server's default configuration.

@@ -43,11 +43,26 @@ No parameters. No body.
     "learnedMovePool": ["slash", "shield_up", "battle_cry", "second_wind"]
   },
   "encounters": [
-    { "index": 0, "monsterId": "goblin_warrior", "level": 1 },
-    { "index": 1, "monsterId": "goblin_mage",    "level": 2 },
-    { "index": 2, "monsterId": "giant_spider",   "level": 3 },
-    { "index": 3, "monsterId": "witch",          "level": 4 },
-    { "index": 4, "monsterId": "dragon",         "level": 5 }
+    { "index": 0, "monsterId": "goblin_warrior", "level": 1, "environmentId": "training_fields" },
+    { "index": 1, "monsterId": "goblin_mage",    "level": 2, "environmentId": "arcane_library"  },
+    { "index": 2, "monsterId": "giant_spider",   "level": 3, "environmentId": "spider_nest"     },
+    { "index": 3, "monsterId": "witch",          "level": 4, "environmentId": "dark_altar"      },
+    { "index": 4, "monsterId": "dragon",         "level": 5, "environmentId": "dragon_peak"     }
+  ],
+  "environments": [
+    {
+      "id": "training_fields",
+      "name": "Training Fields",
+      "description": "Open ground favors clean strikes. Physical hits land a little harder.",
+      "physicalDamageBonus": 2
+    },
+    {
+      "id": "dragon_peak",
+      "name": "Dragon Peak",
+      "description": "Thin mountain air pushes magic harder; healing is a touch less effective.",
+      "magicDamageBonus": 3,
+      "healingBonus": -3
+    }
   ],
   "monsters": [
     {
@@ -150,8 +165,10 @@ No parameters. No body.
 
 **Notes**
 - The full `moves` catalog is returned once so the client never has to look up a move by id out-of-band.
-- The example above shows a subset of monsters and moves for brevity. The real response includes every monster referenced by `encounters` and every move referenced by the hero or any monster.
+- The example above shows a subset of monsters, moves, and environments for brevity. The real response includes every monster referenced by `encounters`, every move referenced by the hero or any monster, and every environment referenced by an encounter.
 - `encounters` is ordered; the client advances through it one battle at a time.
+- Each encounter carries an `environmentId` that points into `environments`. The Unity client looks the entry up and applies its modifiers during that battle. Environments are intentionally simple flat-integer modifiers (e.g. `physicalDamageBonus: 2`, `healingBonus: -3`) so they fold into the existing damage and status pipeline without any new math.
+- Modifier fields default to `0` and are omitted from the JSON when zero.
 - `rules` carries the tunable numbers so the client and server agree on formulas without hard-coding them on the client.
 - Fields with a `null` value (e.g. `effect`, `manaCost`, or `hpCost` on a free pure-damage move) are omitted from the JSON response.
 - `manaCost` and `hpCost` on a `move` are optional resource costs paid by the caster. A move without either field is free. `maxMana = 0` on an entity simply means it has no mana resource and can only use moves with no `manaCost`.

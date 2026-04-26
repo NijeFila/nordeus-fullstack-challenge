@@ -102,6 +102,25 @@ Fields:
 - `index` (int) — position in the run, starting at 0.
 - `monsterId` (string) — reference into the monster catalog.
 - `level` (int) — the level at which the monster is instantiated.
+- `environmentId` (string) — reference into the environment catalog. Selects the battlefield used for this encounter.
+
+## BattleEnvironment
+
+Role: a battlefield that flavors a single encounter with small, readable combat modifiers. Returned as part of `RunConfig` and looked up on the client by `Encounter.environmentId`.
+
+Fields (all integer modifiers, default `0` meaning "no effect"):
+- `id` (string)
+- `name` (string)
+- `description` (string)
+- `physicalDamageBonus` (int) — added to outgoing Physical move damage by either combatant on this battlefield.
+- `magicDamageBonus` (int) — added to outgoing Magic move damage by either combatant.
+- `healingBonus` (int) — added to the amount restored by `Heal` effects. Can be negative to dampen healing.
+- `endOfTurnDamage` (int) — flat HP loss applied to both combatants at the end of every turn (in addition to DoTs). Bypasses Defense and `DamageReduction`.
+- `poisonBonusTurns` (int) — extra turns appended to the duration of newly applied `Poison` effects on this battlefield.
+- `bleedBonusDamage` (int) — added to each `Bleed` tick's per-turn damage.
+- `manaRegenBonus` (int) — mana restored to both combatants at the end of every turn.
+
+Environments are deliberately symmetric: they apply to both hero and monster so the battlefield reads as a place, not as a hero-only buff.
 
 ## RunConfig
 
@@ -113,6 +132,7 @@ Fields:
 - `encounters` (Encounter[]) — ordered list of battles.
 - `monsters` (Monster[]) — catalog referenced by encounters.
 - `moves` (Move[]) — catalog referenced by hero and monsters.
+- `environments` (BattleEnvironment[]) — catalog referenced by encounters.
 - `rules` (object) — tunable constants: `buffDurationTurns`, `xpPerVictory`, `xpPerLevel`, `statGainPerLevel` (Stats delta), `equippedMoveSlots`.
 
 ## BattleState

@@ -12,6 +12,7 @@ public class RunConfigService
         var monsters = BuildMonsters();
         var hero = BuildHero();
         var encounters = BuildEncounters();
+        var environments = BuildEnvironments();
         var rules = BuildRules();
 
         return new RunConfigResponse
@@ -21,6 +22,7 @@ public class RunConfigService
             Encounters = encounters,
             Monsters = monsters,
             Moves = moves,
+            Environments = environments,
             Rules = rules
         };
     }
@@ -65,11 +67,53 @@ public class RunConfigService
 
     private static List<Encounter> BuildEncounters() => new()
     {
-        new Encounter { Index = 0, MonsterId = "goblin_warrior", Level = 1 },
-        new Encounter { Index = 1, MonsterId = "goblin_mage",    Level = 2 },
-        new Encounter { Index = 2, MonsterId = "giant_spider",   Level = 3 },
-        new Encounter { Index = 3, MonsterId = "witch",          Level = 4 },
-        new Encounter { Index = 4, MonsterId = "dragon",         Level = 5 }
+        new Encounter { Index = 0, MonsterId = "goblin_warrior", Level = 1, EnvironmentId = "training_fields" },
+        new Encounter { Index = 1, MonsterId = "goblin_mage",    Level = 2, EnvironmentId = "arcane_library"  },
+        new Encounter { Index = 2, MonsterId = "giant_spider",   Level = 3, EnvironmentId = "spider_nest"     },
+        new Encounter { Index = 3, MonsterId = "witch",          Level = 4, EnvironmentId = "dark_altar"      },
+        new Encounter { Index = 4, MonsterId = "dragon",         Level = 5, EnvironmentId = "dragon_peak"     }
+    };
+
+    private static List<BattleEnvironment> BuildEnvironments() => new()
+    {
+        new BattleEnvironment
+        {
+            Id = "training_fields",
+            Name = "Training Fields",
+            Description = "Open ground favors clean strikes. Physical hits land a little harder.",
+            PhysicalDamageBonus = 2
+        },
+        new BattleEnvironment
+        {
+            Id = "arcane_library",
+            Name = "Arcane Library",
+            Description = "Latent magic in the air empowers spells and gently restores mana.",
+            MagicDamageBonus = 2,
+            ManaRegenBonus = 1
+        },
+        new BattleEnvironment
+        {
+            Id = "spider_nest",
+            Name = "Spider Nest",
+            Description = "Lingering venom makes poisons cling longer.",
+            PoisonBonusTurns = 1
+        },
+        new BattleEnvironment
+        {
+            Id = "dark_altar",
+            Name = "Dark Altar",
+            Description = "Cursed ground deepens bleeds and saps a sliver of life each turn.",
+            BleedBonusDamage = 1,
+            EndOfTurnDamage = 2
+        },
+        new BattleEnvironment
+        {
+            Id = "dragon_peak",
+            Name = "Dragon Peak",
+            Description = "Thin mountain air pushes magic harder; healing is a touch less effective.",
+            MagicDamageBonus = 3,
+            HealingBonus = -3
+        }
     };
 
     private static List<Monster> BuildMonsters() => new()
