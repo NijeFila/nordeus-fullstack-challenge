@@ -8,6 +8,8 @@ Desktop.ini
 *~
 .idea/
 .vscode/
+.claude/
+*.claude
 *.code-workspace
 *.sublime-project
 *.sublime-workspace
