@@ -9,5 +9,6 @@ public class RunConfigResponse
     public List<Move> Moves { get; set; } = new();
     public List<BattleEnvironment> Environments { get; set; } = new();
     public List<Item> Items { get; set; } = new();
+    public List<ShopOffer> ShopOffers { get; set; } = new();
     public RulesConfig Rules { get; set; } = new();
 }

@@ -117,6 +117,16 @@ Environments apply symmetrically to both combatants — they describe a place, n
 
 The hero's HP is always reset to full at the start of each encounter, including replays.
 
+## Gold and the Shop
+
+- On victory, the hero gains `rules.goldPerVictory` gold (default 15) in addition to XP. On defeat, no gold is awarded.
+- Gold is tracked entirely on the client; there is no server-side currency state. It starts at `0` for a new run and resets when another run begins.
+- The shop offers the hero buys from come from `RunConfig.shopOffers`. Two offer types share one shape:
+  - `Item` offers grant the item identified by `itemId` (added to the inventory; ignored if already owned).
+  - `StatUpgrade` offers permanently raise the matching hero base stat (`maxHealth`, `maxMana`, `attack`, `defense`, `magic`) by `amount`.
+- A purchase is allowed only when `gold >= offer.price`. On success, gold is decreased by `price` and the offer's effect is applied to the local run state. The server is not informed.
+- Stat upgrades and equipped item bonuses both feed into the same effective-stats calculation used in battle, on top of any active battle effects.
+
 ## XP and Leveling
 
 - On victory, the hero gains `rules.xpPerVictory` XP (default 25).

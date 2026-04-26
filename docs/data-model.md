@@ -135,7 +135,8 @@ Fields:
 - `moves` (Move[]) — catalog referenced by hero and monsters.
 - `environments` (BattleEnvironment[]) — catalog referenced by encounters.
 - `items` (Item[]) — catalog referenced by `monsters[].itemDrops` and by the hero's inventory.
-- `rules` (object) — tunable constants: `buffDurationTurns`, `xpPerVictory`, `xpPerLevel`, `statGainPerLevel` (Stats delta, retained for backward compatibility), `equippedMoveSlots`, `levelUpChoices` (LevelUpChoice[]), `equippedItemSlots` (string→int map of cap per slot).
+- `shopOffers` (ShopOffer[]) — catalog of in-run shop entries the client renders.
+- `rules` (object) — tunable constants: `buffDurationTurns`, `xpPerVictory`, `xpPerLevel`, `statGainPerLevel` (Stats delta, retained for backward compatibility), `equippedMoveSlots`, `levelUpChoices` (LevelUpChoice[]), `equippedItemSlots` (string→int map of cap per slot), `goldPerVictory` (int).
 
 ## Item
 
@@ -158,6 +159,32 @@ Fields:
 - `amount` (int) — flat amount added to the matching base stat. May be negative.
 
 While an item is equipped, the sum of its `statBonuses` is added to the hero's base stats. These bonuses stack additively with level-up gains and with active battle effects (buffs, debuffs, `DamageIncrease`, `DamageReduction`).
+
+## ShopOffer
+
+Role: a single purchasable entry in the in-run shop. Returned in `RunConfig.shopOffers`. Two flavors share one shape; fields not relevant to a given `type` are empty / zero.
+
+Fields:
+- `id` (string) — stable identifier.
+- `name` (string) — display name.
+- `description` (string) — UI text.
+- `price` (int) — cost in gold.
+- `type` (enum) — `Item` or `StatUpgrade`.
+- `itemId` (string) — for `Item` offers, the id of an entry in `items`. Empty for `StatUpgrade`.
+- `stat` (enum) — for `StatUpgrade` offers, one of `maxHealth`, `maxMana`, `attack`, `defense`, `magic`. Empty for `Item`.
+- `amount` (int) — for `StatUpgrade` offers, the flat increase added to the chosen stat. `0` for `Item`.
+
+Buying an `Item` offer adds the referenced item to the hero's inventory (no-op if already owned). Buying a `StatUpgrade` offer raises the matching base hero stat permanently for the rest of the run. Either way, the offer's `price` is debited from the run's gold total. The server is not notified — the shop is fully client-resolved.
+
+## Gold (client-only)
+
+Role: the run's spendable currency. Not part of the wire payload.
+
+The client maintains a single integer `gold` value during a run:
+- Initialized to `0` on a new run.
+- Increased by `rules.goldPerVictory` after every battle victory (defeats grant nothing).
+- Decreased by `ShopOffer.price` on each successful purchase. A purchase is rejected if `gold < price`.
+- Reset to `0` when a new run begins. Like XP, items, and learned moves, gold is run-scoped only.
 
 ## Inventory (client-only)
 

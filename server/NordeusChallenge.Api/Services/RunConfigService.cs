@@ -14,6 +14,7 @@ public class RunConfigService
         var encounters = BuildEncounters();
         var environments = BuildEnvironments();
         var items = BuildItems();
+        var shopOffers = BuildShopOffers();
         var rules = BuildRules();
 
         return new RunConfigResponse
@@ -25,9 +26,94 @@ public class RunConfigService
             Moves = moves,
             Environments = environments,
             Items = items,
+            ShopOffers = shopOffers,
             Rules = rules
         };
     }
+
+    private static List<ShopOffer> BuildShopOffers() => new()
+    {
+        // ---------- Item offers (3) ----------
+        new ShopOffer
+        {
+            Id = "shop_apprentice_wand",
+            Name = "Apprentice Wand",
+            Description = "+3 Magic. A simple wand for budding spellcasters.",
+            Price = 60,
+            Type = "Item",
+            ItemId = "apprentice_wand"
+        },
+        new ShopOffer
+        {
+            Id = "shop_chitin_plate",
+            Name = "Chitin Plate",
+            Description = "+4 Defense, +8 Max Health. Layered insectoid armor.",
+            Price = 90,
+            Type = "Item",
+            ItemId = "chitin_plate"
+        },
+        new ShopOffer
+        {
+            Id = "shop_lifedrinker_locket",
+            Name = "Lifedrinker Locket",
+            Description = "+10 Max Health, +2 Magic. Steals a drop of vitality with every spell.",
+            Price = 140,
+            Type = "Item",
+            ItemId = "lifedrinker_locket"
+        },
+
+        // ---------- Stat upgrade offers (5) ----------
+        new ShopOffer
+        {
+            Id = "shop_upgrade_health",
+            Name = "+10 Max Health",
+            Description = "Permanent: raises Max Health by 10.",
+            Price = 50,
+            Type = "StatUpgrade",
+            Stat = "maxHealth",
+            Amount = 10
+        },
+        new ShopOffer
+        {
+            Id = "shop_upgrade_mana",
+            Name = "+5 Max Mana",
+            Description = "Permanent: raises Max Mana by 5.",
+            Price = 50,
+            Type = "StatUpgrade",
+            Stat = "maxMana",
+            Amount = 5
+        },
+        new ShopOffer
+        {
+            Id = "shop_upgrade_attack",
+            Name = "+2 Attack",
+            Description = "Permanent: raises Attack by 2.",
+            Price = 60,
+            Type = "StatUpgrade",
+            Stat = "attack",
+            Amount = 2
+        },
+        new ShopOffer
+        {
+            Id = "shop_upgrade_defense",
+            Name = "+2 Defense",
+            Description = "Permanent: raises Defense by 2.",
+            Price = 60,
+            Type = "StatUpgrade",
+            Stat = "defense",
+            Amount = 2
+        },
+        new ShopOffer
+        {
+            Id = "shop_upgrade_magic",
+            Name = "+2 Magic",
+            Description = "Permanent: raises Magic by 2.",
+            Price = 60,
+            Type = "StatUpgrade",
+            Stat = "magic",
+            Amount = 2
+        }
+    };
 
     private static Hero BuildHero()
     {
@@ -725,6 +811,7 @@ public class RunConfigService
             Magic = 2
         },
         EquippedMoveSlots = 4,
+        GoldPerVictory = 15,
         EquippedItemSlots = new Dictionary<string, int>
         {
             { "weapon", 1 },

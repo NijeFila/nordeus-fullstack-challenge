@@ -21,4 +21,7 @@ public class RulesConfig
     // { "weapon": 1, "armor": 1, "trinket": 2 }. The client enforces caps
     // when equipping; the server only declares the contract.
     public Dictionary<string, int> EquippedItemSlots { get; set; } = new();
+
+    // Gold awarded to the hero on each battle victory. Defeats grant nothing.
+    public int GoldPerVictory { get; set; }
 }

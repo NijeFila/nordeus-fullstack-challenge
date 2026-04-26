@@ -92,6 +92,25 @@ No parameters. No body.
       "itemDrops": ["hex_focus", "lifedrinker_locket"]
     }
   ],
+  "shopOffers": [
+    {
+      "id": "shop_apprentice_wand",
+      "name": "Apprentice Wand",
+      "description": "+3 Magic. A simple wand for budding spellcasters.",
+      "price": 60,
+      "type": "Item",
+      "itemId": "apprentice_wand"
+    },
+    {
+      "id": "shop_upgrade_health",
+      "name": "+10 Max Health",
+      "description": "Permanent: raises Max Health by 10.",
+      "price": 50,
+      "type": "StatUpgrade",
+      "stat": "maxHealth",
+      "amount": 10
+    }
+  ],
   "items": [
     {
       "id": "rusty_shortsword",
@@ -196,6 +215,7 @@ No parameters. No body.
     },
     "equippedMoveSlots": 4,
     "equippedItemSlots": { "weapon": 1, "armor": 1, "trinket": 2 },
+    "goldPerVictory": 15,
     "levelUpChoices": [
       { "id": "health",  "name": "+15 Max Health", "description": "Toughen up. Raises Max Health by 15.",     "stat": "health",  "amount": 15 },
       { "id": "attack",  "name": "+4 Attack",      "description": "Hit harder. Raises Attack by 4.",          "stat": "attack",  "amount": 4  },
@@ -218,6 +238,11 @@ No parameters. No body.
 - `items` is the full catalog of equippable gear referenced by `monsters[].itemDrops`. Each item has a `slot` (`weapon`, `armor`, or `trinket`), a `rarity` string (UI hint), and a `statBonuses` list of flat integer bonuses keyed by `stat` (`maxHealth`, `maxMana`, `attack`, `defense`, `magic`). The client tracks ownership and equipped items locally during the run; bonuses from currently equipped items are added to the hero's base stats during battle.
 - `monsters[].itemDrops` lists the item ids a monster can drop on victory. The client decides how to pick from the list (the prototype simply rolls one entry uniformly at random and grants it to the player on first kill).
 - `rules.equippedItemSlots` declares how many items can be worn per slot. The default is `{ "weapon": 1, "armor": 1, "trinket": 2 }`. The client enforces these caps in inventory UI; the server only declares the contract.
+- `rules.goldPerVictory` is the flat amount of gold awarded for each battle victory (default `15`). Defeats grant nothing. Gold is tracked entirely on the client during a run and resets on a new run.
+- `shopOffers` is the catalog of purchasable entries the client renders in the in-run shop. Each offer has a `price` in gold and a `type`:
+  - `"Item"` offers grant the item with the matching `itemId` (which must exist in the `items` catalog). `stat` and `amount` are unused.
+  - `"StatUpgrade"` offers permanently raise the hero's chosen `stat` (`maxHealth`, `maxMana`, `attack`, `defense`, or `magic`) by `amount`. `itemId` is unused.
+  Purchases are resolved entirely on the client: gold is debited from the run total, and the offer's effect (item granted or stat raised) is applied to the local run state. The server is not informed.
 - Fields with a `null` value (e.g. `effect`, `manaCost`, or `hpCost` on a free pure-damage move) are omitted from the JSON response.
 - `manaCost` and `hpCost` on a `move` are optional resource costs paid by the caster. A move without either field is free. `maxMana = 0` on an entity simply means it has no mana resource and can only use moves with no `manaCost`.
 
