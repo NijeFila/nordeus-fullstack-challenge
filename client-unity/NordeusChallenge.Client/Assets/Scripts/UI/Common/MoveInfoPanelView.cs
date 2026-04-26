@@ -1,3 +1,4 @@
+using System.Text;
 using NordeusChallenge.Client.Models;
 using TMPro;
 using UnityEngine;
@@ -48,9 +49,7 @@ namespace NordeusChallenge.Client.UI.Common
 
             if (categoryText != null)
             {
-                categoryText.text = move.power > 0
-                    ? $"{move.category} · Power {move.power}"
-                    : move.category;
+                categoryText.text = BuildCategoryLine(move);
             }
 
             if (descriptionText != null)
@@ -72,6 +71,37 @@ namespace NordeusChallenge.Client.UI.Common
             if (nameText != null) nameText.text = string.Empty;
             if (categoryText != null) categoryText.text = string.Empty;
             if (descriptionText != null) descriptionText.text = string.Empty;
+        }
+
+        private static string BuildCategoryLine(MoveDto move)
+        {
+            var sb = new StringBuilder();
+            sb.Append(move.category);
+            if (move.power > 0)
+            {
+                sb.Append($" · Power {move.power}");
+            }
+            if (move.manaCost > 0)
+            {
+                sb.Append($" · {move.manaCost} MP");
+            }
+            if (move.hpCost > 0)
+            {
+                sb.Append($" · {move.hpCost} HP");
+            }
+            if (move.effect != null && !string.IsNullOrEmpty(move.effect.kind))
+            {
+                sb.Append($" · {move.effect.kind}");
+                if (move.effect.amount != 0)
+                {
+                    sb.Append($" {move.effect.amount}");
+                }
+                if (move.effect.durationTurns > 0 && move.effect.kind != "Heal")
+                {
+                    sb.Append($" / {move.effect.durationTurns}t");
+                }
+            }
+            return sb.ToString();
         }
     }
 }

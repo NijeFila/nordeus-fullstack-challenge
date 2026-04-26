@@ -26,6 +26,8 @@ namespace NordeusChallenge.Client.UI.Battle
         [SerializeField] private TMP_Text heroNameText;
         [SerializeField] private TMP_Text heroStatsText;
         [SerializeField] private TMP_Text heroHealthText;
+        [SerializeField] private TMP_Text heroManaText;
+        [SerializeField] private TMP_Text heroStatusEffectsText;
         [SerializeField] private HpBarView heroHpBar;
         [SerializeField] private CombatantVisuals heroVisuals;
 
@@ -33,6 +35,8 @@ namespace NordeusChallenge.Client.UI.Battle
         [SerializeField] private TMP_Text monsterNameText;
         [SerializeField] private TMP_Text monsterStatsText;
         [SerializeField] private TMP_Text monsterHealthText;
+        [SerializeField] private TMP_Text monsterManaText;
+        [SerializeField] private TMP_Text monsterStatusEffectsText;
         [SerializeField] private HpBarView monsterHpBar;
         [SerializeField] private CombatantVisuals monsterVisuals;
 
@@ -59,13 +63,18 @@ namespace NordeusChallenge.Client.UI.Battle
 
         private int _heroHealth;
         private int _heroMaxHealth;
+        private int _heroMana;
+        private int _heroMaxMana;
         private int _monsterHealth;
         private int _monsterMaxHealth;
+        private int _monsterMana;
+        private int _monsterMaxMana;
         private int _turn;
         private bool _battleOver;
         private bool _inputLocked;
 
         private const int MaxLogLines = 8;
+        private const int ManaRegenPerTurn = 5;
 
         private readonly List<ActiveEffect> _heroEffects = new();
         private readonly List<ActiveEffect> _monsterEffects = new();
@@ -113,14 +122,20 @@ namespace NordeusChallenge.Client.UI.Battle
 
             _heroMaxHealth = _hero.stats.maxHealth;
             _heroHealth = _heroMaxHealth;
+            _heroMaxMana = _hero.stats.maxMana;
+            _heroMana = _heroMaxMana;
+
             _monsterMaxHealth = _monsterScaledStats.maxHealth;
             _monsterHealth = _monsterMaxHealth;
+            _monsterMaxMana = _monsterScaledStats.maxMana;
+            _monsterMana = _monsterMaxMana;
 
             RenderHero();
             RenderMonster();
             if (heroHpBar != null) heroHpBar.SetImmediate(_heroHealth, _heroMaxHealth);
             if (monsterHpBar != null) monsterHpBar.SetImmediate(_monsterHealth, _monsterMaxHealth);
             RenderMoves(_hero);
+            RefreshAffordability();
             AppendLog($"A wild {_monster.name} appears.");
         }
 
@@ -138,6 +153,12 @@ namespace NordeusChallenge.Client.UI.Battle
         {
             if (_battleOver || _inputLocked || move == null)
             {
+                return;
+            }
+
+            if (!CanAfford(move, isHero: true))
+            {
+                AppendLog($"{move.name} is unavailable: {AffordabilityReason(move, isHero: true)}.");
                 return;
             }
 
@@ -167,9 +188,25 @@ namespace NordeusChallenge.Client.UI.Battle
                 yield break;
             }
 
+            ApplyDoTTicks();
+            RefreshCombatantsUi();
+
+            if (_heroHealth <= 0)
+            {
+                EndBattle(false);
+                yield break;
+            }
+            if (_monsterHealth <= 0)
+            {
+                EndBattle(true);
+                yield break;
+            }
+
             TickEffectsAtEndOfTurn();
+            RegenerateMana();
             _turn++;
             RefreshCombatantsUi();
+            RefreshAffordability();
 
             _inputLocked = false;
             SetMovesInteractable(true);
@@ -177,6 +214,7 @@ namespace NordeusChallenge.Client.UI.Battle
 
         private void ResolveHeroMove(MoveDto move)
         {
+            PayCosts(move, isHero: true);
             ResolveMove(
                 move,
                 isHeroAttacker: true,
@@ -197,6 +235,9 @@ namespace NordeusChallenge.Client.UI.Battle
                 _heroHealth,
                 _heroMaxHealth,
                 _turn,
+                _monsterMana,
+                CollectKinds(_monsterEffects),
+                CollectKinds(_heroEffects),
                 id => selectedMoveId = id,
                 e => error = e);
 
@@ -213,11 +254,71 @@ namespace NordeusChallenge.Client.UI.Battle
                 yield break;
             }
 
+            // The server already filtered by affordability when given mana,
+            // but verify locally so HP/mana costs are paid honestly.
+            if (!CanAfford(move, isHero: false))
+            {
+                AppendLog($"{_monster.name} could not afford {move.name} and hesitates.");
+                yield break;
+            }
+
+            PayCosts(move, isHero: false);
             ResolveMove(
                 move,
                 isHeroAttacker: false,
                 attackerName: _monster.name,
                 defenderName: _hero.name);
+        }
+
+        // ---------- Resource costs ----------
+
+        private bool CanAfford(MoveDto move, bool isHero)
+        {
+            int mana = isHero ? _heroMana : _monsterMana;
+            int hp = isHero ? _heroHealth : _monsterHealth;
+            if (move.manaCost > 0 && mana < move.manaCost) return false;
+            if (move.hpCost > 0 && hp <= move.hpCost) return false;
+            return true;
+        }
+
+        private string AffordabilityReason(MoveDto move, bool isHero)
+        {
+            int mana = isHero ? _heroMana : _monsterMana;
+            int hp = isHero ? _heroHealth : _monsterHealth;
+            if (move.manaCost > 0 && mana < move.manaCost) return "not enough mana";
+            if (move.hpCost > 0 && hp <= move.hpCost) return "not enough HP";
+            return "unavailable";
+        }
+
+        private void PayCosts(MoveDto move, bool isHero)
+        {
+            string casterName = isHero ? _hero.name : _monster.name;
+
+            if (move.manaCost > 0)
+            {
+                if (isHero) _heroMana = Mathf.Max(0, _heroMana - move.manaCost);
+                else _monsterMana = Mathf.Max(0, _monsterMana - move.manaCost);
+                AppendLog($"{casterName} spent {move.manaCost} mana.");
+            }
+
+            if (move.hpCost > 0)
+            {
+                if (isHero) _heroHealth = Mathf.Max(1, _heroHealth - move.hpCost);
+                else _monsterHealth = Mathf.Max(1, _monsterHealth - move.hpCost);
+                AppendLog($"{casterName} paid {move.hpCost} HP.");
+            }
+        }
+
+        private void RegenerateMana()
+        {
+            if (_heroMaxMana > 0)
+            {
+                _heroMana = Mathf.Min(_heroMaxMana, _heroMana + ManaRegenPerTurn);
+            }
+            if (_monsterMaxMana > 0)
+            {
+                _monsterMana = Mathf.Min(_monsterMaxMana, _monsterMana + ManaRegenPerTurn);
+            }
         }
 
         // ---------- Move resolution ----------
@@ -232,7 +333,8 @@ namespace NordeusChallenge.Client.UI.Battle
             {
                 case "Physical":
                 {
-                    int damage = Mathf.Max(1, move.power + attackerAttack - defenderDefense);
+                    int raw = move.power + attackerAttack - defenderDefense;
+                    int damage = AdjustOutgoingDamage(raw, isHeroAttacker, defenderIsHero: !isHeroAttacker);
                     ApplyDamage(isHeroAttacker, damage);
                     PlayDamageFeedback(isHeroAttacker, damage);
                     AppendLog($"{attackerName} used {move.name}. {defenderName} took {damage} damage.");
@@ -240,7 +342,8 @@ namespace NordeusChallenge.Client.UI.Battle
                 }
                 case "Magic":
                 {
-                    int damage = move.power + attackerMagic;
+                    int raw = move.power + attackerMagic;
+                    int damage = AdjustOutgoingDamage(raw, isHeroAttacker, defenderIsHero: !isHeroAttacker);
                     ApplyDamage(isHeroAttacker, damage);
                     PlayDamageFeedback(isHeroAttacker, damage);
                     AppendLog($"{attackerName} used {move.name}. {defenderName} took {damage} damage.");
@@ -270,6 +373,13 @@ namespace NordeusChallenge.Client.UI.Battle
             {
                 ApplyEffect(move, isHeroAttacker);
             }
+        }
+
+        private int AdjustOutgoingDamage(int raw, bool attackerIsHero, bool defenderIsHero)
+        {
+            int increase = SumKind(attackerIsHero ? _heroEffects : _monsterEffects, "DamageIncrease");
+            int reduction = SumKind(defenderIsHero ? _heroEffects : _monsterEffects, "DamageReduction");
+            return Mathf.Max(1, raw + increase - reduction);
         }
 
         private void ApplyDamage(bool isHeroAttacker, int damage)
@@ -327,6 +437,34 @@ namespace NordeusChallenge.Client.UI.Battle
                 Amount = effect.amount,
                 TurnsRemaining = effect.durationTurns
             });
+        }
+
+        // ---------- Status ticking ----------
+
+        private void ApplyDoTTicks()
+        {
+            int heroDot = SumKind(_heroEffects, "Bleed") + SumKind(_heroEffects, "Poison");
+            int monsterDot = SumKind(_monsterEffects, "Bleed") + SumKind(_monsterEffects, "Poison");
+
+            if (heroDot > 0)
+            {
+                _heroHealth = Mathf.Max(0, _heroHealth - heroDot);
+                AppendLog($"{_hero.name} suffers {heroDot} damage from status effects.");
+                if (feedbackView != null && heroVisuals != null)
+                {
+                    feedbackView.PlayHit(heroVisuals, heroDot);
+                }
+            }
+
+            if (monsterDot > 0)
+            {
+                _monsterHealth = Mathf.Max(0, _monsterHealth - monsterDot);
+                AppendLog($"{_monster.name} suffers {monsterDot} damage from status effects.");
+                if (feedbackView != null && monsterVisuals != null)
+                {
+                    feedbackView.PlayHit(monsterVisuals, monsterDot);
+                }
+            }
         }
 
         private void TickEffectsAtEndOfTurn()
@@ -387,6 +525,32 @@ namespace NordeusChallenge.Client.UI.Battle
             return total;
         }
 
+        private static int SumKind(List<ActiveEffect> list, string kind)
+        {
+            int total = 0;
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i].Kind == kind)
+                {
+                    total += list[i].Amount;
+                }
+            }
+            return total;
+        }
+
+        private static List<string> CollectKinds(List<ActiveEffect> list)
+        {
+            var result = new List<string>(list.Count);
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (!string.IsNullOrEmpty(list[i].Kind))
+                {
+                    result.Add(list[i].Kind);
+                }
+            }
+            return result;
+        }
+
         // ---------- UI ----------
 
         private void RenderHero()
@@ -403,6 +567,8 @@ namespace NordeusChallenge.Client.UI.Battle
             }
             UpdateHeroStatsText();
             UpdateHeroHealthText();
+            UpdateHeroManaText();
+            UpdateHeroStatusEffectsText();
         }
 
         private void RenderMonster()
@@ -419,6 +585,8 @@ namespace NordeusChallenge.Client.UI.Battle
             }
             UpdateMonsterStatsText();
             UpdateMonsterHealthText();
+            UpdateMonsterManaText();
+            UpdateMonsterStatusEffectsText();
         }
 
         private void RefreshCombatantsUi()
@@ -427,6 +595,10 @@ namespace NordeusChallenge.Client.UI.Battle
             UpdateMonsterStatsText();
             UpdateHeroHealthText();
             UpdateMonsterHealthText();
+            UpdateHeroManaText();
+            UpdateMonsterManaText();
+            UpdateHeroStatusEffectsText();
+            UpdateMonsterStatusEffectsText();
             if (heroHpBar != null) heroHpBar.SetValue(_heroHealth, _heroMaxHealth);
             if (monsterHpBar != null) monsterHpBar.SetValue(_monsterHealth, _monsterMaxHealth);
         }
@@ -477,6 +649,47 @@ namespace NordeusChallenge.Client.UI.Battle
             }
         }
 
+        private void UpdateHeroManaText()
+        {
+            if (heroManaText == null) return;
+            heroManaText.text = _heroMaxMana > 0 ? $"MP {_heroMana} / {_heroMaxMana}" : string.Empty;
+        }
+
+        private void UpdateMonsterManaText()
+        {
+            if (monsterManaText == null) return;
+            monsterManaText.text = _monsterMaxMana > 0 ? $"MP {_monsterMana} / {_monsterMaxMana}" : string.Empty;
+        }
+
+        private void UpdateHeroStatusEffectsText()
+        {
+            if (heroStatusEffectsText != null)
+            {
+                heroStatusEffectsText.text = FormatEffects(_heroEffects);
+            }
+        }
+
+        private void UpdateMonsterStatusEffectsText()
+        {
+            if (monsterStatusEffectsText != null)
+            {
+                monsterStatusEffectsText.text = FormatEffects(_monsterEffects);
+            }
+        }
+
+        private static string FormatEffects(List<ActiveEffect> list)
+        {
+            if (list == null || list.Count == 0) return string.Empty;
+            var sb = new StringBuilder();
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (i > 0) sb.Append(", ");
+                sb.Append(list[i].Kind);
+                sb.Append('(').Append(list[i].TurnsRemaining).Append(')');
+            }
+            return sb.ToString();
+        }
+
         private void RenderMoves(HeroDto hero)
         {
             ClearMovesContainer();
@@ -507,11 +720,17 @@ namespace NordeusChallenge.Client.UI.Battle
             {
                 var view = _spawnedMoveButtons[i];
                 if (view == null) continue;
-                var button = view.GetComponent<Button>();
-                if (button != null)
-                {
-                    button.interactable = value;
-                }
+                view.SetInteractableExternal(value);
+            }
+        }
+
+        private void RefreshAffordability()
+        {
+            for (int i = 0; i < _spawnedMoveButtons.Count; i++)
+            {
+                var view = _spawnedMoveButtons[i];
+                if (view == null || view.Move == null) continue;
+                view.SetAffordable(CanAfford(view.Move, isHero: true));
             }
         }
 
@@ -606,6 +825,7 @@ namespace NordeusChallenge.Client.UI.Battle
             var result = new StatsDto
             {
                 maxHealth = baseStats.maxHealth,
+                maxMana = baseStats.maxMana,
                 attack = baseStats.attack,
                 defense = baseStats.defense,
                 magic = baseStats.magic
@@ -618,6 +838,7 @@ namespace NordeusChallenge.Client.UI.Battle
 
             int extraLevels = level - 1;
             result.maxHealth += rules.statGainPerLevel.maxHealth * extraLevels;
+            result.maxMana += rules.statGainPerLevel.maxMana * extraLevels;
             result.attack += rules.statGainPerLevel.attack * extraLevels;
             result.defense += rules.statGainPerLevel.defense * extraLevels;
             result.magic += rules.statGainPerLevel.magic * extraLevels;
@@ -692,6 +913,14 @@ namespace NordeusChallenge.Client.UI.Battle
             if (move.power > 0)
             {
                 sb.Append($", Pow {move.power}");
+            }
+            if (move.manaCost > 0)
+            {
+                sb.Append($", {move.manaCost} MP");
+            }
+            if (move.hpCost > 0)
+            {
+                sb.Append($", {move.hpCost} HP");
             }
             sb.Append(")");
             if (!string.IsNullOrEmpty(move.description))

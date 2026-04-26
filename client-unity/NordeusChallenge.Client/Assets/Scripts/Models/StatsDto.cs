@@ -6,6 +6,7 @@ namespace NordeusChallenge.Client.Models
     public class StatsDto
     {
         public int maxHealth;
+        public int maxMana;
         public int attack;
         public int defense;
         public int magic;

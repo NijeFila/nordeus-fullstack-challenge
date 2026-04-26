@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using NordeusChallenge.Client.Models;
 using TMPro;
 using UnityEngine;
@@ -11,11 +12,16 @@ namespace NordeusChallenge.Client.UI.Battle
     {
         [SerializeField] private Button button;
         [SerializeField] private TMP_Text label;
+        [SerializeField] private TMP_Text costLabel;
         [SerializeField] private Image icon;
 
         private MoveDto _move;
         private Action<MoveDto> _onClick;
         private Action<MoveDto> _onHover;
+        private bool _affordable = true;
+        private bool _externallyEnabled = true;
+
+        public MoveDto Move => _move;
 
         public void Bind(MoveDto move, Sprite iconSprite, Action<MoveDto> onClick, Action<MoveDto> onHover = null)
         {
@@ -28,6 +34,8 @@ namespace NordeusChallenge.Client.UI.Battle
                 label.text = move != null ? move.name : string.Empty;
             }
 
+            UpdateCostLabel();
+
             if (icon != null)
             {
                 icon.sprite = iconSprite;
@@ -39,6 +47,45 @@ namespace NordeusChallenge.Client.UI.Battle
                 button.onClick.RemoveAllListeners();
                 button.onClick.AddListener(OnClicked);
             }
+        }
+
+        public void SetAffordable(bool affordable)
+        {
+            _affordable = affordable;
+            ApplyInteractable();
+        }
+
+        public void SetInteractableExternal(bool enabled)
+        {
+            _externallyEnabled = enabled;
+            ApplyInteractable();
+        }
+
+        private void ApplyInteractable()
+        {
+            if (button != null)
+            {
+                button.interactable = _externallyEnabled && _affordable;
+            }
+        }
+
+        private void UpdateCostLabel()
+        {
+            if (costLabel == null) return;
+            if (_move == null)
+            {
+                costLabel.text = string.Empty;
+                return;
+            }
+
+            var sb = new StringBuilder();
+            if (_move.manaCost > 0) sb.Append($"{_move.manaCost} MP");
+            if (_move.hpCost > 0)
+            {
+                if (sb.Length > 0) sb.Append("  ");
+                sb.Append($"{_move.hpCost} HP");
+            }
+            costLabel.text = sb.ToString();
         }
 
         public void OnPointerEnter(PointerEventData eventData)
