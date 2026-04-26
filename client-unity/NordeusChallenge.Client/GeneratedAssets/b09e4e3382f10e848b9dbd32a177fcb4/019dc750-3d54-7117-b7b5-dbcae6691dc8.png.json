@@ -1,0 +1,27 @@
+{
+    "asset": "b09e4e3382f10e848b9dbd32a177fcb4",
+    "fileName": "019dc750-3d54-7117-b7b5-dbcae6691dc8.png",
+    "prompt": "A dark, atmospheric fantasy dungeon background for a main menu of a roguelike game, pixel art style, high detail, 1920x1080 resolution, epic lighting, torches on walls",
+    "negativePrompt": "",
+    "model": "2e08f181-6547-40b4-b51e-f6cc1fd63500",
+    "modelName": "Gemini 3.0 Pro",
+    "customSeed": -1,
+    "w3CTraceId": "77781b21ddbe6948dae46e0631a601ac",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

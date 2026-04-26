@@ -34,6 +34,7 @@ No parameters. No body.
     "xp": 0,
     "stats": {
       "maxHealth": 100,
+      "maxMana": 20,
       "attack": 20,
       "defense": 15,
       "magic": 20
@@ -54,6 +55,7 @@ No parameters. No body.
       "name": "Goblin Warrior",
       "baseStats": {
         "maxHealth": 60,
+        "maxMana": 10,
         "attack": 12,
         "defense": 8,
         "magic": 4
@@ -65,11 +67,12 @@ No parameters. No body.
       "name": "Witch",
       "baseStats": {
         "maxHealth": 80,
+        "maxMana": 25,
         "attack": 8,
         "defense": 8,
         "magic": 18
       },
-      "moves": ["shadow_bolt", "drain_life", "curse", "dark_pact"]
+      "moves": ["shadow_bolt", "drain_life", "curse", "dark_pact", "bleeding_curse"]
     }
   ],
   "moves": [
@@ -85,6 +88,7 @@ No parameters. No body.
       "name": "Shield Up",
       "category": "Buff",
       "power": 0,
+      "manaCost": 2,
       "effect": {
         "kind": "BuffDefense",
         "amount": 5,
@@ -92,6 +96,20 @@ No parameters. No body.
         "target": "Self"
       },
       "description": "Raises the Knight's Defense for 2 turns."
+    },
+    {
+      "id": "rend",
+      "name": "Rend",
+      "category": "Physical",
+      "power": 12,
+      "manaCost": 2,
+      "effect": {
+        "kind": "Bleed",
+        "amount": 4,
+        "durationTurns": 2,
+        "target": "Opponent"
+      },
+      "description": "A tearing strike that leaves the foe bleeding."
     },
     {
       "id": "second_wind",
@@ -120,6 +138,7 @@ No parameters. No body.
     "xpPerLevel": 100,
     "statGainPerLevel": {
       "maxHealth": 10,
+      "maxMana": 0,
       "attack": 2,
       "defense": 2,
       "magic": 2
@@ -134,7 +153,8 @@ No parameters. No body.
 - The example above shows a subset of monsters and moves for brevity. The real response includes every monster referenced by `encounters` and every move referenced by the hero or any monster.
 - `encounters` is ordered; the client advances through it one battle at a time.
 - `rules` carries the tunable numbers so the client and server agree on formulas without hard-coding them on the client.
-- Fields with a `null` value (e.g. `effect` on a pure damage move) are omitted from the JSON response.
+- Fields with a `null` value (e.g. `effect`, `manaCost`, or `hpCost` on a free pure-damage move) are omitted from the JSON response.
+- `manaCost` and `hpCost` on a `move` are optional resource costs paid by the caster. A move without either field is free. `maxMana = 0` on an entity simply means it has no mana resource and can only use moves with no `manaCost`.
 
 ---
 
@@ -150,19 +170,22 @@ By the client at the start of each enemy turn during a battle.
 
 Query parameters (preferred for a GET):
 
-| Param              | Type   | Description                                            |
-|--------------------|--------|--------------------------------------------------------|
-| `monsterId`        | string | Id from the run config (e.g. `goblin_warrior`).        |
-| `monsterLevel`     | int    | Level of the monster in the current encounter.         |
-| `monsterHealth`    | int    | Current HP.                                            |
-| `monsterMaxHealth` | int    | Max HP.                                                |
-| `heroHealth`       | int    | Current hero HP.                                       |
-| `heroMaxHealth`    | int    | Max hero HP.                                           |
-| `turn`             | int    | Battle turn counter, starting at 1.                    |
+| Param              | Type   | Required | Description                                                                                                  |
+|--------------------|--------|----------|--------------------------------------------------------------------------------------------------------------|
+| `monsterId`        | string | yes      | Id from the run config (e.g. `goblin_warrior`).                                                              |
+| `monsterLevel`     | int    | yes      | Level of the monster in the current encounter.                                                               |
+| `monsterHealth`    | int    | yes      | Current HP.                                                                                                  |
+| `monsterMaxHealth` | int    | yes      | Max HP.                                                                                                      |
+| `heroHealth`       | int    | yes      | Current hero HP.                                                                                             |
+| `heroMaxHealth`    | int    | yes      | Max hero HP.                                                                                                 |
+| `turn`             | int    | yes      | Battle turn counter, starting at 1.                                                                          |
+| `monsterMana`      | int    | no       | Current monster mana. If omitted, the server does not enforce mana costs at all (older clients keep working).|
+| `monsterEffects`   | string | no       | Comma-separated list of `kind` values currently active on the monster (e.g. `BuffAttack,Bleed`).             |
+| `heroEffects`      | string | no       | Comma-separated list of `kind` values currently active on the hero.                                          |
 
 Example:
 ```
-GET /battle/next-move?monsterId=witch&monsterLevel=4&monsterHealth=20&monsterMaxHealth=80&heroHealth=70&heroMaxHealth=100&turn=3
+GET /battle/next-move?monsterId=witch&monsterLevel=4&monsterHealth=20&monsterMaxHealth=80&heroHealth=70&heroMaxHealth=100&turn=3&monsterMana=22&monsterEffects=BuffMagic&heroEffects=BuffDefense
 ```
 
 **Response (200 OK)**
@@ -178,6 +201,7 @@ GET /battle/next-move?monsterId=witch&monsterLevel=4&monsterHealth=20&monsterMax
 
 **Notes**
 - The server selects from the monster's declared `moves` in the run config. No move is returned that the monster does not own.
+- The optional `monsterMana`, `monsterEffects`, and `heroEffects` parameters let the bot filter unaffordable moves and avoid re-applying buffs and debuffs already active on the relevant target. Older clients that omit them still get a valid (if shallower) selection.
 - Selection logic is intentionally simple for the prototype (see `battle-rules.md`), but stays server-side so it can evolve without client changes.
 
 ---

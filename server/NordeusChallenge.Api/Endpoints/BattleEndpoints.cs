@@ -14,6 +14,9 @@ public static class BattleEndpoints
             int? monsterMaxHealth,
             int? heroHealth,
             int? heroMaxHealth,
+            int? monsterMana,
+            string? monsterEffects,
+            string? heroEffects,
             int? turn,
             BattleService battleService) =>
         {
@@ -36,7 +39,12 @@ public static class BattleEndpoints
             var moveId = battleService.SelectNextMove(
                 monsterId,
                 monsterHealth.Value,
-                monsterMaxHealth.Value);
+                monsterMaxHealth.Value,
+                heroHealth.Value,
+                heroMaxHealth.Value,
+                monsterMana,
+                ParseEffects(monsterEffects),
+                ParseEffects(heroEffects));
 
             if (moveId is null)
             {
@@ -46,5 +54,17 @@ public static class BattleEndpoints
             return Results.Ok(new NextMoveResponse { MoveId = moveId });
         })
         .WithName("GetNextMove");
+    }
+
+    private static IReadOnlyCollection<string> ParseEffects(string? csv)
+    {
+        if (string.IsNullOrWhiteSpace(csv))
+        {
+            return Array.Empty<string>();
+        }
+
+        return csv
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToArray();
     }
 }

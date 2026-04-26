@@ -35,6 +35,15 @@ public class RunConfigService
             "second_wind"
         };
 
+        // Pool also includes a few moves the player can swap in via Move
+        // Management to demonstrate the new effect kinds.
+        var pool = new List<string>(equipped)
+        {
+            "power_stance",
+            "iron_skin",
+            "rend"
+        };
+
         return new Hero
         {
             Id = "knight",
@@ -44,12 +53,13 @@ public class RunConfigService
             Stats = new Stats
             {
                 MaxHealth = 100,
+                MaxMana = 20,
                 Attack = 20,
                 Defense = 15,
                 Magic = 20
             },
-            EquippedMoves = new List<string>(equipped),
-            LearnedMovePool = new List<string>(equipped)
+            EquippedMoves = equipped,
+            LearnedMovePool = pool
         };
     }
 
@@ -68,35 +78,35 @@ public class RunConfigService
         {
             Id = "goblin_warrior",
             Name = "Goblin Warrior",
-            BaseStats = new Stats { MaxHealth = 60, Attack = 12, Defense = 8, Magic = 4 },
+            BaseStats = new Stats { MaxHealth = 60, MaxMana = 10, Attack = 12, Defense = 8, Magic = 4 },
             Moves = new List<string> { "rusty_blade", "dirty_kick", "frenzy", "headbutt" }
         },
         new Monster
         {
             Id = "goblin_mage",
             Name = "Goblin Mage",
-            BaseStats = new Stats { MaxHealth = 55, Attack = 6, Defense = 6, Magic = 14 },
+            BaseStats = new Stats { MaxHealth = 55, MaxMana = 25, Attack = 6, Defense = 6, Magic = 14 },
             Moves = new List<string> { "firebolt", "arcane_surge", "mana_drain", "hex_shield" }
         },
         new Monster
         {
             Id = "giant_spider",
             Name = "Giant Spider",
-            BaseStats = new Stats { MaxHealth = 75, Attack = 14, Defense = 10, Magic = 4 },
-            Moves = new List<string> { "bite", "web_throw", "pounce", "skitter" }
+            BaseStats = new Stats { MaxHealth = 75, MaxMana = 10, Attack = 14, Defense = 10, Magic = 4 },
+            Moves = new List<string> { "bite", "web_throw", "pounce", "skitter", "venom_bite" }
         },
         new Monster
         {
             Id = "witch",
             Name = "Witch",
-            BaseStats = new Stats { MaxHealth = 80, Attack = 8, Defense = 8, Magic = 18 },
-            Moves = new List<string> { "shadow_bolt", "drain_life", "curse", "dark_pact" }
+            BaseStats = new Stats { MaxHealth = 80, MaxMana = 25, Attack = 8, Defense = 8, Magic = 18 },
+            Moves = new List<string> { "shadow_bolt", "drain_life", "curse", "dark_pact", "bleeding_curse" }
         },
         new Monster
         {
             Id = "dragon",
             Name = "Dragon",
-            BaseStats = new Stats { MaxHealth = 120, Attack = 18, Defense = 14, Magic = 16 },
+            BaseStats = new Stats { MaxHealth = 120, MaxMana = 30, Attack = 18, Defense = 14, Magic = 16 },
             Moves = new List<string> { "flame_breath", "claw_swipe", "intimidate", "dragon_scales" }
         }
     };
@@ -119,6 +129,7 @@ public class RunConfigService
             Name = "Shield Up",
             Category = "Buff",
             Power = 0,
+            ManaCost = 2,
             Effect = new MoveEffect
             {
                 Kind = "BuffDefense",
@@ -134,6 +145,7 @@ public class RunConfigService
             Name = "Battle Cry",
             Category = "Buff",
             Power = 0,
+            ManaCost = 2,
             Effect = new MoveEffect
             {
                 Kind = "BuffAttack",
@@ -149,6 +161,7 @@ public class RunConfigService
             Name = "Second Wind",
             Category = "Heal",
             Power = 0,
+            ManaCost = 4,
             Effect = new MoveEffect
             {
                 Kind = "Heal",
@@ -157,6 +170,54 @@ public class RunConfigService
                 Target = "Self"
             },
             Description = "Restores a portion of the Knight's HP."
+        },
+        new Move
+        {
+            Id = "power_stance",
+            Name = "Power Stance",
+            Category = "Buff",
+            Power = 0,
+            ManaCost = 3,
+            Effect = new MoveEffect
+            {
+                Kind = "DamageIncrease",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Self"
+            },
+            Description = "Channels focus, increasing damage dealt for 2 turns."
+        },
+        new Move
+        {
+            Id = "iron_skin",
+            Name = "Iron Skin",
+            Category = "Buff",
+            Power = 0,
+            ManaCost = 3,
+            Effect = new MoveEffect
+            {
+                Kind = "DamageReduction",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Self"
+            },
+            Description = "Hardens the body, reducing incoming damage for 2 turns."
+        },
+        new Move
+        {
+            Id = "rend",
+            Name = "Rend",
+            Category = "Physical",
+            Power = 12,
+            ManaCost = 2,
+            Effect = new MoveEffect
+            {
+                Kind = "Bleed",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Opponent"
+            },
+            Description = "A tearing strike that leaves the foe bleeding."
         },
 
         // ---------- Goblin Warrior ----------
@@ -190,6 +251,7 @@ public class RunConfigService
             Name = "Frenzy",
             Category = "Buff",
             Power = 0,
+            ManaCost = 2,
             Effect = new MoveEffect
             {
                 Kind = "BuffAttack",
@@ -216,6 +278,7 @@ public class RunConfigService
             Name = "Firebolt",
             Category = "Magic",
             Power = 18,
+            ManaCost = 2,
             Effect = null,
             Description = "A small bolt of fire."
         },
@@ -225,6 +288,7 @@ public class RunConfigService
             Name = "Arcane Surge",
             Category = "Magic",
             Power = 22,
+            ManaCost = 4,
             Effect = null,
             Description = "A burst of raw arcane energy."
         },
@@ -249,6 +313,7 @@ public class RunConfigService
             Name = "Hex Shield",
             Category = "Buff",
             Power = 0,
+            ManaCost = 2,
             Effect = new MoveEffect
             {
                 Kind = "BuffDefense",
@@ -267,7 +332,7 @@ public class RunConfigService
             Category = "Physical",
             Power = 16,
             Effect = null,
-            Description = "A sharp venomous bite."
+            Description = "A sharp bite."
         },
         new Move
         {
@@ -308,6 +373,22 @@ public class RunConfigService
             },
             Description = "Darts around erratically, raising Defense for 2 turns."
         },
+        new Move
+        {
+            Id = "venom_bite",
+            Name = "Venom Bite",
+            Category = "Physical",
+            Power = 12,
+            ManaCost = 2,
+            Effect = new MoveEffect
+            {
+                Kind = "Poison",
+                Amount = 3,
+                DurationTurns = 2,
+                Target = "Opponent"
+            },
+            Description = "A venomous bite that poisons the target for 2 turns."
+        },
 
         // ---------- Witch ----------
         new Move
@@ -316,6 +397,7 @@ public class RunConfigService
             Name = "Shadow Bolt",
             Category = "Magic",
             Power = 20,
+            ManaCost = 2,
             Effect = null,
             Description = "A bolt of shadow energy."
         },
@@ -325,6 +407,7 @@ public class RunConfigService
             Name = "Drain Life",
             Category = "Heal",
             Power = 0,
+            ManaCost = 4,
             Effect = new MoveEffect
             {
                 Kind = "Heal",
@@ -340,6 +423,7 @@ public class RunConfigService
             Name = "Curse",
             Category = "Debuff",
             Power = 0,
+            ManaCost = 2,
             Effect = new MoveEffect
             {
                 Kind = "DebuffDefense",
@@ -355,6 +439,7 @@ public class RunConfigService
             Name = "Dark Pact",
             Category = "Buff",
             Power = 0,
+            HpCost = 5,
             Effect = new MoveEffect
             {
                 Kind = "BuffMagic",
@@ -362,7 +447,23 @@ public class RunConfigService
                 DurationTurns = 2,
                 Target = "Self"
             },
-            Description = "A dark bargain that raises Magic for 2 turns."
+            Description = "A dark bargain that pays HP to raise Magic for 2 turns."
+        },
+        new Move
+        {
+            Id = "bleeding_curse",
+            Name = "Bleeding Curse",
+            Category = "Magic",
+            Power = 8,
+            ManaCost = 3,
+            Effect = new MoveEffect
+            {
+                Kind = "Bleed",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Opponent"
+            },
+            Description = "A hex that opens unseen wounds for 2 turns."
         },
 
         // ---------- Dragon ----------
@@ -372,6 +473,7 @@ public class RunConfigService
             Name = "Flame Breath",
             Category = "Magic",
             Power = 24,
+            ManaCost = 6,
             Effect = null,
             Description = "A powerful cone of fire."
         },
@@ -405,6 +507,7 @@ public class RunConfigService
             Name = "Dragon Scales",
             Category = "Buff",
             Power = 0,
+            ManaCost = 3,
             Effect = new MoveEffect
             {
                 Kind = "BuffDefense",
@@ -424,6 +527,7 @@ public class RunConfigService
         StatGainPerLevel = new Stats
         {
             MaxHealth = 10,
+            MaxMana = 0,
             Attack = 2,
             Defense = 2,
             Magic = 2

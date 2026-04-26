@@ -8,6 +8,7 @@ Role: the four numeric attributes that drive combat.
 
 Fields:
 - `maxHealth` (int) — hit points ceiling.
+- `maxMana` (int) — mana pool ceiling. `0` means the entity has no mana resource.
 - `attack` (int) — scales physical damage dealt.
 - `defense` (int) — reduces incoming physical damage.
 - `magic` (int) — scales magic damage dealt and healing.
@@ -23,6 +24,8 @@ Fields:
 - `name` (string) — display name.
 - `category` (enum) — `Physical`, `Magic`, `Buff`, `Debuff`, `Heal`.
 - `power` (int) — base power used by the damage or heal formula. `0` for pure buffs/debuffs.
+- `manaCost` (int | null) — optional mana cost paid by the caster on use. Omitted when the move is free.
+- `hpCost` (int | null) — optional HP cost paid by the caster on use. Omitted when the move is free. The caster cannot be reduced below `1` HP by paying this cost.
 - `effect` (MoveEffect | null) — optional secondary effect applied alongside or instead of damage.
 - `description` (string) — short UI text.
 
@@ -31,9 +34,13 @@ Fields:
 Role: a structured description of what a move does beyond its base damage. Kept intentionally narrow for the prototype.
 
 Fields:
-- `kind` (enum) — `BuffAttack`, `BuffDefense`, `BuffMagic`, `DebuffAttack`, `DebuffDefense`, `DebuffMagic`, `Heal`.
-- `amount` (int) — stat delta for buffs/debuffs, or flat heal amount for `Heal`.
-- `durationTurns` (int) — for buffs/debuffs, how many turns the effect remains active. Ignored for `Heal`.
+- `kind` (enum) — one of:
+  - `BuffAttack`, `BuffDefense`, `BuffMagic`, `DebuffAttack`, `DebuffDefense`, `DebuffMagic` — stat-modifier effects.
+  - `Heal` — flat heal applied immediately.
+  - `Bleed`, `Poison` — damage-over-time on the target; `amount` is dealt at the end of each turn the effect is active.
+  - `DamageIncrease`, `DamageReduction` — flat modifiers applied after the base damage formula. `DamageIncrease` adds `amount` to outgoing damage; `DamageReduction` subtracts `amount` from incoming damage. Both clamp the final damage to a minimum of `1`.
+- `amount` (int) — meaning depends on `kind` (stat delta, heal amount, per-turn DoT damage, or flat damage delta).
+- `durationTurns` (int) — for everything except `Heal`, how many turns the effect remains active.
 - `target` (enum) — `Self` or `Opponent`.
 
 Heals are treated as an effect rather than damage so the same `Move` shape covers every action.
@@ -45,7 +52,7 @@ Role: a buff or debuff currently applied to a battling entity. Exists only durin
 Fields:
 - `sourceMoveId` (string) — which move applied it (for UI and debugging).
 - `kind` (enum) — same enum as `MoveEffect.kind` (excluding `Heal`).
-- `amount` (int) — signed delta applied to the affected stat.
+- `amount` (int) — signed delta applied to the affected stat, per-turn DoT damage, or flat damage delta, depending on `kind`.
 - `turnsRemaining` (int) — decremented at the end of each turn; removed when it reaches 0.
 
 A battling entity holds a list of these. Effective stats during a turn are base stats plus the sum of matching active effects.
@@ -118,13 +125,17 @@ Fields:
 - `hero`:
   - `stats` (Stats) — current base stats.
   - `health` (int) — current HP.
+  - `mana` (int) — current MP.
   - `activeEffects` (ActiveStatusEffect[])
 - `monster`:
   - `monsterId` (string)
   - `level` (int)
   - `stats` (Stats) — scaled stats.
   - `health` (int)
+  - `mana` (int) — current MP.
   - `activeEffects` (ActiveStatusEffect[])
+
+Both combatants start each battle at `stats.maxHealth` and `stats.maxMana`. Mana, like HP, does not carry over between encounters.
 
 ## BattleResult
 

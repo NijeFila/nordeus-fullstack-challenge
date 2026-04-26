@@ -1,0 +1,27 @@
+{
+    "asset": "926bb6db655722344bef2bdb4c510c3d",
+    "fileName": "019dc752-6426-7331-8577-98dadcb66ce0.png",
+    "prompt": "A pixel art fantasy UI button frame, iron and stone texture, 9-sliceable, square shape, ornate corners, transparent background",
+    "negativePrompt": "",
+    "model": "67bfd488-3588-4076-9d7b-14710382cf78",
+    "modelName": "Game UI Elements (Flux)",
+    "customSeed": -1,
+    "w3CTraceId": "9fa7d990749f57be0904235e33b21dee",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

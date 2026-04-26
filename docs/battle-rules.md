@@ -4,11 +4,12 @@ The rules the prototype follows. Formulas are kept simple, explicit, and integer
 
 ## Turn Flow
 
-1. A battle begins with both the hero and the monster at full HP. Hero HP is reset to `stats.maxHealth` at the start of every encounter; there is no HP carry-over between battles.
+1. A battle begins with both the hero and the monster at full HP and full mana. Hero HP and mana are reset to `stats.maxHealth` and `stats.maxMana` at the start of every encounter; there is no HP or mana carry-over between battles.
 2. Each turn has two phases, resolved in order:
    1. **Hero phase** — the player picks one of the hero's equipped moves. The move resolves immediately.
    2. **Monster phase** — the client calls `GET /battle/next-move` with the current state and resolves the returned move.
 3. At the end of each turn:
+   - Damage-over-time effects (`Bleed`, `Poison`) tick on each affected combatant: `health -= amount`, clamped to `0`.
    - Durations on all `ActiveStatusEffect`s are decremented by 1.
    - Effects that reach `0` are removed.
    - The turn counter is incremented.
@@ -25,6 +26,16 @@ effective(stat) = baseStat + sum(amount of active effects targeting that stat)
 ```
 
 Effective stats are clamped to a minimum of `1` to avoid divide-by-zero or negative scaling.
+
+## Resource Costs
+
+Some moves declare a `manaCost` and / or `hpCost`. When such a move is used:
+
+- The cost is paid by the caster the moment the move resolves.
+- A move is not selectable if the caster cannot pay both costs in full. `manaCost` must be `<= caster.mana`. `hpCost` must be strictly less than `caster.health` so the caster cannot kill themselves casting it.
+- Mana paid is subtracted: `caster.mana = caster.mana - manaCost`.
+- HP paid is subtracted directly and bypasses Defense and `DamageReduction`.
+- Mana never regenerates mid-battle in the prototype; both sides must spend their pool deliberately.
 
 ## Damage
 
@@ -45,7 +56,13 @@ damage = power + attacker.effectiveMagic
 
 Magic damage ignores Defense entirely.
 
-Damage is applied as `defender.health = max(0, defender.health - damage)`.
+Before being applied, damage is adjusted by any active `DamageIncrease` on the attacker and `DamageReduction` on the defender:
+
+```
+finalDamage = max(1, damage + sum(attacker.DamageIncrease) - sum(defender.DamageReduction))
+```
+
+`finalDamage` is then applied as `defender.health = max(0, defender.health - finalDamage)`.
 
 ## Healing
 
@@ -66,6 +83,14 @@ Healing cannot exceed `maxHealth`. A `Heal` move does not deal damage even if it
 - Effects tick down at the end of the turn in which they were applied.
 
 Result: a buff or debuff cast on turn N is active for turn N and turn N+1, then expires.
+
+## Damage-over-time (Bleed, Poison)
+
+`Bleed` and `Poison` are status effects that sit on the target as `ActiveStatusEffect`s and deal `amount` damage at the end of every turn while active. They use the same duration mechanic as buffs and ignore Defense and `DamageReduction`. Multiple sources of the same kind do not stack on the same target — re-application refreshes duration but does not double the per-turn tick.
+
+## Flat damage modifiers (DamageIncrease, DamageReduction)
+
+`DamageIncrease` and `DamageReduction` are buff-shaped effects that do not change a base stat. Instead, they adjust the final damage of a Physical or Magic move at the moment it resolves (see the Damage section). They follow the same duration rules as other buffs.
 
 ## Win / Loss Conditions
 
@@ -99,12 +124,15 @@ A monster in an encounter with `level = L` is instantiated by applying `(L - 1)`
 
 ## Opponent Move Selection
 
-The server's `GET /battle/next-move` returns a move id drawn from the monster's declared move list. The prototype uses a simple selection rule:
+The server's `GET /battle/next-move` returns a move id drawn from the monster's declared move list. The prototype uses a small layered rule, applied in order:
 
-- If the monster has a healing move available and its `monsterHealth / monsterMaxHealth < 0.35`, return the healing move.
-- Otherwise, return a uniformly random move from the monster's list.
+1. **Affordability filter.** Drop any move whose `manaCost` exceeds `monsterMana`, or whose `hpCost` would reduce the monster to `0` HP or below.
+2. **Heal when low.** If `monsterHealth / monsterMaxHealth < 0.35` and an affordable Heal move is available, use it.
+3. **Finishing blow.** If `heroHealth / heroMaxHealth < 0.25`, pick the highest-`power` affordable Physical or Magic move.
+4. **Skip redundant effects.** From what's left, drop moves whose `effect.kind` is already active on the relevant target (a `Self` buff already on the monster, or an `Opponent` debuff/DoT already on the hero). Active effects come from the optional `monsterEffects` and `heroEffects` query parameters.
+5. **Mild offensive bias.** Among the remaining moves, pick a damaging move with probability ~0.7, otherwise pick uniformly from all remaining options.
 
-Selection is deterministic only in the sense that it respects the rule above; the random fallback is intentionally non-deterministic so repeat battles feel different.
+Selection is deterministic only in the sense that it respects this layered rule; the random fallback is intentionally non-deterministic so repeat battles feel different. If the optional state parameters are omitted, the corresponding step degrades gracefully — an unknown `monsterMana` simply skips the affordability check so older clients still get a valid move.
 
 ## Prototype Simplifications
 

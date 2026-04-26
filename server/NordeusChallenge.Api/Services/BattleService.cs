@@ -2,11 +2,15 @@ using NordeusChallenge.Api.Models;
 
 namespace NordeusChallenge.Api.Services;
 
-// Picks the monster's next move. Selection is intentionally simple:
-// heal when low, otherwise uniform random from the monster's move list.
+// Picks the monster's next move. The selection is intentionally shallow,
+// but takes battle state into account: resource costs, current HP/mana,
+// active status effects on both sides, and whether a finishing blow is
+// in reach.
 public class BattleService
 {
-    private const double LowHealthRatio = 0.35;
+    private const double LowSelfHealthRatio = 0.35;
+    private const double FinishHeroHealthRatio = 0.25;
+    private const double DamagePreferenceChance = 0.7;
 
     private readonly RunConfigService _runConfigService;
     private readonly Random _random = new();
@@ -19,7 +23,12 @@ public class BattleService
     public string? SelectNextMove(
         string monsterId,
         int monsterHealth,
-        int monsterMaxHealth)
+        int monsterMaxHealth,
+        int heroHealth,
+        int heroMaxHealth,
+        int? monsterMana,
+        IReadOnlyCollection<string> monsterActiveEffects,
+        IReadOnlyCollection<string> heroActiveEffects)
     {
         var config = _runConfigService.GetRunConfig();
 
@@ -38,20 +47,95 @@ public class BattleService
             return null;
         }
 
+        // 1. Filter to moves the monster can actually pay for. HP cost must
+        //    leave the monster alive after spending; mana cost must fit.
+        //    If monsterMana is not supplied, the bot does not enforce mana
+        //    cost — older clients that don't track mana keep working.
+        var affordable = availableMoves
+            .Where(m => (monsterMana is null || (m.ManaCost ?? 0) <= monsterMana)
+                     && (m.HpCost ?? 0) < monsterHealth)
+            .ToList();
+
+        if (affordable.Count == 0)
+        {
+            // Hard fallback: take any free move; otherwise the cheapest one.
+            var free = availableMoves.FirstOrDefault(m =>
+                (m.ManaCost ?? 0) == 0 && (m.HpCost ?? 0) == 0);
+            return (free ?? availableMoves[0]).Id;
+        }
+
+        // 2. Heal when low — only if affordable.
         if (monsterMaxHealth > 0)
         {
             double ratio = (double)monsterHealth / monsterMaxHealth;
-            if (ratio < LowHealthRatio)
+            if (ratio < LowSelfHealthRatio)
             {
-                var healMove = availableMoves.FirstOrDefault(m => m.Category == "Heal");
-                if (healMove is not null)
+                var heal = affordable.FirstOrDefault(IsHealMove);
+                if (heal is not null)
                 {
-                    return healMove.Id;
+                    return heal.Id;
                 }
             }
         }
 
-        var pick = availableMoves[_random.Next(availableMoves.Count)];
-        return pick.Id;
+        // 3. Reach for a finishing blow when the hero is nearly down.
+        if (heroMaxHealth > 0)
+        {
+            double heroRatio = (double)heroHealth / heroMaxHealth;
+            if (heroRatio < FinishHeroHealthRatio)
+            {
+                var finisher = affordable
+                    .Where(IsDamagingMove)
+                    .OrderByDescending(m => m.Power)
+                    .FirstOrDefault();
+                if (finisher is not null)
+                {
+                    return finisher.Id;
+                }
+            }
+        }
+
+        // 4. Don't waste a turn re-applying a buff or debuff that is already
+        //    on the relevant target.
+        var meaningful = affordable
+            .Where(m => !IsRedundantEffect(m, monsterActiveEffects, heroActiveEffects))
+            .ToList();
+        if (meaningful.Count == 0)
+        {
+            meaningful = affordable;
+        }
+
+        // 5. Mild bias toward damaging moves; otherwise random across the rest.
+        var damaging = meaningful.Where(IsDamagingMove).ToList();
+        var pool = damaging.Count > 0 && _random.NextDouble() < DamagePreferenceChance
+            ? damaging
+            : meaningful;
+
+        return pool[_random.Next(pool.Count)].Id;
+    }
+
+    private static bool IsHealMove(Move move) =>
+        move.Category == "Heal" || move.Effect?.Kind == "Heal";
+
+    private static bool IsDamagingMove(Move move) =>
+        move.Category == "Physical" || move.Category == "Magic";
+
+    private static bool IsRedundantEffect(
+        Move move,
+        IReadOnlyCollection<string> selfEffects,
+        IReadOnlyCollection<string> opponentEffects)
+    {
+        var effect = move.Effect;
+        if (effect is null || effect.Kind == "Heal")
+        {
+            return false;
+        }
+
+        return effect.Target switch
+        {
+            "Self"     => selfEffects.Contains(effect.Kind),
+            "Opponent" => opponentEffects.Contains(effect.Kind),
+            _ => false
+        };
     }
 }
