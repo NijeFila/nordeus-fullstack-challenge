@@ -15,6 +15,16 @@ namespace NordeusChallenge.Client.Runtime
         public string LearnedMoveId;
         public string LearnedMoveName;
 
+        // Item drop info (set when the defeated monster has at least one entry
+        // in itemDrops). DroppedItemId / DroppedItemName describe the rolled
+        // item; ItemAddedToInventory is false if the player already owned it.
+        public bool ItemDropped;
+        public string DroppedItemId;
+        public string DroppedItemName;
+        public bool ItemAddedToInventory;
+        public bool ItemAlreadyOwned;
+        public bool ItemAutoEquipped;
+
         public bool UnlockedNextEncounter;
         public int NextUnlockedIndex = -1;
     }

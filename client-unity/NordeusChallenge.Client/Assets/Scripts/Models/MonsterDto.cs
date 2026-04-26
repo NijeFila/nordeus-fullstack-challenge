@@ -10,5 +10,8 @@ namespace NordeusChallenge.Client.Models
         public string name;
         public StatsDto baseStats;
         public List<string> moves;
+
+        // Item ids this monster can drop on victory. Empty/null means no drops.
+        public List<string> itemDrops;
     }
 }

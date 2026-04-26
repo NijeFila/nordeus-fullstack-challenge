@@ -65,6 +65,9 @@ namespace NordeusChallenge.Client.UI.Battle
         private EncounterDto _encounter;
         private BattleEnvironmentDto _environment;
         private StatsDto _monsterScaledStats;
+        // Snapshot of hero stats for this battle including equipped item bonuses.
+        // Permanent hero stats are never mutated by equipping items.
+        private StatsDto _heroBattleStats;
 
         private int _heroHealth;
         private int _heroMaxHealth;
@@ -125,11 +128,12 @@ namespace NordeusChallenge.Client.UI.Battle
             _turn = 1;
             _environment = GameSession.Instance.GetEnvironmentById(_encounter.environmentId);
             _monsterScaledStats = ScaleMonsterStats(_monster.baseStats, _encounter.level, run.rules);
+            _heroBattleStats = GameSession.Instance.GetHeroStatsWithItemBonuses();
             RenderEnvironment();
 
-            _heroMaxHealth = _hero.stats.maxHealth;
+            _heroMaxHealth = _heroBattleStats.maxHealth;
             _heroHealth = _heroMaxHealth;
-            _heroMaxMana = _hero.stats.maxMana;
+            _heroMaxMana = _heroBattleStats.maxMana;
             _heroMana = _heroMaxMana;
 
             _monsterMaxHealth = _monsterScaledStats.maxHealth;
@@ -525,21 +529,21 @@ namespace NordeusChallenge.Client.UI.Battle
 
         private int EffectiveAttack(bool isHero)
         {
-            int baseValue = isHero ? _hero.stats.attack : _monsterScaledStats.attack;
+            int baseValue = isHero ? _heroBattleStats.attack : _monsterScaledStats.attack;
             int delta = SumEffectsFor(isHero ? _heroEffects : _monsterEffects, "BuffAttack", "DebuffAttack");
             return Mathf.Max(1, baseValue + delta);
         }
 
         private int EffectiveDefense(bool isHero)
         {
-            int baseValue = isHero ? _hero.stats.defense : _monsterScaledStats.defense;
+            int baseValue = isHero ? _heroBattleStats.defense : _monsterScaledStats.defense;
             int delta = SumEffectsFor(isHero ? _heroEffects : _monsterEffects, "BuffDefense", "DebuffDefense");
             return Mathf.Max(1, baseValue + delta);
         }
 
         private int EffectiveMagic(bool isHero)
         {
-            int baseValue = isHero ? _hero.stats.magic : _monsterScaledStats.magic;
+            int baseValue = isHero ? _heroBattleStats.magic : _monsterScaledStats.magic;
             int delta = SumEffectsFor(isHero ? _heroEffects : _monsterEffects, "BuffMagic", "DebuffMagic");
             return Mathf.Max(1, baseValue + delta);
         }
@@ -861,6 +865,18 @@ namespace NordeusChallenge.Client.UI.Battle
                         string equippedNote = reward.AutoEquipped ? " (auto-equipped)" : "";
                         AppendLog($"Learned {reward.LearnedMoveName}.{equippedNote}");
                     }
+                    if (reward.ItemDropped)
+                    {
+                        if (reward.ItemAddedToInventory)
+                        {
+                            string equippedNote = reward.ItemAutoEquipped ? " (auto-equipped)" : "";
+                            AppendLog($"Found {reward.DroppedItemName}.{equippedNote}");
+                        }
+                        else if (reward.ItemAlreadyOwned)
+                        {
+                            AppendLog($"Found {reward.DroppedItemName} (duplicate, already owned).");
+                        }
+                    }
                     if (reward.UnlockedNextEncounter)
                     {
                         AppendLog($"Encounter {reward.NextUnlockedIndex + 1} unlocked.");
@@ -936,6 +952,19 @@ namespace NordeusChallenge.Client.UI.Battle
                 sb.Append(reward.AutoEquipped
                     ? $" Learned {reward.LearnedMoveName} (auto-equipped)."
                     : $" Learned {reward.LearnedMoveName}.");
+            }
+            if (reward.ItemDropped)
+            {
+                if (reward.ItemAddedToInventory)
+                {
+                    sb.Append(reward.ItemAutoEquipped
+                        ? $" Found {reward.DroppedItemName} (auto-equipped)."
+                        : $" Found {reward.DroppedItemName}.");
+                }
+                else if (reward.ItemAlreadyOwned)
+                {
+                    sb.Append($" {reward.DroppedItemName} dropped (duplicate).");
+                }
             }
             return sb.ToString();
         }
