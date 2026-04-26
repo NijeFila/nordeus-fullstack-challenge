@@ -20,6 +20,12 @@ namespace NordeusChallenge.Client.Runtime
 
         private readonly System.Random _random = new();
 
+        private int _pendingLevelUps;
+
+        public int PendingLevelUps => _pendingLevelUps;
+
+        public bool HasPendingLevelUp => _pendingLevelUps > 0;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -39,6 +45,7 @@ namespace NordeusChallenge.Client.Runtime
             SelectedEncounterIndex = -1;
             HighestUnlockedEncounterIndex = (run != null && run.encounters != null && run.encounters.Count > 0) ? 0 : -1;
             _clearedEncounters.Clear();
+            _pendingLevelUps = 0;
         }
 
         public void ClearCurrentRun()
@@ -48,6 +55,57 @@ namespace NordeusChallenge.Client.Runtime
             SelectedEncounterIndex = -1;
             HighestUnlockedEncounterIndex = -1;
             _clearedEncounters.Clear();
+            _pendingLevelUps = 0;
+        }
+
+        // Applies one attribute pick from rules.levelUpChoices to the hero and
+        // consumes one pending level-up. Safe to call when no choices are pending
+        // (it logs a warning and does nothing) so UI references can be optional.
+        public void ApplyLevelUpChoice(LevelUpChoiceDto choice)
+        {
+            if (choice == null)
+            {
+                Debug.LogWarning("ApplyLevelUpChoice called with null choice.");
+                return;
+            }
+
+            if (CurrentHero == null || CurrentHero.stats == null)
+            {
+                Debug.LogWarning("ApplyLevelUpChoice called with no current hero.");
+                return;
+            }
+
+            if (_pendingLevelUps <= 0)
+            {
+                Debug.LogWarning("ApplyLevelUpChoice called with no pending level-ups.");
+                return;
+            }
+
+            switch (choice.stat)
+            {
+                case "health":
+                case "maxHealth":
+                    CurrentHero.stats.maxHealth += choice.amount;
+                    break;
+                case "mana":
+                case "maxMana":
+                    CurrentHero.stats.maxMana += choice.amount;
+                    break;
+                case "attack":
+                    CurrentHero.stats.attack += choice.amount;
+                    break;
+                case "defense":
+                    CurrentHero.stats.defense += choice.amount;
+                    break;
+                case "magic":
+                    CurrentHero.stats.magic += choice.amount;
+                    break;
+                default:
+                    Debug.LogWarning($"Unknown level-up stat '{choice.stat}'. No stat changed.");
+                    return;
+            }
+
+            _pendingLevelUps -= 1;
         }
 
         public void SetSelectedEncounterIndex(int index)
@@ -163,21 +221,23 @@ namespace NordeusChallenge.Client.Runtime
             result.XpGained = rules.xpPerVictory;
             CurrentHero.xp += rules.xpPerVictory;
 
-            if (CurrentHero.xp >= rules.xpPerLevel)
+            // Award one pending attribute pick per level threshold crossed.
+            // Stat gains are no longer applied automatically; the post-battle
+            // UI shows the picker and ApplyLevelUpChoice mutates the hero.
+            int pendingLevelUps = 0;
+            while (rules.xpPerLevel > 0 && CurrentHero.xp >= rules.xpPerLevel)
             {
                 CurrentHero.xp -= rules.xpPerLevel;
                 CurrentHero.level += 1;
+                pendingLevelUps += 1;
+            }
 
-                if (CurrentHero.stats != null && rules.statGainPerLevel != null)
-                {
-                    CurrentHero.stats.maxHealth += rules.statGainPerLevel.maxHealth;
-                    CurrentHero.stats.attack += rules.statGainPerLevel.attack;
-                    CurrentHero.stats.defense += rules.statGainPerLevel.defense;
-                    CurrentHero.stats.magic += rules.statGainPerLevel.magic;
-                }
-
+            if (pendingLevelUps > 0)
+            {
+                _pendingLevelUps += pendingLevelUps;
                 result.LeveledUp = true;
                 result.NewLevel = CurrentHero.level;
+                result.PendingLevelUps = _pendingLevelUps;
             }
 
             TryLearnMove(monster, rules, result);
@@ -250,6 +310,7 @@ namespace NordeusChallenge.Client.Runtime
                 stats = source.stats == null ? null : new StatsDto
                 {
                     maxHealth = source.stats.maxHealth,
+                    maxMana = source.stats.maxMana,
                     attack = source.stats.attack,
                     defense = source.stats.defense,
                     magic = source.stats.magic

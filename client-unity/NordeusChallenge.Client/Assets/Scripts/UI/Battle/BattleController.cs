@@ -55,6 +55,9 @@ namespace NordeusChallenge.Client.UI.Battle
         [SerializeField] private TMP_Text environmentText;
         [SerializeField] private Button backButton;
 
+        [Header("Level Up")]
+        [SerializeField] private LevelUpChoicePanelView levelUpPanel;
+
         private BattleApiClient _battleApi;
 
         private HeroDto _hero;
@@ -863,6 +866,8 @@ namespace NordeusChallenge.Client.UI.Battle
                         AppendLog($"Encounter {reward.NextUnlockedIndex + 1} unlocked.");
                     }
                 }
+
+                MaybeShowLevelUpPanel(reward);
             }
             else
             {
@@ -870,6 +875,46 @@ namespace NordeusChallenge.Client.UI.Battle
                 SetStatus(message);
                 AppendLog(message);
             }
+        }
+
+        private void MaybeShowLevelUpPanel(VictoryRewardResult reward)
+        {
+            if (reward == null || !reward.LeveledUp || reward.PendingLevelUps <= 0)
+            {
+                return;
+            }
+
+            var rules = GameSession.Instance != null && GameSession.Instance.CurrentRun != null
+                ? GameSession.Instance.CurrentRun.rules
+                : null;
+
+            if (rules == null || rules.levelUpChoices == null || rules.levelUpChoices.Count == 0)
+            {
+                // No choices configured — fall back to a no-op so older configs keep working.
+                return;
+            }
+
+            if (levelUpPanel == null)
+            {
+                Debug.LogWarning("LevelUpChoicePanelView reference missing on BattleController; skipping picker.");
+                return;
+            }
+
+            if (backButton != null)
+            {
+                backButton.interactable = false;
+            }
+
+            levelUpPanel.Show(reward.NewLevel, rules.levelUpChoices, OnLevelUpPanelClosed);
+        }
+
+        private void OnLevelUpPanelClosed()
+        {
+            if (backButton != null)
+            {
+                backButton.interactable = true;
+            }
+            UpdateHeroStatsText();
         }
 
         private static string BuildVictorySummary(string headline, VictoryRewardResult reward)
