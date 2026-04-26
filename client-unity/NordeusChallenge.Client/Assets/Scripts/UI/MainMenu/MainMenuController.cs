@@ -16,6 +16,7 @@ namespace NordeusChallenge.Client.UI.MainMenu
 
         [Header("UI References")]
         [SerializeField] private Button startButton;
+        [SerializeField] private Button optionsButton;
         [SerializeField] private Button exitButton;
         [SerializeField] private TMP_Text statusText;
 
