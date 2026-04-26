@@ -25,6 +25,10 @@ namespace NordeusChallenge.Client.Runtime
         public bool ItemAlreadyOwned;
         public bool ItemAutoEquipped;
 
+        // Gold awarded on this victory and the resulting run-total gold.
+        public int GoldGained;
+        public int CurrentGold;
+
         public bool UnlockedNextEncounter;
         public int NextUnlockedIndex = -1;
     }

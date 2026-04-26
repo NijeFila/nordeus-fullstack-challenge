@@ -856,6 +856,10 @@ namespace NordeusChallenge.Client.UI.Battle
                 if (reward != null)
                 {
                     AppendLog($"+{reward.XpGained} XP.");
+                    if (reward.GoldGained > 0)
+                    {
+                        AppendLog($"+{reward.GoldGained} gold (total {reward.CurrentGold}).");
+                    }
                     if (reward.LeveledUp)
                     {
                         AppendLog($"Level up! Now Lv {reward.NewLevel}.");
@@ -943,6 +947,10 @@ namespace NordeusChallenge.Client.UI.Battle
             var sb = new StringBuilder();
             sb.Append(headline);
             sb.Append($" +{reward.XpGained} XP.");
+            if (reward.GoldGained > 0)
+            {
+                sb.Append($" +{reward.GoldGained} gold.");
+            }
             if (reward.LeveledUp)
             {
                 sb.Append($" Level up to Lv {reward.NewLevel}.");

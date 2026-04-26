@@ -18,5 +18,8 @@ namespace NordeusChallenge.Client.Models
 
         // Attribute increases the player can pick from when the hero levels up.
         public List<LevelUpChoiceDto> levelUpChoices;
+
+        // Gold awarded on each battle victory. Defeats grant nothing.
+        public int goldPerVictory;
     }
 }

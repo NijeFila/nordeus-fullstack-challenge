@@ -7,5 +7,6 @@ namespace NordeusChallenge.Client.Core
         public const string Battle = "Battle";
         public const string MoveManagement = "MoveManagement";
         public const string ItemManagement = "ItemManagement";
+        public const string Shop = "Shop";
     }
 }

@@ -32,6 +32,7 @@ client-unity/NordeusChallenge.Client/*.csproj
 client-unity/NordeusChallenge.Client/*.unityproj
 client-unity/NordeusChallenge.Client/*.sln
 client-unity/NordeusChallenge.Client/*.suo
+client-unity/NordeusChallenge.Client/*.CLAUDE.md
 client-unity/*.tmp
 client-unity/*.user
 client-unity/*.userprefs

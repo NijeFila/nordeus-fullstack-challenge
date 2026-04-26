@@ -26,6 +26,12 @@ namespace NordeusChallenge.Client.Runtime
 
         public bool HasPendingLevelUp => _pendingLevelUps > 0;
 
+        // ---------- Gold (run-scoped) ----------
+
+        private int _currentGold;
+
+        public int CurrentGold => _currentGold;
+
         // ---------- Items (inventory + equipped) ----------
 
         // All item ids the player owns this run (no duplicates).
@@ -64,6 +70,7 @@ namespace NordeusChallenge.Client.Runtime
             HighestUnlockedEncounterIndex = (run != null && run.encounters != null && run.encounters.Count > 0) ? 0 : -1;
             _clearedEncounters.Clear();
             _pendingLevelUps = 0;
+            _currentGold = 0;
             ResetInventory();
         }
 
@@ -75,6 +82,7 @@ namespace NordeusChallenge.Client.Runtime
             HighestUnlockedEncounterIndex = -1;
             _clearedEncounters.Clear();
             _pendingLevelUps = 0;
+            _currentGold = 0;
             ResetInventory();
         }
 
@@ -358,6 +366,14 @@ namespace NordeusChallenge.Client.Runtime
             result.XpGained = rules.xpPerVictory;
             CurrentHero.xp += rules.xpPerVictory;
 
+            // Gold reward: a flat amount per victory, tracked entirely on the client.
+            if (rules.goldPerVictory > 0)
+            {
+                _currentGold += rules.goldPerVictory;
+                result.GoldGained = rules.goldPerVictory;
+            }
+            result.CurrentGold = _currentGold;
+
             int pendingLevelUps = 0;
             while (rules.xpPerLevel > 0 && CurrentHero.xp >= rules.xpPerLevel)
             {
@@ -469,6 +485,107 @@ namespace NordeusChallenge.Client.Runtime
         {
             _inventoryItemIds.Clear();
             _equippedItemIds.Clear();
+        }
+
+        // ---------- Shop ----------
+
+        public bool CanAffordShopOffer(ShopOfferDto offer)
+        {
+            if (offer == null) return false;
+            return _currentGold >= offer.price;
+        }
+
+        // Returns true on a successful purchase. Callers should refresh UI on
+        // true and surface 'reason' on false. Failure cases:
+        // - not enough gold
+        // - Item offer for an item already owned (we block to avoid wasted gold)
+        // - unknown offer type / item / stat
+        public bool PurchaseShopOffer(ShopOfferDto offer, out string reason)
+        {
+            reason = string.Empty;
+
+            if (offer == null)
+            {
+                reason = "No offer selected.";
+                return false;
+            }
+
+            if (CurrentHero == null || CurrentHero.stats == null)
+            {
+                reason = "No active hero.";
+                return false;
+            }
+
+            if (_currentGold < offer.price)
+            {
+                reason = $"Not enough gold ({_currentGold}/{offer.price}).";
+                return false;
+            }
+
+            switch (offer.type)
+            {
+                case "Item":
+                {
+                    if (string.IsNullOrEmpty(offer.itemId))
+                    {
+                        reason = "Offer is missing an item id.";
+                        return false;
+                    }
+
+                    var item = GetItemById(offer.itemId);
+                    if (item == null)
+                    {
+                        reason = $"Unknown item '{offer.itemId}'.";
+                        return false;
+                    }
+
+                    if (_inventoryItemIds.Contains(offer.itemId))
+                    {
+                        reason = $"You already own {item.name}.";
+                        return false;
+                    }
+
+                    _currentGold -= offer.price;
+                    _inventoryItemIds.Add(offer.itemId);
+                    return true;
+                }
+
+                case "StatUpgrade":
+                {
+                    if (!ApplyStatUpgrade(offer.stat, offer.amount))
+                    {
+                        reason = $"Unknown stat '{offer.stat}'.";
+                        return false;
+                    }
+
+                    _currentGold -= offer.price;
+                    return true;
+                }
+
+                default:
+                    reason = $"Unknown offer type '{offer.type}'.";
+                    return false;
+            }
+        }
+
+        private bool ApplyStatUpgrade(string stat, int amount)
+        {
+            switch (stat)
+            {
+                case "maxHealth": CurrentHero.stats.maxHealth += amount; return true;
+                case "maxMana":   CurrentHero.stats.maxMana   += amount; return true;
+                case "attack":    CurrentHero.stats.attack    += amount; return true;
+                case "defense":   CurrentHero.stats.defense   += amount; return true;
+                case "magic":     CurrentHero.stats.magic     += amount; return true;
+                default: return false;
+            }
+        }
+
+        // Returns true if buying this Item offer would be wasted gold (already owned).
+        public bool IsShopOfferAlreadyOwned(ShopOfferDto offer)
+        {
+            if (offer == null || offer.type != "Item" || string.IsNullOrEmpty(offer.itemId)) return false;
+            return _inventoryItemIds.Contains(offer.itemId);
         }
 
         private static HeroDto CloneHero(HeroDto source)

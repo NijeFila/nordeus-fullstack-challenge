@@ -22,6 +22,10 @@ namespace NordeusChallenge.Client.UI.RunOverview
         [SerializeField] private TMP_Text inventoryText;
         [SerializeField] private Button itemManagementButton;
 
+        [Header("Shop")]
+        [SerializeField] private TMP_Text goldText;
+        [SerializeField] private Button shopButton;
+
         [Header("Encounters")]
         [SerializeField] private Transform encountersContainer;
         [SerializeField] private EncounterButtonView encounterButtonPrefab;
@@ -38,6 +42,10 @@ namespace NordeusChallenge.Client.UI.RunOverview
             {
                 itemManagementButton.onClick.AddListener(OnItemManagementClicked);
             }
+            if (shopButton != null)
+            {
+                shopButton.onClick.AddListener(OnShopClicked);
+            }
 
             if (GameSession.Instance == null || GameSession.Instance.CurrentRun == null)
             {
@@ -45,6 +53,7 @@ namespace NordeusChallenge.Client.UI.RunOverview
                 SetText(equippedMovesText, string.Empty);
                 SetText(equippedItemsText, string.Empty);
                 SetText(inventoryText, string.Empty);
+                SetText(goldText, string.Empty);
                 ClearEncountersContainer();
                 return;
             }
@@ -56,6 +65,7 @@ namespace NordeusChallenge.Client.UI.RunOverview
             RenderEquippedMoves(hero);
             RenderEquippedItems();
             RenderInventory();
+            RenderGold();
             RenderEncounters(run);
         }
 
@@ -69,6 +79,22 @@ namespace NordeusChallenge.Client.UI.RunOverview
             {
                 itemManagementButton.onClick.RemoveListener(OnItemManagementClicked);
             }
+            if (shopButton != null)
+            {
+                shopButton.onClick.RemoveListener(OnShopClicked);
+            }
+        }
+
+        private void RenderGold()
+        {
+            if (goldText == null) return;
+            int gold = GameSession.Instance != null ? GameSession.Instance.CurrentGold : 0;
+            goldText.text = $"Gold: {gold}";
+        }
+
+        private void OnShopClicked()
+        {
+            SceneManager.LoadScene(SceneNames.Shop);
         }
 
         private void RenderHero(HeroDto hero)

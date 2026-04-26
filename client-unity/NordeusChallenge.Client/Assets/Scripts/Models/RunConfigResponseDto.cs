@@ -13,6 +13,7 @@ namespace NordeusChallenge.Client.Models
         public List<MoveDto> moves;
         public List<BattleEnvironmentDto> environments;
         public List<ItemDto> items;
+        public List<ShopOfferDto> shopOffers;
         public RulesConfigDto rules;
     }
 }
