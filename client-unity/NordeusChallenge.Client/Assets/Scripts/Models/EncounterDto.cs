@@ -8,5 +8,6 @@ namespace NordeusChallenge.Client.Models
         public int index;
         public string monsterId;
         public int level;
+        public string environmentId;
     }
 }

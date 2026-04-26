@@ -11,6 +11,7 @@ namespace NordeusChallenge.Client.Models
         public List<EncounterDto> encounters;
         public List<MonsterDto> monsters;
         public List<MoveDto> moves;
+        public List<BattleEnvironmentDto> environments;
         public RulesConfigDto rules;
     }
 }

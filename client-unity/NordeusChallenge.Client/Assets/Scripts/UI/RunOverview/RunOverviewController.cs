@@ -115,7 +115,12 @@ namespace NordeusChallenge.Client.UI.RunOverview
                 bool cleared = session.IsEncounterCleared(encounter.index);
 
                 string status = !unlocked ? "Locked" : (cleared ? "Cleared" : "Available");
-                string label = $"{encounter.index + 1}. {monsterName} (Lv {encounter.level}) - {status}";
+                var environment = session.GetEnvironmentById(encounter.environmentId);
+                string environmentName = environment != null ? environment.name : null;
+
+                string label = string.IsNullOrEmpty(environmentName)
+                    ? $"{encounter.index + 1}. {monsterName} (Lv {encounter.level}) - {status}"
+                    : $"{encounter.index + 1}. {monsterName} (Lv {encounter.level}) - {environmentName} - {status}";
 
                 var view = Instantiate(encounterButtonPrefab, encountersContainer);
                 view.Bind(encounter.index, label, unlocked, OnEncounterSelected);

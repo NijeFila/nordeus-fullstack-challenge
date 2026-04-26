@@ -101,6 +101,24 @@ namespace NordeusChallenge.Client.Runtime
             return null;
         }
 
+        public BattleEnvironmentDto GetEnvironmentById(string environmentId)
+        {
+            if (CurrentRun == null || CurrentRun.environments == null || string.IsNullOrEmpty(environmentId))
+            {
+                return null;
+            }
+
+            for (int i = 0; i < CurrentRun.environments.Count; i++)
+            {
+                if (CurrentRun.environments[i].id == environmentId)
+                {
+                    return CurrentRun.environments[i];
+                }
+            }
+
+            return null;
+        }
+
         public EncounterDto GetEncounterByIndex(int index)
         {
             if (CurrentRun == null || CurrentRun.encounters == null)

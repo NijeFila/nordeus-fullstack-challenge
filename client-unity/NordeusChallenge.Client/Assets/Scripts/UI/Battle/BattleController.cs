@@ -52,6 +52,7 @@ namespace NordeusChallenge.Client.UI.Battle
         [Header("Status")]
         [SerializeField] private TMP_Text statusText;
         [SerializeField] private TMP_Text logText;
+        [SerializeField] private TMP_Text environmentText;
         [SerializeField] private Button backButton;
 
         private BattleApiClient _battleApi;
@@ -59,6 +60,7 @@ namespace NordeusChallenge.Client.UI.Battle
         private HeroDto _hero;
         private MonsterDto _monster;
         private EncounterDto _encounter;
+        private BattleEnvironmentDto _environment;
         private StatsDto _monsterScaledStats;
 
         private int _heroHealth;
@@ -118,7 +120,9 @@ namespace NordeusChallenge.Client.UI.Battle
             }
 
             _turn = 1;
+            _environment = GameSession.Instance.GetEnvironmentById(_encounter.environmentId);
             _monsterScaledStats = ScaleMonsterStats(_monster.baseStats, _encounter.level, run.rules);
+            RenderEnvironment();
 
             _heroMaxHealth = _hero.stats.maxHealth;
             _heroHealth = _heroMaxHealth;
@@ -137,6 +141,10 @@ namespace NordeusChallenge.Client.UI.Battle
             RenderMoves(_hero);
             RefreshAffordability();
             AppendLog($"A wild {_monster.name} appears.");
+            if (_environment != null)
+            {
+                AppendLog($"Environment: {_environment.name} - {_environment.description}");
+            }
         }
 
         private void OnDestroy()
@@ -189,6 +197,20 @@ namespace NordeusChallenge.Client.UI.Battle
             }
 
             ApplyDoTTicks();
+            RefreshCombatantsUi();
+
+            if (_heroHealth <= 0)
+            {
+                EndBattle(false);
+                yield break;
+            }
+            if (_monsterHealth <= 0)
+            {
+                EndBattle(true);
+                yield break;
+            }
+
+            ApplyEnvironmentEndOfTurn();
             RefreshCombatantsUi();
 
             if (_heroHealth <= 0)
@@ -311,13 +333,15 @@ namespace NordeusChallenge.Client.UI.Battle
 
         private void RegenerateMana()
         {
+            int regen = ManaRegenPerTurn + (_environment != null ? _environment.manaRegenBonus : 0);
+            if (regen <= 0) regen = 0;
             if (_heroMaxMana > 0)
             {
-                _heroMana = Mathf.Min(_heroMaxMana, _heroMana + ManaRegenPerTurn);
+                _heroMana = Mathf.Min(_heroMaxMana, _heroMana + regen);
             }
             if (_monsterMaxMana > 0)
             {
-                _monsterMana = Mathf.Min(_monsterMaxMana, _monsterMana + ManaRegenPerTurn);
+                _monsterMana = Mathf.Min(_monsterMaxMana, _monsterMana + regen);
             }
         }
 
@@ -333,7 +357,7 @@ namespace NordeusChallenge.Client.UI.Battle
             {
                 case "Physical":
                 {
-                    int raw = move.power + attackerAttack - defenderDefense;
+                    int raw = move.power + attackerAttack - defenderDefense + EnvPhysicalBonus();
                     int damage = AdjustOutgoingDamage(raw, isHeroAttacker, defenderIsHero: !isHeroAttacker);
                     ApplyDamage(isHeroAttacker, damage);
                     PlayDamageFeedback(isHeroAttacker, damage);
@@ -342,7 +366,7 @@ namespace NordeusChallenge.Client.UI.Battle
                 }
                 case "Magic":
                 {
-                    int raw = move.power + attackerMagic;
+                    int raw = move.power + attackerMagic + EnvMagicBonus();
                     int damage = AdjustOutgoingDamage(raw, isHeroAttacker, defenderIsHero: !isHeroAttacker);
                     ApplyDamage(isHeroAttacker, damage);
                     PlayDamageFeedback(isHeroAttacker, damage);
@@ -396,7 +420,7 @@ namespace NordeusChallenge.Client.UI.Battle
 
         private int ApplyHeal(bool isHeroAttacker, MoveDto move, int casterMagic)
         {
-            int amount = (move.effect != null ? move.effect.amount : 0) + (casterMagic / 2);
+            int amount = Mathf.Max(0, (move.effect != null ? move.effect.amount : 0) + (casterMagic / 2) + EnvHealingBonus());
             if (isHeroAttacker)
             {
                 int before = _heroHealth;
@@ -430,12 +454,18 @@ namespace NordeusChallenge.Client.UI.Battle
                 }
             }
 
+            int duration = effect.durationTurns;
+            if (effect.kind == "Poison" && _environment != null)
+            {
+                duration += _environment.poisonBonusTurns;
+            }
+
             list.Add(new ActiveEffect
             {
                 SourceMoveId = move.id,
                 Kind = effect.kind,
                 Amount = effect.amount,
-                TurnsRemaining = effect.durationTurns
+                TurnsRemaining = duration
             });
         }
 
@@ -443,8 +473,11 @@ namespace NordeusChallenge.Client.UI.Battle
 
         private void ApplyDoTTicks()
         {
-            int heroDot = SumKind(_heroEffects, "Bleed") + SumKind(_heroEffects, "Poison");
-            int monsterDot = SumKind(_monsterEffects, "Bleed") + SumKind(_monsterEffects, "Poison");
+            int bleedBonus = _environment != null ? _environment.bleedBonusDamage : 0;
+            int heroBleedTicks = CountKind(_heroEffects, "Bleed");
+            int monsterBleedTicks = CountKind(_monsterEffects, "Bleed");
+            int heroDot = SumKind(_heroEffects, "Bleed") + (heroBleedTicks * bleedBonus) + SumKind(_heroEffects, "Poison");
+            int monsterDot = SumKind(_monsterEffects, "Bleed") + (monsterBleedTicks * bleedBonus) + SumKind(_monsterEffects, "Poison");
 
             if (heroDot > 0)
             {
@@ -538,6 +571,19 @@ namespace NordeusChallenge.Client.UI.Battle
             return total;
         }
 
+        private static int CountKind(List<ActiveEffect> list, string kind)
+        {
+            int count = 0;
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i].Kind == kind)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
         private static List<string> CollectKinds(List<ActiveEffect> list)
         {
             var result = new List<string>(list.Count);
@@ -549,6 +595,42 @@ namespace NordeusChallenge.Client.UI.Battle
                 }
             }
             return result;
+        }
+
+        // ---------- Environment ----------
+
+        private int EnvPhysicalBonus() => _environment != null ? _environment.physicalDamageBonus : 0;
+        private int EnvMagicBonus() => _environment != null ? _environment.magicDamageBonus : 0;
+        private int EnvHealingBonus() => _environment != null ? _environment.healingBonus : 0;
+
+        private void RenderEnvironment()
+        {
+            if (environmentText == null) return;
+            if (_environment == null)
+            {
+                environmentText.text = string.Empty;
+                return;
+            }
+
+            environmentText.text = string.IsNullOrEmpty(_environment.description)
+                ? _environment.name
+                : $"<b>{_environment.name}</b>\n{_environment.description}";
+        }
+
+        private void ApplyEnvironmentEndOfTurn()
+        {
+            if (_environment == null || _environment.endOfTurnDamage <= 0) return;
+
+            int dmg = _environment.endOfTurnDamage;
+            _heroHealth = Mathf.Max(0, _heroHealth - dmg);
+            _monsterHealth = Mathf.Max(0, _monsterHealth - dmg);
+            AppendLog($"The {_environment.name} deals {dmg} damage to both combatants.");
+
+            if (feedbackView != null)
+            {
+                if (heroVisuals != null) feedbackView.PlayHit(heroVisuals, dmg);
+                if (monsterVisuals != null) feedbackView.PlayHit(monsterVisuals, dmg);
+            }
         }
 
         // ---------- UI ----------
