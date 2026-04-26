@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/Scenes/MoveManagement.unity
     guid: e5121ffd579686b40b8efef48112e379
   - enabled: 1
+    path: Assets/Scenes/ItemManagement.unity
+    guid: 18939795214ee9648baba31734c42611
+  - enabled: 1
     path: Assets/Scenes/Battle.unity
     guid: 02888b42e38b0414eafe1982763523a3
   m_configObjects:

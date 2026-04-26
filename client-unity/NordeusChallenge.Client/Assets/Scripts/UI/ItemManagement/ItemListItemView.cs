@@ -5,44 +5,49 @@ using UnityEngine.UI;
 
 namespace NordeusChallenge.Client.UI.ItemManagement
 {
+    // Single inventory row. Click selects the item; the controller then assigns
+    // it to a compatible equipped slot. Mirrors MoveListItemView's style.
     public class ItemListItemView : MonoBehaviour
     {
-        [SerializeField] private Button button;
-        [SerializeField] private TMP_Text labelText;
-        [SerializeField] private TMP_Text actionText;
+        [SerializeField] private Button selectButton;
+        [SerializeField] private TMP_Text label;
+        [SerializeField] private Image icon;
+        [SerializeField] private GameObject selectedMarker;
 
         private string _itemId;
-        private Action<string> _onClicked;
+        private Action<string> _onSelect;
 
-        private void Awake()
-        {
-            if (button != null)
-            {
-                button.onClick.AddListener(OnClicked);
-            }
-        }
-
-        private void OnDestroy()
-        {
-            if (button != null)
-            {
-                button.onClick.RemoveListener(OnClicked);
-            }
-        }
-
-        public void Bind(string itemId, string label, string action, bool interactable, Action<string> onClicked)
+        public void Bind(string itemId, string labelText, Sprite iconSprite, bool isSelected, Action<string> onSelect)
         {
             _itemId = itemId;
-            _onClicked = onClicked;
+            _onSelect = onSelect;
 
-            if (labelText != null) labelText.text = label;
-            if (actionText != null) actionText.text = action ?? string.Empty;
-            if (button != null) button.interactable = interactable;
+            if (label != null)
+            {
+                label.text = labelText;
+            }
+
+            if (icon != null)
+            {
+                icon.sprite = iconSprite;
+                icon.enabled = iconSprite != null;
+            }
+
+            if (selectedMarker != null)
+            {
+                selectedMarker.SetActive(isSelected);
+            }
+
+            if (selectButton != null)
+            {
+                selectButton.onClick.RemoveAllListeners();
+                selectButton.onClick.AddListener(OnSelectClicked);
+            }
         }
 
-        private void OnClicked()
+        private void OnSelectClicked()
         {
-            if (_onClicked != null && !string.IsNullOrEmpty(_itemId)) _onClicked(_itemId);
+            _onSelect?.Invoke(_itemId);
         }
     }
 }

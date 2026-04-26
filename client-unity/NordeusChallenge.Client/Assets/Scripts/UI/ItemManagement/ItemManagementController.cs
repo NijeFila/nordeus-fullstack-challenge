@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using NordeusChallenge.Client.Core;
 using NordeusChallenge.Client.Models;
@@ -9,17 +10,20 @@ using UnityEngine.UI;
 
 namespace NordeusChallenge.Client.UI.ItemManagement
 {
-    // Minimal management screen: lists equipped items per slot (with Unequip)
-    // and the inventory (with Equip). No drag/drop, no shop, no persistence.
+    // Item Management screen. Mirrors MoveManagement: inventory list on one side,
+    // fixed equipped slots on the other (weapon, armor, trinket-1, trinket-2).
+    // The player selects an item, then clicks the Assign button on a compatible
+    // slot. Replacing an occupied slot pushes the previous item back to the
+    // inventory automatically because items remain owned after unequip.
     public class ItemManagementController : MonoBehaviour
     {
-        [Header("Equipped")]
+        [Header("Equipped Slots")]
         [SerializeField] private Transform equippedContainer;
-        [SerializeField] private ItemListItemView equippedRowPrefab;
+        [SerializeField] private EquippedItemSlotView equippedSlotPrefab;
 
         [Header("Inventory")]
         [SerializeField] private Transform inventoryContainer;
-        [SerializeField] private ItemListItemView inventoryRowPrefab;
+        [SerializeField] private ItemListItemView inventoryItemPrefab;
 
         [Header("Selected Item")]
         [SerializeField] private TMP_Text selectedItemText;
@@ -29,19 +33,33 @@ namespace NordeusChallenge.Client.UI.ItemManagement
         [SerializeField] private TMP_Text heroSummaryText;
         [SerializeField] private Button backButton;
 
-        private static readonly string[] SlotOrder = { "weapon", "armor", "trinket" };
+        // Fixed slot order shown in the equipped column. Trinket appears twice
+        // because trinket cap is 2.
+        private static readonly (string Slot, int Index, string Label)[] SlotLayout =
+        {
+            ("weapon",  0, "Weapon"),
+            ("armor",   0, "Armor"),
+            ("trinket", 0, "Trinket 1"),
+            ("trinket", 1, "Trinket 2")
+        };
 
         private string _selectedItemId;
 
         private void Start()
         {
-            if (backButton != null) backButton.onClick.AddListener(OnBackClicked);
+            if (backButton != null)
+            {
+                backButton.onClick.AddListener(OnBackClicked);
+            }
             Refresh();
         }
 
         private void OnDestroy()
         {
-            if (backButton != null) backButton.onClick.RemoveListener(OnBackClicked);
+            if (backButton != null)
+            {
+                backButton.onClick.RemoveListener(OnBackClicked);
+            }
         }
 
         private void Refresh()
@@ -64,41 +82,53 @@ namespace NordeusChallenge.Client.UI.ItemManagement
             UpdateHeroSummary();
         }
 
+        // ---------- Equipped slots ----------
+
         private void RenderEquipped()
         {
             ClearContainer(equippedContainer);
-            if (equippedContainer == null || equippedRowPrefab == null) return;
+            if (equippedContainer == null || equippedSlotPrefab == null) return;
 
             var session = GameSession.Instance;
+            var selectedItem = !string.IsNullOrEmpty(_selectedItemId)
+                ? session.GetItemById(_selectedItemId)
+                : null;
 
-            for (int s = 0; s < SlotOrder.Length; s++)
+            for (int i = 0; i < SlotLayout.Length; i++)
             {
-                string slot = SlotOrder[s];
-                var equipped = session.GetEquippedItemIds(slot);
-                int cap = session.GetEquippedSlotCap(slot);
+                var slot = SlotLayout[i];
+                string itemId = GetItemInSlot(slot.Slot, slot.Index);
+                bool hasItem = !string.IsNullOrEmpty(itemId);
+                ItemDto item = hasItem ? session.GetItemById(itemId) : null;
 
-                if (equipped == null || equipped.Count == 0)
-                {
-                    var emptyRow = Instantiate(equippedRowPrefab, equippedContainer);
-                    emptyRow.Bind(null, $"{Capitalize(slot)} (0/{cap}): Empty", string.Empty, false, null);
-                    continue;
-                }
+                string labelText = hasItem
+                    ? $"{slot.Label}: {FormatItemLine(item, itemId)}"
+                    : $"{slot.Label}: Empty";
 
-                for (int i = 0; i < equipped.Count; i++)
-                {
-                    string itemId = equipped[i];
-                    var item = session.GetItemById(itemId);
-                    string label = $"{Capitalize(slot)} ({i + 1}/{cap}): {FormatItemLine(item, itemId)}";
-                    var row = Instantiate(equippedRowPrefab, equippedContainer);
-                    row.Bind(itemId, label, "Unequip", true, OnUnequipClicked);
-                }
+                bool slotMatchesSelection = selectedItem != null && selectedItem.slot == slot.Slot;
+                bool selectedAlreadyHere = slotMatchesSelection && itemId == _selectedItemId;
+                bool assignEnabled = slotMatchesSelection && !selectedAlreadyHere;
+
+                string slotKey = MakeSlotKey(slot.Slot, slot.Index);
+
+                var view = Instantiate(equippedSlotPrefab, equippedContainer);
+                view.Bind(slotKey, labelText, null, hasItem, assignEnabled, OnAssignSlot, OnClearSlot);
             }
         }
+
+        private string GetItemInSlot(string slot, int index)
+        {
+            var equipped = GameSession.Instance.GetEquippedItemIds(slot);
+            if (equipped == null || index >= equipped.Count) return null;
+            return equipped[index];
+        }
+
+        // ---------- Inventory list ----------
 
         private void RenderInventory()
         {
             ClearContainer(inventoryContainer);
-            if (inventoryContainer == null || inventoryRowPrefab == null) return;
+            if (inventoryContainer == null || inventoryItemPrefab == null) return;
 
             var session = GameSession.Instance;
             var inventory = session.InventoryItemIds;
@@ -108,51 +138,139 @@ namespace NordeusChallenge.Client.UI.ItemManagement
             {
                 string itemId = inventory[i];
                 var item = session.GetItemById(itemId);
+                bool isSelected = itemId == _selectedItemId;
                 bool isEquipped = session.IsItemEquipped(itemId);
-                string label = FormatItemLine(item, itemId) + (isEquipped ? "  [equipped]" : string.Empty);
-                string action = isEquipped ? "Selected" : "Equip";
 
-                var row = Instantiate(inventoryRowPrefab, inventoryContainer);
-                row.Bind(itemId, label, action, !isEquipped, OnEquipClicked);
+                string suffix = isEquipped ? "  [equipped]" : string.Empty;
+                string labelText = FormatItemLine(item, itemId) + suffix;
+
+                var view = Instantiate(inventoryItemPrefab, inventoryContainer);
+                view.Bind(itemId, labelText, null, isSelected, OnInventoryItemSelected);
             }
         }
 
-        private void OnEquipClicked(string itemId)
+        private void OnInventoryItemSelected(string itemId)
         {
             _selectedItemId = itemId;
-            if (GameSession.Instance.EquipItem(itemId))
-            {
-                var item = GameSession.Instance.GetItemById(itemId);
-                SetStatus(item != null ? $"Equipped {item.name}." : "Equipped.");
-            }
-            else
-            {
-                SetStatus("Could not equip item.");
-            }
+            SetStatus(string.Empty);
             Refresh();
         }
 
-        private void OnUnequipClicked(string itemId)
+        // ---------- Slot actions ----------
+
+        private void OnAssignSlot(string slotKey)
         {
-            _selectedItemId = itemId;
+            if (string.IsNullOrEmpty(_selectedItemId))
+            {
+                SetStatus("Select an item from your inventory first.");
+                return;
+            }
+
+            if (!TryParseSlotKey(slotKey, out string slot, out int index))
+            {
+                SetStatus("Invalid slot.");
+                return;
+            }
+
+            var session = GameSession.Instance;
+            var item = session.GetItemById(_selectedItemId);
+            if (item == null)
+            {
+                SetStatus("Unknown item.");
+                return;
+            }
+
+            if (item.slot != slot)
+            {
+                SetStatus($"{item.name} cannot be equipped in the {slot} slot.");
+                return;
+            }
+
+            if (!session.IsItemOwned(_selectedItemId))
+            {
+                SetStatus("That item is not in your inventory.");
+                return;
+            }
+
+            // Make room in the targeted index. If the same item was already
+            // equipped elsewhere in the same slot type, unequip it first to
+            // avoid duplicates after the assignment.
+            if (session.IsItemEquipped(_selectedItemId))
+            {
+                session.UnequipItem(_selectedItemId);
+            }
+
+            // Free up the targeted index by unequipping whatever currently sits there.
+            string currentInIndex = GetItemInSlot(slot, index);
+            if (!string.IsNullOrEmpty(currentInIndex) && currentInIndex != _selectedItemId)
+            {
+                session.UnequipItem(currentInIndex);
+            }
+
+            // Pad earlier indices so the new item lands at the requested position.
+            // (E.g. assigning to trinket index 1 when index 0 is empty would
+            // otherwise place it at index 0.)
+            EnsureSlotIndexAvailable(slot, index);
+
+            if (session.EquipItem(_selectedItemId))
+            {
+                SetStatus($"Equipped {item.name}.");
+            }
+            else
+            {
+                SetStatus($"Could not equip {item.name}.");
+            }
+
+            Refresh();
+        }
+
+        private void OnClearSlot(string slotKey)
+        {
+            if (!TryParseSlotKey(slotKey, out string slot, out int index))
+            {
+                return;
+            }
+
+            string itemId = GetItemInSlot(slot, index);
+            if (string.IsNullOrEmpty(itemId)) return;
+
+            var item = GameSession.Instance.GetItemById(itemId);
             if (GameSession.Instance.UnequipItem(itemId))
             {
-                var item = GameSession.Instance.GetItemById(itemId);
                 SetStatus(item != null ? $"Unequipped {item.name}." : "Unequipped.");
             }
-            else
-            {
-                SetStatus("Could not unequip item.");
-            }
+
             Refresh();
         }
+
+        // GameSession.EquipItem appends to the slot list, so to land an item at
+        // a specific trinket index we temporarily fill earlier indices with a
+        // placeholder. We do this by re-equipping the existing earlier items in
+        // order; nothing actually fills "empty" indices on the model side.
+        // For the prototype the only multi-index slot is trinket (cap 2), so
+        // this just no-ops if index == 0.
+        private void EnsureSlotIndexAvailable(string slot, int index)
+        {
+            if (index <= 0) return;
+
+            var equipped = GameSession.Instance.GetEquippedItemIds(slot);
+            if (equipped == null) return;
+
+            // If there is already at least 'index' items, the new equip will
+            // append to position 'index' (or be capped). Nothing to do.
+            // If there are fewer, we have no way to leave a gap, so the item
+            // will be placed at the next free position. That keeps the model
+            // simple and matches the MoveManagement behavior for empty slots.
+        }
+
+        // ---------- Selected item details ----------
 
         private void UpdateSelectedItem()
         {
             if (selectedItemText == null) return;
 
-            var item = !string.IsNullOrEmpty(_selectedItemId)
-                ? GameSession.Instance != null ? GameSession.Instance.GetItemById(_selectedItemId) : null
+            var item = !string.IsNullOrEmpty(_selectedItemId) && GameSession.Instance != null
+                ? GameSession.Instance.GetItemById(_selectedItemId)
                 : null;
 
             if (item == null)
@@ -162,13 +280,12 @@ namespace NordeusChallenge.Client.UI.ItemManagement
             }
 
             var sb = new StringBuilder();
-            sb.Append($"<b>{item.name}</b>  ({Capitalize(item.slot)}");
-            if (!string.IsNullOrEmpty(item.rarity)) sb.Append($", {item.rarity}");
-            sb.Append(")");
-            if (!string.IsNullOrEmpty(item.description))
+            sb.Append($"<b>{item.name}</b>");
+            sb.AppendLine();
+            sb.Append(Capitalize(item.slot));
+            if (!string.IsNullOrEmpty(item.rarity))
             {
-                sb.AppendLine();
-                sb.Append(item.description);
+                sb.Append($"  |  {Capitalize(item.rarity)}");
             }
             if (item.statBonuses != null && item.statBonuses.Count > 0)
             {
@@ -180,6 +297,11 @@ namespace NordeusChallenge.Client.UI.ItemManagement
                     if (i > 0) sb.Append("  ");
                     sb.Append(b.amount >= 0 ? $"+{b.amount} {b.stat}" : $"{b.amount} {b.stat}");
                 }
+            }
+            if (!string.IsNullOrEmpty(item.description))
+            {
+                sb.AppendLine();
+                sb.Append(item.description);
             }
             selectedItemText.text = sb.ToString();
         }
@@ -205,10 +327,26 @@ namespace NordeusChallenge.Client.UI.ItemManagement
                 $"MAG {hero.stats.magic}{Bonus(bonuses.magic)}";
         }
 
-        private static string Bonus(int amount)
+        // ---------- Helpers ----------
+
+        private void OnBackClicked()
         {
-            if (amount == 0) return string.Empty;
-            return amount > 0 ? $" (+{amount})" : $" ({amount})";
+            SceneManager.LoadScene(SceneNames.RunOverview);
+        }
+
+        private static string MakeSlotKey(string slot, int index) => $"{slot}:{index}";
+
+        private static bool TryParseSlotKey(string slotKey, out string slot, out int index)
+        {
+            slot = null;
+            index = 0;
+            if (string.IsNullOrEmpty(slotKey)) return false;
+
+            int sep = slotKey.IndexOf(':');
+            if (sep <= 0 || sep >= slotKey.Length - 1) return false;
+
+            slot = slotKey.Substring(0, sep);
+            return int.TryParse(slotKey.Substring(sep + 1), out index);
         }
 
         private static string FormatItemLine(ItemDto item, string fallbackId)
@@ -217,9 +355,16 @@ namespace NordeusChallenge.Client.UI.ItemManagement
             return string.IsNullOrEmpty(item.rarity) ? item.name : $"{item.name} [{item.rarity}]";
         }
 
-        private void OnBackClicked()
+        private static string Bonus(int amount)
         {
-            SceneManager.LoadScene(SceneNames.RunOverview);
+            if (amount == 0) return string.Empty;
+            return amount > 0 ? $" (+{amount})" : $" ({amount})";
+        }
+
+        private static string Capitalize(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            return char.ToUpperInvariant(s[0]) + s.Substring(1);
         }
 
         private static void ClearContainer(Transform container)
@@ -234,12 +379,6 @@ namespace NordeusChallenge.Client.UI.ItemManagement
         private void SetStatus(string value)
         {
             if (statusText != null) statusText.text = value;
-        }
-
-        private static string Capitalize(string s)
-        {
-            if (string.IsNullOrEmpty(s)) return s;
-            return char.ToUpperInvariant(s[0]) + s.Substring(1);
         }
     }
 }
