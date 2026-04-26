@@ -133,7 +133,20 @@ Fields:
 - `monsters` (Monster[]) — catalog referenced by encounters.
 - `moves` (Move[]) — catalog referenced by hero and monsters.
 - `environments` (BattleEnvironment[]) — catalog referenced by encounters.
-- `rules` (object) — tunable constants: `buffDurationTurns`, `xpPerVictory`, `xpPerLevel`, `statGainPerLevel` (Stats delta), `equippedMoveSlots`.
+- `rules` (object) — tunable constants: `buffDurationTurns`, `xpPerVictory`, `xpPerLevel`, `statGainPerLevel` (Stats delta, retained for backward compatibility), `equippedMoveSlots`, `levelUpChoices` (LevelUpChoice[]).
+
+## LevelUpChoice
+
+Role: a single attribute increase the player can pick when the hero levels up. The client renders the list from `rules.levelUpChoices`, lets the player pick one, and applies its stat delta to the hero during the post-battle flow.
+
+Fields:
+- `id` (string) — stable identifier (e.g. `"health"`, `"attack"`).
+- `name` (string) — short display label (e.g. `"+4 Attack"`).
+- `description` (string) — UI text explaining the pick.
+- `stat` (enum) — which stat to increase. One of `health` (MaxHealth), `mana` (MaxMana), `attack`, `defense`, `magic`.
+- `amount` (int) — flat amount added to the chosen stat.
+
+Older clients that still consume `rules.statGainPerLevel` keep working unchanged; newer clients drive level-ups from `levelUpChoices` and ignore `statGainPerLevel`.
 
 ## BattleState
 

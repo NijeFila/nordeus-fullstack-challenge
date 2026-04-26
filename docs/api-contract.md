@@ -158,7 +158,14 @@ No parameters. No body.
       "defense": 2,
       "magic": 2
     },
-    "equippedMoveSlots": 4
+    "equippedMoveSlots": 4,
+    "levelUpChoices": [
+      { "id": "health",  "name": "+15 Max Health", "description": "Toughen up. Raises Max Health by 15.",     "stat": "health",  "amount": 15 },
+      { "id": "attack",  "name": "+4 Attack",      "description": "Hit harder. Raises Attack by 4.",          "stat": "attack",  "amount": 4  },
+      { "id": "defense", "name": "+4 Defense",     "description": "Brace yourself. Raises Defense by 4.",     "stat": "defense", "amount": 4  },
+      { "id": "magic",   "name": "+4 Magic",       "description": "Sharpen your focus. Raises Magic by 4.",   "stat": "magic",   "amount": 4  },
+      { "id": "mana",    "name": "+10 Max Mana",   "description": "Deepen your reserves. Raises Max Mana by 10.", "stat": "mana", "amount": 10 }
+    ]
   }
 }
 ```
@@ -170,6 +177,7 @@ No parameters. No body.
 - Each encounter carries an `environmentId` that points into `environments`. The Unity client looks the entry up and applies its modifiers during that battle. Environments are intentionally simple flat-integer modifiers (e.g. `physicalDamageBonus: 2`, `healingBonus: -3`) so they fold into the existing damage and status pipeline without any new math.
 - Modifier fields default to `0` and are omitted from the JSON when zero.
 - `rules` carries the tunable numbers so the client and server agree on formulas without hard-coding them on the client.
+- `rules.levelUpChoices` lists the attribute increases the client offers the player on a level up. Each entry has a `stat` (`health`, `mana`, `attack`, `defense`, or `magic`) and a flat `amount`. The client presents the list during the post-battle flow and applies the picked entry to the hero. `rules.statGainPerLevel` is retained for backward compatibility with older clients that auto-apply a fixed stat gain; newer clients ignore it and drive level-ups from `levelUpChoices` instead.
 - Fields with a `null` value (e.g. `effect`, `manaCost`, or `hpCost` on a free pure-damage move) are omitted from the JSON response.
 - `manaCost` and `hpCost` on a `move` are optional resource costs paid by the caster. A move without either field is free. `maxMana = 0` on an entity simply means it has no mana resource and can only use moves with no `manaCost`.
 

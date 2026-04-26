@@ -576,6 +576,49 @@ public class RunConfigService
             Defense = 2,
             Magic = 2
         },
-        EquippedMoveSlots = 4
+        EquippedMoveSlots = 4,
+        LevelUpChoices = new List<LevelUpChoice>
+        {
+            new LevelUpChoice
+            {
+                Id = "health",
+                Name = "+15 Max Health",
+                Description = "Toughen up. Raises Max Health by 15.",
+                Stat = "health",
+                Amount = 15
+            },
+            new LevelUpChoice
+            {
+                Id = "attack",
+                Name = "+4 Attack",
+                Description = "Hit harder. Raises Attack by 4.",
+                Stat = "attack",
+                Amount = 4
+            },
+            new LevelUpChoice
+            {
+                Id = "defense",
+                Name = "+4 Defense",
+                Description = "Brace yourself. Raises Defense by 4.",
+                Stat = "defense",
+                Amount = 4
+            },
+            new LevelUpChoice
+            {
+                Id = "magic",
+                Name = "+4 Magic",
+                Description = "Sharpen your focus. Raises Magic by 4.",
+                Stat = "magic",
+                Amount = 4
+            },
+            new LevelUpChoice
+            {
+                Id = "mana",
+                Name = "+10 Max Mana",
+                Description = "Deepen your reserves. Raises Max Mana by 10.",
+                Stat = "mana",
+                Amount = 10
+            }
+        }
     };
 }

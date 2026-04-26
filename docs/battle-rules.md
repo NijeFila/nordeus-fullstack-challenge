@@ -120,7 +120,8 @@ The hero's HP is always reset to full at the start of each encounter, including 
 - When `hero.xp >= rules.xpPerLevel` (default 100):
   - `hero.level` increases by 1.
   - `hero.xp` is reduced by `xpPerLevel`; any remainder carries over toward the next level.
-  - Each stat in `hero.stats` increases by the corresponding entry in `rules.statGainPerLevel`.
+  - The post-battle flow presents the attribute choices listed in `rules.levelUpChoices`. The player picks one entry and the chosen `amount` is added to the matching stat on `hero.stats` (`health` → `MaxHealth`, `mana` → `MaxMana`, `attack`, `defense`, `magic`). When `MaxHealth` or `MaxMana` increases, the hero's current HP/MP at the start of the next encounter is the new max (HP and mana are reset between battles).
+  - For backward compatibility, older clients that do not implement the picker fall back to applying `rules.statGainPerLevel` automatically. New clients ignore `statGainPerLevel` and drive level-ups from `levelUpChoices`.
 - For simplicity, at most one level-up is resolved per battle. If the hero would have enough XP for more than one level-up in a single battle (rare with the default numbers), the remaining XP is retained and a further level-up is resolved after the next victory. No XP is discarded.
 
 ## Move Learning After Victory
