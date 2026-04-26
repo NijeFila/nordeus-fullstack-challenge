@@ -66,6 +66,7 @@ Fields:
 - `name` (string)
 - `baseStats` (Stats) — values at level 1.
 - `moves` (string[]) — ids of moves this monster can use.
+- `itemDrops` (string[]) — ids of items this monster can drop on victory. The client picks from this list when awarding loot; an empty list means the monster never drops gear.
 
 Monsters are scaled to an encounter's level on the client using the same per-level gains as the hero.
 
@@ -133,7 +134,38 @@ Fields:
 - `monsters` (Monster[]) — catalog referenced by encounters.
 - `moves` (Move[]) — catalog referenced by hero and monsters.
 - `environments` (BattleEnvironment[]) — catalog referenced by encounters.
-- `rules` (object) — tunable constants: `buffDurationTurns`, `xpPerVictory`, `xpPerLevel`, `statGainPerLevel` (Stats delta, retained for backward compatibility), `equippedMoveSlots`, `levelUpChoices` (LevelUpChoice[]).
+- `items` (Item[]) — catalog referenced by `monsters[].itemDrops` and by the hero's inventory.
+- `rules` (object) — tunable constants: `buffDurationTurns`, `xpPerVictory`, `xpPerLevel`, `statGainPerLevel` (Stats delta, retained for backward compatibility), `equippedMoveSlots`, `levelUpChoices` (LevelUpChoice[]), `equippedItemSlots` (string→int map of cap per slot).
+
+## Item
+
+Role: a piece of equippable gear. Items are stateless catalog entries returned in `RunConfig.items`; ownership and equipped state live entirely on the client during a run.
+
+Fields:
+- `id` (string) — stable identifier.
+- `name` (string) — display name.
+- `description` (string) — short UI text.
+- `slot` (enum) — `weapon`, `armor`, or `trinket`.
+- `rarity` (enum) — `common`, `uncommon`, `rare`, `epic`, `legendary`. Used as a UI hint (color/badge); the server does not gate behavior on rarity.
+- `statBonuses` (ItemStatBonus[]) — flat integer bonuses applied while equipped.
+
+## ItemStatBonus
+
+Role: a single flat stat increase granted by an equipped item.
+
+Fields:
+- `stat` (enum) — `maxHealth`, `maxMana`, `attack`, `defense`, or `magic`.
+- `amount` (int) — flat amount added to the matching base stat. May be negative.
+
+While an item is equipped, the sum of its `statBonuses` is added to the hero's base stats. These bonuses stack additively with level-up gains and with active battle effects (buffs, debuffs, `DamageIncrease`, `DamageReduction`).
+
+## Inventory (client-only)
+
+The hero's inventory is not part of the wire payload. The client maintains, during a run:
+- An owned-items list, populated when monsters drop items on victory.
+- An equipped-items map keyed by slot (`weapon`, `armor`, `trinket`). The map respects the per-slot caps in `rules.equippedItemSlots` (default `{ "weapon": 1, "armor": 1, "trinket": 2 }`).
+
+Equipping or unequipping changes the hero's effective base stats immediately. Items are run-scoped only — there is no persistence across runs.
 
 ## LevelUpChoice
 

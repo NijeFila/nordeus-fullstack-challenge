@@ -8,5 +8,6 @@ public class RunConfigResponse
     public List<Monster> Monsters { get; set; } = new();
     public List<Move> Moves { get; set; } = new();
     public List<BattleEnvironment> Environments { get; set; } = new();
+    public List<Item> Items { get; set; } = new();
     public RulesConfig Rules { get; set; } = new();
 }

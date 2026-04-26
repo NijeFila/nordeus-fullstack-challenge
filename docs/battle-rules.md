@@ -22,8 +22,12 @@ If both HPs would drop to 0 on the same turn, the side whose move resolved first
 During damage and healing calculations, the effective value of a stat is:
 
 ```
-effective(stat) = baseStat + sum(amount of active effects targeting that stat)
+effective(stat) = baseStat
+                + sum(statBonus.amount of equipped items for this stat)
+                + sum(amount of active effects targeting that stat)
 ```
+
+Equipped item bonuses are applied at battle start by raising the hero's effective base stats; for `maxHealth` and `maxMana` the new ceiling is used when filling HP and mana at the start of an encounter. Active battle effects continue to stack on top of the gear-modified base.
 
 Effective stats are clamped to a minimum of `1` to avoid divide-by-zero or negative scaling.
 
@@ -123,6 +127,13 @@ The hero's HP is always reset to full at the start of each encounter, including 
   - The post-battle flow presents the attribute choices listed in `rules.levelUpChoices`. The player picks one entry and the chosen `amount` is added to the matching stat on `hero.stats` (`health` → `MaxHealth`, `mana` → `MaxMana`, `attack`, `defense`, `magic`). When `MaxHealth` or `MaxMana` increases, the hero's current HP/MP at the start of the next encounter is the new max (HP and mana are reset between battles).
   - For backward compatibility, older clients that do not implement the picker fall back to applying `rules.statGainPerLevel` automatically. New clients ignore `statGainPerLevel` and drive level-ups from `levelUpChoices`.
 - For simplicity, at most one level-up is resolved per battle. If the hero would have enough XP for more than one level-up in a single battle (rare with the default numbers), the remaining XP is retained and a further level-up is resolved after the next victory. No XP is discarded.
+
+## Item Drops After Victory
+
+- On victory, the client also rolls a possible item drop from the defeated monster's `itemDrops` list (the prototype picks one entry uniformly at random; an empty list means no drop).
+- The dropped item is added to the hero's inventory. If the relevant slot in `rules.equippedItemSlots` still has room and no item is currently equipped there, the new item is auto-equipped; otherwise it sits in the inventory until the player swaps it in.
+- Equipping or unequipping an item updates the hero's effective base stats immediately by adding or removing the item's `statBonuses`. `maxHealth` / `maxMana` increases take effect from the next encounter start (HP and mana are reset to the new max at that point).
+- Items are run-scoped only and are discarded when a new run begins.
 
 ## Move Learning After Victory
 

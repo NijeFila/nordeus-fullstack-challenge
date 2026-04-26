@@ -75,7 +75,8 @@ No parameters. No body.
         "defense": 8,
         "magic": 4
       },
-      "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"]
+      "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
+      "itemDrops": ["rusty_shortsword", "tattered_leather"]
     },
     {
       "id": "witch",
@@ -87,7 +88,42 @@ No parameters. No body.
         "defense": 8,
         "magic": 18
       },
-      "moves": ["shadow_bolt", "drain_life", "curse", "dark_pact", "bleeding_curse"]
+      "moves": ["shadow_bolt", "drain_life", "curse", "dark_pact", "bleeding_curse"],
+      "itemDrops": ["hex_focus", "lifedrinker_locket"]
+    }
+  ],
+  "items": [
+    {
+      "id": "rusty_shortsword",
+      "name": "Rusty Shortsword",
+      "description": "Crude but serviceable. +3 Attack.",
+      "slot": "weapon",
+      "rarity": "common",
+      "statBonuses": [
+        { "stat": "attack", "amount": 3 }
+      ]
+    },
+    {
+      "id": "lifedrinker_locket",
+      "name": "Lifedrinker Locket",
+      "description": "Steals a drop of vitality with every spell. +10 Max Health, +2 Magic.",
+      "slot": "trinket",
+      "rarity": "rare",
+      "statBonuses": [
+        { "stat": "maxHealth", "amount": 10 },
+        { "stat": "magic", "amount": 2 }
+      ]
+    },
+    {
+      "id": "dragonbone_blade",
+      "name": "Dragonbone Blade",
+      "description": "Forged from a dragon's own bones. +8 Attack, +5 Max Health.",
+      "slot": "weapon",
+      "rarity": "epic",
+      "statBonuses": [
+        { "stat": "attack", "amount": 8 },
+        { "stat": "maxHealth", "amount": 5 }
+      ]
     }
   ],
   "moves": [
@@ -159,6 +195,7 @@ No parameters. No body.
       "magic": 2
     },
     "equippedMoveSlots": 4,
+    "equippedItemSlots": { "weapon": 1, "armor": 1, "trinket": 2 },
     "levelUpChoices": [
       { "id": "health",  "name": "+15 Max Health", "description": "Toughen up. Raises Max Health by 15.",     "stat": "health",  "amount": 15 },
       { "id": "attack",  "name": "+4 Attack",      "description": "Hit harder. Raises Attack by 4.",          "stat": "attack",  "amount": 4  },
@@ -178,6 +215,9 @@ No parameters. No body.
 - Modifier fields default to `0` and are omitted from the JSON when zero.
 - `rules` carries the tunable numbers so the client and server agree on formulas without hard-coding them on the client.
 - `rules.levelUpChoices` lists the attribute increases the client offers the player on a level up. Each entry has a `stat` (`health`, `mana`, `attack`, `defense`, or `magic`) and a flat `amount`. The client presents the list during the post-battle flow and applies the picked entry to the hero. `rules.statGainPerLevel` is retained for backward compatibility with older clients that auto-apply a fixed stat gain; newer clients ignore it and drive level-ups from `levelUpChoices` instead.
+- `items` is the full catalog of equippable gear referenced by `monsters[].itemDrops`. Each item has a `slot` (`weapon`, `armor`, or `trinket`), a `rarity` string (UI hint), and a `statBonuses` list of flat integer bonuses keyed by `stat` (`maxHealth`, `maxMana`, `attack`, `defense`, `magic`). The client tracks ownership and equipped items locally during the run; bonuses from currently equipped items are added to the hero's base stats during battle.
+- `monsters[].itemDrops` lists the item ids a monster can drop on victory. The client decides how to pick from the list (the prototype simply rolls one entry uniformly at random and grants it to the player on first kill).
+- `rules.equippedItemSlots` declares how many items can be worn per slot. The default is `{ "weapon": 1, "armor": 1, "trinket": 2 }`. The client enforces these caps in inventory UI; the server only declares the contract.
 - Fields with a `null` value (e.g. `effect`, `manaCost`, or `hpCost` on a free pure-damage move) are omitted from the JSON response.
 - `manaCost` and `hpCost` on a `move` are optional resource costs paid by the caster. A move without either field is free. `maxMana = 0` on an entity simply means it has no mana resource and can only use moves with no `manaCost`.
 

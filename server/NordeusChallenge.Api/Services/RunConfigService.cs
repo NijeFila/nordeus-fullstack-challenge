@@ -13,6 +13,7 @@ public class RunConfigService
         var hero = BuildHero();
         var encounters = BuildEncounters();
         var environments = BuildEnvironments();
+        var items = BuildItems();
         var rules = BuildRules();
 
         return new RunConfigResponse
@@ -23,6 +24,7 @@ public class RunConfigService
             Monsters = monsters,
             Moves = moves,
             Environments = environments,
+            Items = items,
             Rules = rules
         };
     }
@@ -123,35 +125,181 @@ public class RunConfigService
             Id = "goblin_warrior",
             Name = "Goblin Warrior",
             BaseStats = new Stats { MaxHealth = 60, MaxMana = 10, Attack = 12, Defense = 8, Magic = 4 },
-            Moves = new List<string> { "rusty_blade", "dirty_kick", "frenzy", "headbutt" }
+            Moves = new List<string> { "rusty_blade", "dirty_kick", "frenzy", "headbutt" },
+            ItemDrops = new List<string> { "rusty_shortsword", "tattered_leather" }
         },
         new Monster
         {
             Id = "goblin_mage",
             Name = "Goblin Mage",
             BaseStats = new Stats { MaxHealth = 55, MaxMana = 25, Attack = 6, Defense = 6, Magic = 14 },
-            Moves = new List<string> { "firebolt", "arcane_surge", "mana_drain", "hex_shield" }
+            Moves = new List<string> { "firebolt", "arcane_surge", "mana_drain", "hex_shield" },
+            ItemDrops = new List<string> { "apprentice_wand", "mana_charm" }
         },
         new Monster
         {
             Id = "giant_spider",
             Name = "Giant Spider",
             BaseStats = new Stats { MaxHealth = 75, MaxMana = 10, Attack = 14, Defense = 10, Magic = 4 },
-            Moves = new List<string> { "bite", "web_throw", "pounce", "skitter", "venom_bite" }
+            Moves = new List<string> { "bite", "web_throw", "pounce", "skitter", "venom_bite" },
+            ItemDrops = new List<string> { "chitin_plate", "venom_fang" }
         },
         new Monster
         {
             Id = "witch",
             Name = "Witch",
             BaseStats = new Stats { MaxHealth = 80, MaxMana = 25, Attack = 8, Defense = 8, Magic = 18 },
-            Moves = new List<string> { "shadow_bolt", "drain_life", "curse", "dark_pact", "bleeding_curse" }
+            Moves = new List<string> { "shadow_bolt", "drain_life", "curse", "dark_pact", "bleeding_curse" },
+            ItemDrops = new List<string> { "hex_focus", "lifedrinker_locket" }
         },
         new Monster
         {
             Id = "dragon",
             Name = "Dragon",
             BaseStats = new Stats { MaxHealth = 120, MaxMana = 30, Attack = 18, Defense = 14, Magic = 16 },
-            Moves = new List<string> { "flame_breath", "claw_swipe", "intimidate", "dragon_scales" }
+            Moves = new List<string> { "flame_breath", "claw_swipe", "intimidate", "dragon_scales" },
+            ItemDrops = new List<string> { "dragonbone_blade", "scale_aegis" }
+        }
+    };
+
+    private static List<Item> BuildItems() => new()
+    {
+        // ---------- Goblin Warrior drops ----------
+        new Item
+        {
+            Id = "rusty_shortsword",
+            Name = "Rusty Shortsword",
+            Description = "Crude but serviceable. +3 Attack.",
+            Slot = "weapon",
+            Rarity = "common",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "attack", Amount = 3 }
+            }
+        },
+        new Item
+        {
+            Id = "tattered_leather",
+            Name = "Tattered Leather",
+            Description = "Worn but better than nothing. +2 Defense, +5 Max Health.",
+            Slot = "armor",
+            Rarity = "common",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "defense", Amount = 2 },
+                new ItemStatBonus { Stat = "maxHealth", Amount = 5 }
+            }
+        },
+
+        // ---------- Goblin Mage drops ----------
+        new Item
+        {
+            Id = "apprentice_wand",
+            Name = "Apprentice Wand",
+            Description = "A simple wand humming with arcane energy. +3 Magic.",
+            Slot = "weapon",
+            Rarity = "common",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "magic", Amount = 3 }
+            }
+        },
+        new Item
+        {
+            Id = "mana_charm",
+            Name = "Mana Charm",
+            Description = "Steadies the flow of mana. +8 Max Mana, +1 Magic.",
+            Slot = "trinket",
+            Rarity = "uncommon",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "maxMana", Amount = 8 },
+                new ItemStatBonus { Stat = "magic", Amount = 1 }
+            }
+        },
+
+        // ---------- Giant Spider drops ----------
+        new Item
+        {
+            Id = "chitin_plate",
+            Name = "Chitin Plate",
+            Description = "Layered insectoid armor. +4 Defense, +8 Max Health.",
+            Slot = "armor",
+            Rarity = "uncommon",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "defense", Amount = 4 },
+                new ItemStatBonus { Stat = "maxHealth", Amount = 8 }
+            }
+        },
+        new Item
+        {
+            Id = "venom_fang",
+            Name = "Venom Fang",
+            Description = "A wickedly curved fang slick with venom. +2 Attack, +2 Defense.",
+            Slot = "trinket",
+            Rarity = "uncommon",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "attack", Amount = 2 },
+                new ItemStatBonus { Stat = "defense", Amount = 2 }
+            }
+        },
+
+        // ---------- Witch drops ----------
+        new Item
+        {
+            Id = "hex_focus",
+            Name = "Hex Focus",
+            Description = "Concentrates dark energies through bone and silver. +4 Magic, +5 Max Mana.",
+            Slot = "weapon",
+            Rarity = "uncommon",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "magic", Amount = 4 },
+                new ItemStatBonus { Stat = "maxMana", Amount = 5 }
+            }
+        },
+        new Item
+        {
+            Id = "lifedrinker_locket",
+            Name = "Lifedrinker Locket",
+            Description = "Steals a drop of vitality with every spell. +10 Max Health, +2 Magic.",
+            Slot = "trinket",
+            Rarity = "rare",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "maxHealth", Amount = 10 },
+                new ItemStatBonus { Stat = "magic", Amount = 2 }
+            }
+        },
+
+        // ---------- Dragon drops (late-run, strong) ----------
+        new Item
+        {
+            Id = "dragonbone_blade",
+            Name = "Dragonbone Blade",
+            Description = "Forged from a dragon's own bones. +8 Attack, +5 Max Health.",
+            Slot = "weapon",
+            Rarity = "epic",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "attack", Amount = 8 },
+                new ItemStatBonus { Stat = "maxHealth", Amount = 5 }
+            }
+        },
+        new Item
+        {
+            Id = "scale_aegis",
+            Name = "Scale Aegis",
+            Description = "A bulwark of layered dragon scales. +6 Defense, +15 Max Health.",
+            Slot = "armor",
+            Rarity = "epic",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "defense", Amount = 6 },
+                new ItemStatBonus { Stat = "maxHealth", Amount = 15 }
+            }
         }
     };
 
@@ -577,6 +725,12 @@ public class RunConfigService
             Magic = 2
         },
         EquippedMoveSlots = 4,
+        EquippedItemSlots = new Dictionary<string, int>
+        {
+            { "weapon", 1 },
+            { "armor", 1 },
+            { "trinket", 2 }
+        },
         LevelUpChoices = new List<LevelUpChoice>
         {
             new LevelUpChoice
