@@ -177,13 +177,13 @@ namespace NordeusChallenge.Client.UI.MainMenu
             bool exists = SaveGameService.SaveExists();
             if (continueButton != null)
             {
-                continueButton.gameObject.SetActive(exists);
+                continueButton.gameObject.SetActive(true);
                 continueButton.interactable = exists;
             }
+            // Delete Save button is removed from layout per rework instructions.
             if (deleteSaveButton != null)
             {
-                deleteSaveButton.gameObject.SetActive(exists);
-                deleteSaveButton.interactable = exists;
+                deleteSaveButton.gameObject.SetActive(false);
             }
         }
 
