@@ -22,6 +22,12 @@ namespace NordeusChallenge.Client.UI.MainMenu
         [Tooltip("Optional Endless Run button. Wired to OnEndlessStartClicked. Hidden if endlessMode is disabled.")]
         [SerializeField] private Button endlessButton;
 
+        [Tooltip("Optional Continue Run button. Hidden when no save file exists.")]
+        [SerializeField] private Button continueButton;
+
+        [Tooltip("Optional Delete Save button. Hidden when no save file exists.")]
+        [SerializeField] private Button deleteSaveButton;
+
         [SerializeField] private Button optionsButton;
         [SerializeField] private Button exitButton;
         [SerializeField] private TMP_Text statusText;
@@ -30,57 +36,66 @@ namespace NordeusChallenge.Client.UI.MainMenu
         private bool _requestInFlight;
         private RunMode _pendingMode = RunMode.Standard;
 
+        // When true, the response handler restores from save instead of
+        // routing the player to ClassSelection.
+        private bool _pendingContinue;
+
         private void Awake()
         {
             _apiClient = new RunApiClient(baseUrl);
-
-            if (statusText != null)
-            {
-                statusText.text = string.Empty;
-            }
+            if (statusText != null) statusText.text = string.Empty;
         }
 
         private void OnEnable()
         {
-            if (startButton != null)
-            {
-                startButton.onClick.AddListener(OnStartClicked);
-            }
-            if (endlessButton != null)
-            {
-                endlessButton.onClick.AddListener(OnEndlessStartClicked);
-            }
-            if (exitButton != null)
-            {
-                exitButton.onClick.AddListener(OnExitClicked);
-            }
+            if (startButton != null) startButton.onClick.AddListener(OnStartClicked);
+            if (endlessButton != null) endlessButton.onClick.AddListener(OnEndlessStartClicked);
+            if (continueButton != null) continueButton.onClick.AddListener(OnContinueClicked);
+            if (deleteSaveButton != null) deleteSaveButton.onClick.AddListener(OnDeleteSaveClicked);
+            if (exitButton != null) exitButton.onClick.AddListener(OnExitClicked);
+
+            RefreshSaveButtons();
         }
 
         private void OnDisable()
         {
-            if (startButton != null)
-            {
-                startButton.onClick.RemoveListener(OnStartClicked);
-            }
-            if (endlessButton != null)
-            {
-                endlessButton.onClick.RemoveListener(OnEndlessStartClicked);
-            }
-            if (exitButton != null)
-            {
-                exitButton.onClick.RemoveListener(OnExitClicked);
-            }
+            if (startButton != null) startButton.onClick.RemoveListener(OnStartClicked);
+            if (endlessButton != null) endlessButton.onClick.RemoveListener(OnEndlessStartClicked);
+            if (continueButton != null) continueButton.onClick.RemoveListener(OnContinueClicked);
+            if (deleteSaveButton != null) deleteSaveButton.onClick.RemoveListener(OnDeleteSaveClicked);
+            if (exitButton != null) exitButton.onClick.RemoveListener(OnExitClicked);
         }
 
-        private void OnStartClicked() => BeginRunRequest(RunMode.Standard);
+        private void OnStartClicked() => BeginRunRequest(RunMode.Standard, isContinue: false);
 
-        private void OnEndlessStartClicked() => BeginRunRequest(RunMode.Endless);
+        private void OnEndlessStartClicked() => BeginRunRequest(RunMode.Endless, isContinue: false);
 
-        private void BeginRunRequest(RunMode mode)
+        private void OnContinueClicked()
+        {
+            if (!SaveGameService.SaveExists())
+            {
+                SetStatus(Loc.Tr("ui.main_menu.no_save", "No save file found."));
+                RefreshSaveButtons();
+                return;
+            }
+            // Run mode is restored from the save itself; pass Standard as a
+            // placeholder so the request kicks off.
+            BeginRunRequest(RunMode.Standard, isContinue: true);
+        }
+
+        private void OnDeleteSaveClicked()
+        {
+            SaveGameService.TryDelete();
+            SetStatus(Loc.Tr("ui.save.deleted", "Save deleted."));
+            RefreshSaveButtons();
+        }
+
+        private void BeginRunRequest(RunMode mode, bool isContinue)
         {
             if (_requestInFlight) return;
 
             _pendingMode = mode;
+            _pendingContinue = isContinue;
             _requestInFlight = true;
             SetButtonsInteractable(false);
             SetStatus(Loc.Tr("ui.main_menu.loading", "Loading run..."));
@@ -98,9 +113,34 @@ namespace NordeusChallenge.Client.UI.MainMenu
                 return;
             }
 
-            // If the user chose Endless but the server has it disabled, fall
-            // back to Standard rather than dropping the player into an empty
-            // endless run.
+            if (_pendingContinue)
+            {
+                GameSession.Instance.SetCurrentRun(run);
+                var data = SaveGameService.TryRead();
+                if (data == null)
+                {
+                    SetStatus(Loc.Tr("ui.save.load_failed", "Could not load save."));
+                    GameSession.Instance.ClearCurrentRun();
+                    SetButtonsInteractable(true);
+                    RefreshSaveButtons();
+                    return;
+                }
+
+                if (!GameSession.Instance.RestoreFromSaveData(data))
+                {
+                    SetStatus(Loc.Tr("ui.save.load_failed", "Could not load save."));
+                    GameSession.Instance.ClearCurrentRun();
+                    SetButtonsInteractable(true);
+                    RefreshSaveButtons();
+                    return;
+                }
+
+                SetStatus(Loc.Tr("ui.save.loaded", "Run restored."));
+                SceneManager.LoadScene(SceneNames.RunOverview);
+                return;
+            }
+
+            // Fresh-run flow.
             if (_pendingMode == RunMode.Endless
                 && (run == null || run.endlessMode == null || !run.endlessMode.enabled))
             {
@@ -110,9 +150,6 @@ namespace NordeusChallenge.Client.UI.MainMenu
             GameSession.Instance.SetCurrentRun(run);
             GameSession.Instance.SetRunMode(_pendingMode);
 
-            // If the server returned hero classes, route to the picker. Older
-            // server payloads without classes go straight to the run overview
-            // using the legacy hero field already loaded by SetCurrentRun.
             bool hasClasses = run != null && run.heroClasses != null && run.heroClasses.Count > 0;
             SceneManager.LoadScene(hasClasses ? SceneNames.ClassSelection : SceneNames.RunOverview);
         }
@@ -122,6 +159,7 @@ namespace NordeusChallenge.Client.UI.MainMenu
             _requestInFlight = false;
             SetStatus(string.Format(Loc.Tr("ui.main_menu.error", "Could not start run. {0}"), error));
             SetButtonsInteractable(true);
+            RefreshSaveButtons();
         }
 
         private void OnExitClicked()
@@ -134,18 +172,32 @@ namespace NordeusChallenge.Client.UI.MainMenu
 #endif
         }
 
+        private void RefreshSaveButtons()
+        {
+            bool exists = SaveGameService.SaveExists();
+            if (continueButton != null)
+            {
+                continueButton.gameObject.SetActive(exists);
+                continueButton.interactable = exists;
+            }
+            if (deleteSaveButton != null)
+            {
+                deleteSaveButton.gameObject.SetActive(exists);
+                deleteSaveButton.interactable = exists;
+            }
+        }
+
         private void SetButtonsInteractable(bool value)
         {
             if (startButton != null) startButton.interactable = value;
             if (endlessButton != null) endlessButton.interactable = value;
+            if (continueButton != null) continueButton.interactable = value && SaveGameService.SaveExists();
+            if (deleteSaveButton != null) deleteSaveButton.interactable = value && SaveGameService.SaveExists();
         }
 
         private void SetStatus(string message)
         {
-            if (statusText != null)
-            {
-                statusText.text = message;
-            }
+            if (statusText != null) statusText.text = message;
         }
     }
 }

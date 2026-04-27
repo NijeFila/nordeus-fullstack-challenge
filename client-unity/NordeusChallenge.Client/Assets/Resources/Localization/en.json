@@ -10,6 +10,16 @@
     { "key": "ui.main_menu.error", "value": "Could not start run. {0}" },
     { "key": "ui.main_menu.standard_run", "value": "Standard Run" },
     { "key": "ui.main_menu.endless_run", "value": "Endless Run" },
+    { "key": "ui.main_menu.continue_run", "value": "Continue Run" },
+    { "key": "ui.main_menu.delete_save", "value": "Delete Save" },
+    { "key": "ui.main_menu.no_save", "value": "No save file found." },
+
+    { "key": "ui.save.save_and_exit", "value": "Save & Exit" },
+    { "key": "ui.save.saved", "value": "Run saved." },
+    { "key": "ui.save.loaded", "value": "Run restored." },
+    { "key": "ui.save.load_failed", "value": "Could not load save." },
+    { "key": "ui.save.delete_save", "value": "Delete Save" },
+    { "key": "ui.save.deleted", "value": "Save deleted." },
 
     { "key": "ui.endless.title", "value": "Endless Mode" },
     { "key": "ui.endless.floor", "value": "Floor {0}" },

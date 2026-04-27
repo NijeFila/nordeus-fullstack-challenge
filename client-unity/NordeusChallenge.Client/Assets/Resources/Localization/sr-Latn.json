@@ -10,6 +10,16 @@
     { "key": "ui.main_menu.error", "value": "Pohod nije mogao da počne. {0}" },
     { "key": "ui.main_menu.standard_run", "value": "Standardni pohod" },
     { "key": "ui.main_menu.endless_run", "value": "Beskonačni pohod" },
+    { "key": "ui.main_menu.continue_run", "value": "Nastavi pohod" },
+    { "key": "ui.main_menu.delete_save", "value": "Obriši snimak" },
+    { "key": "ui.main_menu.no_save", "value": "Snimak nije pronađen." },
+
+    { "key": "ui.save.save_and_exit", "value": "Sačuvaj i izađi" },
+    { "key": "ui.save.saved", "value": "Pohod sačuvan." },
+    { "key": "ui.save.loaded", "value": "Pohod vraćen." },
+    { "key": "ui.save.load_failed", "value": "Učitavanje snimka nije uspelo." },
+    { "key": "ui.save.delete_save", "value": "Obriši snimak" },
+    { "key": "ui.save.deleted", "value": "Snimak obrisan." },
 
     { "key": "ui.endless.title", "value": "Beskonačni režim" },
     { "key": "ui.endless.floor", "value": "Sprat {0}" },

@@ -1065,6 +1065,284 @@ namespace NordeusChallenge.Client.Runtime
             };
         }
 
+        // ---------- Save / Restore ----------
+
+        // Builds a serializable snapshot of the current run. Catalog data
+        // (run config) is intentionally not saved — Continue refetches /run/config
+        // and reapplies this snapshot.
+        public SaveGameData CreateSaveData()
+        {
+            var data = new SaveGameData
+            {
+                saveVersion = 1,
+                savedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC",
+                runMode = CurrentRunMode == RunMode.Endless ? "Endless" : "Standard",
+                selectedHeroClassId = SelectedHeroClassId,
+                gold = _currentGold,
+                pendingLevelUps = _pendingLevelUps,
+                selectedMapNodeId = SelectedMapNodeId,
+                runCompleted = RunCompleted,
+                selectedEncounterIndex = SelectedEncounterIndex,
+                highestUnlockedEncounterIndex = HighestUnlockedEncounterIndex
+            };
+
+            if (CurrentHero != null)
+            {
+                data.hero.id = CurrentHero.id;
+                data.hero.name = CurrentHero.name;
+                data.hero.level = CurrentHero.level;
+                data.hero.xp = CurrentHero.xp;
+                if (CurrentHero.stats != null)
+                {
+                    data.hero.maxHealth = CurrentHero.stats.maxHealth;
+                    data.hero.maxMana = CurrentHero.stats.maxMana;
+                    data.hero.attack = CurrentHero.stats.attack;
+                    data.hero.defense = CurrentHero.stats.defense;
+                    data.hero.magic = CurrentHero.stats.magic;
+                }
+                if (CurrentHero.equippedMoves != null)
+                    data.hero.equippedMoves = new List<string>(CurrentHero.equippedMoves);
+                if (CurrentHero.learnedMovePool != null)
+                    data.hero.learnedMovePool = new List<string>(CurrentHero.learnedMovePool);
+            }
+
+            data.inventoryItemIds = new List<string>(_inventoryItemIds);
+            foreach (var pair in _equippedItemIds)
+            {
+                if (pair.Value == null || pair.Value.Count == 0) continue;
+                data.equippedSlots.Add(new EquippedSlotSaveData
+                {
+                    slot = pair.Key,
+                    itemIds = new List<string>(pair.Value)
+                });
+            }
+
+            data.clearedNodeIds = new List<string>(_clearedNodeIds);
+            data.availableNodeIds = new List<string>(_availableNodeIds);
+            data.clearedEncounters = new List<int>(_clearedEncounters);
+
+            data.endless.floor = EndlessFloor;
+            data.endless.bestFloor = EndlessBestFloor;
+            data.endless.runOver = EndlessRunOver;
+            data.endless.floorType = EndlessFloorType;
+            if (_endlessEncounter != null)
+            {
+                data.endless.monsterId = _endlessEncounter.monsterId;
+                data.endless.monsterLevel = _endlessEncounter.level;
+                data.endless.environmentId = _endlessEncounter.environmentId;
+            }
+
+            return data;
+        }
+
+        // Restores mutable state from a SaveGameData snapshot onto the current
+        // run config. Call SetCurrentRun(...) with a freshly fetched run config
+        // *before* invoking this. Returns false when the save references a
+        // hero/state that cannot be reconstructed from the current config.
+        public bool RestoreFromSaveData(SaveGameData data)
+        {
+            if (data == null || CurrentRun == null) return false;
+
+            CurrentRunMode = string.Equals(data.runMode, "Endless", StringComparison.OrdinalIgnoreCase)
+                ? RunMode.Endless
+                : RunMode.Standard;
+
+            // Re-seed the hero from the saved class so move ids / stats line
+            // up with the current catalog, then overwrite mutable fields with
+            // the saved values.
+            HeroClassDto cls = GetHeroClassByIdOrDefault(data.selectedHeroClassId);
+            if (cls != null)
+            {
+                CurrentHero = HeroFromClass(cls);
+                SelectedHeroClassId = cls.id;
+            }
+            else if (CurrentRun.hero != null)
+            {
+                CurrentHero = CloneHero(CurrentRun.hero);
+                SelectedHeroClassId = data.selectedHeroClassId;
+            }
+
+            if (CurrentHero == null)
+            {
+                Debug.LogWarning("[Save] Restore failed: no hero could be reconstructed.");
+                return false;
+            }
+
+            // Apply hero mutable fields from the save.
+            if (data.hero != null)
+            {
+                CurrentHero.id = string.IsNullOrEmpty(data.hero.id) ? CurrentHero.id : data.hero.id;
+                CurrentHero.name = string.IsNullOrEmpty(data.hero.name) ? CurrentHero.name : data.hero.name;
+                CurrentHero.level = data.hero.level > 0 ? data.hero.level : 1;
+                CurrentHero.xp = data.hero.xp;
+
+                if (CurrentHero.stats == null) CurrentHero.stats = new StatsDto();
+                CurrentHero.stats.maxHealth = data.hero.maxHealth;
+                CurrentHero.stats.maxMana = data.hero.maxMana;
+                CurrentHero.stats.attack = data.hero.attack;
+                CurrentHero.stats.defense = data.hero.defense;
+                CurrentHero.stats.magic = data.hero.magic;
+
+                CurrentHero.learnedMovePool = FilterKnownMoves(data.hero.learnedMovePool);
+                CurrentHero.equippedMoves = FilterKnownMoves(data.hero.equippedMoves);
+            }
+
+            _currentGold = Math.Max(0, data.gold);
+            _pendingLevelUps = Math.Max(0, data.pendingLevelUps);
+
+            // Inventory + equipped (drop unknown ids).
+            ResetInventory();
+            if (data.inventoryItemIds != null)
+            {
+                for (int i = 0; i < data.inventoryItemIds.Count; i++)
+                {
+                    string id = data.inventoryItemIds[i];
+                    if (string.IsNullOrEmpty(id)) continue;
+                    if (GetItemById(id) == null) continue;
+                    if (!_inventoryItemIds.Contains(id)) _inventoryItemIds.Add(id);
+                }
+            }
+            if (data.equippedSlots != null)
+            {
+                for (int s = 0; s < data.equippedSlots.Count; s++)
+                {
+                    var slot = data.equippedSlots[s];
+                    if (slot == null || string.IsNullOrEmpty(slot.slot) || slot.itemIds == null) continue;
+                    int cap = GetEquippedSlotCap(slot.slot);
+                    if (cap <= 0) continue;
+
+                    if (!_equippedItemIds.TryGetValue(slot.slot, out var list))
+                    {
+                        list = new List<string>();
+                        _equippedItemIds[slot.slot] = list;
+                    }
+                    for (int i = 0; i < slot.itemIds.Count && list.Count < cap; i++)
+                    {
+                        string id = slot.itemIds[i];
+                        if (string.IsNullOrEmpty(id)) continue;
+                        if (GetItemById(id) == null) continue;
+                        if (!_inventoryItemIds.Contains(id)) continue;
+                        if (!list.Contains(id)) list.Add(id);
+                    }
+                }
+            }
+
+            // Standard map state.
+            ResetMapProgress();
+            if (HasMap)
+            {
+                _availableNodeIds.Clear();
+                _clearedNodeIds.Clear();
+
+                if (data.clearedNodeIds != null)
+                {
+                    for (int i = 0; i < data.clearedNodeIds.Count; i++)
+                    {
+                        string id = data.clearedNodeIds[i];
+                        if (!string.IsNullOrEmpty(id) && GetMapNodeById(id) != null) _clearedNodeIds.Add(id);
+                    }
+                }
+                if (data.availableNodeIds != null)
+                {
+                    for (int i = 0; i < data.availableNodeIds.Count; i++)
+                    {
+                        string id = data.availableNodeIds[i];
+                        if (string.IsNullOrEmpty(id)) continue;
+                        if (_clearedNodeIds.Contains(id)) continue;
+                        if (GetMapNodeById(id) != null) _availableNodeIds.Add(id);
+                    }
+                }
+
+                // If the save left no available nodes (e.g. save right before a
+                // boss kill that didn't get stored), reseed from depth 0 so the
+                // run is still playable.
+                if (_availableNodeIds.Count == 0 && !data.runCompleted)
+                {
+                    string startId = CurrentRun.startingMapNodeId;
+                    if (!string.IsNullOrEmpty(startId) && GetMapNodeById(startId) != null
+                        && !_clearedNodeIds.Contains(startId))
+                    {
+                        _availableNodeIds.Add(startId);
+                    }
+                }
+
+                SelectedMapNodeId = !string.IsNullOrEmpty(data.selectedMapNodeId)
+                    && GetMapNodeById(data.selectedMapNodeId) != null
+                    ? data.selectedMapNodeId
+                    : null;
+                RunCompleted = data.runCompleted;
+            }
+
+            // Linear fallback.
+            SelectedEncounterIndex = data.selectedEncounterIndex;
+            HighestUnlockedEncounterIndex = data.highestUnlockedEncounterIndex;
+            _clearedEncounters.Clear();
+            if (data.clearedEncounters != null)
+            {
+                for (int i = 0; i < data.clearedEncounters.Count; i++)
+                {
+                    _clearedEncounters.Add(data.clearedEncounters[i]);
+                }
+            }
+
+            // Endless state.
+            ResetEndlessState();
+            if (CurrentRunMode == RunMode.Endless && data.endless != null)
+            {
+                EndlessFloor = data.endless.floor > 0 ? data.endless.floor : 1;
+                EndlessBestFloor = Math.Max(0, data.endless.bestFloor);
+                EndlessRunOver = data.endless.runOver;
+                EndlessFloorType = data.endless.floorType;
+
+                if (!EndlessRunOver
+                    && !string.IsNullOrEmpty(data.endless.monsterId)
+                    && GetMonsterById(data.endless.monsterId) != null)
+                {
+                    _endlessEncounter = new EncounterDto
+                    {
+                        index = -1,
+                        monsterId = data.endless.monsterId,
+                        level = data.endless.monsterLevel > 0 ? data.endless.monsterLevel : 1,
+                        environmentId = data.endless.environmentId
+                    };
+                }
+                else if (!EndlessRunOver)
+                {
+                    // Saved monster vanished from the catalog — roll a fresh
+                    // floor instead of crashing the run.
+                    GenerateNextEndlessFloor();
+                }
+            }
+
+            return true;
+        }
+
+        // Convenience wrappers used by UI buttons.
+        public bool SaveCurrentRun()
+        {
+            if (CurrentRun == null || CurrentHero == null)
+            {
+                Debug.LogWarning("[Save] Cannot save: no active run.");
+                return false;
+            }
+            return SaveGameService.TryWrite(CreateSaveData());
+        }
+
+        public void DeleteSavedRun() => SaveGameService.TryDelete();
+
+        // Helper: keep only move ids that exist in the current move catalog.
+        private List<string> FilterKnownMoves(List<string> source)
+        {
+            var result = new List<string>();
+            if (source == null) return result;
+            for (int i = 0; i < source.Count; i++)
+            {
+                string id = source[i];
+                if (!string.IsNullOrEmpty(id) && GetMoveById(id) != null) result.Add(id);
+            }
+            return result;
+        }
+
         private static HeroDto CloneHero(HeroDto source)
         {
             if (source == null) return null;
