@@ -1944,7 +1944,7 @@ MonoBehaviour:
   goldText: {fileID: 127928558}
   statusText: {fileID: 230289984}
   backButton: {fileID: 385444974}
-  visualCatalog: {fileID: 0}
+  visualCatalog: {fileID: 11400000, guid: 338248d6387423a43bf5c03d64b04cc6, type: 2}
 --- !u!4 &1165118589
 Transform:
   m_ObjectHideFlags: 0

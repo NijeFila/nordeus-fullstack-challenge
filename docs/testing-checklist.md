@@ -24,7 +24,7 @@ Run `dotnet run` from `server/NordeusChallenge.Api`, then exercise the endpoints
 - Calling with low `monsterHealth` (for example `monsterHealth=10` on a 100 HP monster) prefers a Heal-category move when one is in the monster's move list.
 - Calling with very low `heroHealth` (for example `heroHealth=5` on a 100 HP hero) prefers the highest-power affordable damaging move.
 - Calling with `monsterEffects=BuffDefense` and a move whose effect kind is `BuffDefense` and target `Self` should not return that redundant move (unless it is the only legal pick).
-- Unknown `monsterId` returns 200 with `null` or empty (the bot fails closed; client falls back gracefully).
+- Unknown `monsterId` returns `400 Bad Request` with `{"error": "Unknown monsterId '...'."}`. Missing required query parameters return `400` with `{"error": "Missing required battle-state parameters."}`. The client surfaces the error in the battle log and continues to function.
 
 ## Standard Run Tests
 

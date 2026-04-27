@@ -17,7 +17,7 @@ A checklist that maps directly to the challenge requirements.
 - [x] `GET /run/config` is implemented, reachable, and returns the full run payload.
 - [x] `GET /battle/next-move` is implemented, reachable, and returns the opponent's move id.
 - [x] Response payloads are documented with examples in `docs/api-contract.md`.
-- [x] Endpoints return sensible responses for missing or unknown input (for example unknown `monsterId` returns 200 with an empty body, the client falls back gracefully).
+- [x] Endpoints return sensible responses for missing or unknown input (for example unknown `monsterId` returns `400 Bad Request` with an error body, missing required parameters return `400`, the client surfaces the error and falls back gracefully).
 - [x] Server runs locally with a single command: `dotnet run` from `server/NordeusChallenge.Api`.
 
 ## Game Systems

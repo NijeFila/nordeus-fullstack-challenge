@@ -95,7 +95,7 @@ The Run Overview also has buttons for Move Management, Item Management, the Shop
 - **Combat depth.** Status effects (Bleed, Poison, DamageIncrease, DamageReduction, Buff and Debuff for Attack, Defense, and Magic), Heal moves, mana and HP costs, battle log, hit and heal feedback.
 - **Smarter opponent.** Heal-when-low rule, finishing-blow rule, redundant-effect skip, mild damage bias, and an affordability filter (mana and HP costs).
 - **Progression and economy.** Attribute choice on level-up, items with stat bonuses, item management screen, shop with item and stat-upgrade offers, gold rewards.
-- **Content.** 8 monsters, 30+ moves, 8 environments, 11 items, 8 shop offers, 5 level-up choices, 4 hero classes (Knight, Ranger, Mage, Cleric).
+- **Content.** 8 monsters, 40+ moves, 8 environments, 14 items, 8 shop offers, 5 level-up choices, 4 hero classes (Knight, Ranger, Mage, Cleric).
 - **Map.** A small Slay-the-Spire-style branching graph with Battle, Elite, Shop, and Boss node types.
 - **Endless Mode.** Server-defined pools and curves, client-side floor generation, period-based floor types, linear reward curves.
 - **Save and Exit.** Local JSON save with **Continue Run** on the Main Menu. The save restores hero state, gold, inventory, equipped items, and the map or endless progression.

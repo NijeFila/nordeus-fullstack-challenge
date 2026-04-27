@@ -15,6 +15,8 @@ MonoBehaviour:
   defaultPortrait: {fileID: 0}
   defaultMoveIcon: {fileID: 0}
   defaultEffectIcon: {fileID: 0}
+  defaultItemIcon: {fileID: 0}
+  defaultStatIcon: {fileID: 0}
   heroPortraits:
   - id: knight
     sprite: {fileID: -5918137915363136097, guid: 953c1d6867dacec468afc8f8f0651b85, type: 3}
@@ -114,6 +116,22 @@ MonoBehaviour:
     sprite: {fileID: 8410109417593062605, guid: 2c1c6f8a9f91bcd4ca455ea9e16e15b5, type: 3}
   - id: mana_flare
     sprite: {fileID: -7057622138681851761, guid: ba3beabd4fc8d2548b92950e111df39d, type: 3}
+  - id: power_stance
+    sprite: {fileID: -5928894558842119981, guid: afc541c4a8b5b9a499a5a88da50ff08b, type: 3}
+  - id: iron_skin
+    sprite: {fileID: 7871825890517930705, guid: a5654a8d66039fd4680daad4b08281be, type: 3}
+  - id: rend
+    sprite: {fileID: 8010595137646337191, guid: c3e48ac8f7c84b74689fd1d9e6f8d6af, type: 3}
+  - id: arcane_focus
+    sprite: {fileID: 2908981458336185795, guid: f64694f812d9bfd489f75a5acd802e72, type: 3}
+  - id: blessed_mend
+    sprite: {fileID: -1840237867795088516, guid: 08a2fa2b61c618f45a30cd8ca0dd30f9, type: 3}
+  - id: smite
+    sprite: {fileID: -285770822658436869, guid: 92b5080cf5102a545a4fe0c10e0b7e2f, type: 3}
+  - id: venom_bite
+    sprite: {fileID: 7275561814827643719, guid: 331c308f5d8d14945a9d228cc621f876, type: 3}
+  - id: bleeding_curse
+    sprite: {fileID: -906729877512920770, guid: 85145be65f22cc245bc189802b5fd574, type: 3}
   effectIcons:
   - id: BuffAttack
     sprite: {fileID: -1400734978927520801, guid: 4f55c33e0ee756546ab952a1a13155c1, type: 3}
@@ -129,3 +147,51 @@ MonoBehaviour:
     sprite: {fileID: -8188798609868112713, guid: 7962e76e5f537f7419f96fd67106bee2, type: 3}
   - id: Heal
     sprite: {fileID: 2166299480135756165, guid: 038a5cce39c5be54d977bea0af7e2700, type: 3}
+  - id: Bleed
+    sprite: {fileID: -1879853197750402688, guid: 25958f1f6148cb048bc09caa593742c9, type: 3}
+  - id: Poison
+    sprite: {fileID: -7202098052273162093, guid: 52970a9b17eb70540aba034b706f4462, type: 3}
+  - id: DamageIncrease
+    sprite: {fileID: 6339999329112729993, guid: fa7c7f1c7fb4c554e9f6b41be042502c, type: 3}
+  - id: DamageReduction
+    sprite: {fileID: 248065492244729043, guid: 41771c7c5acbb7340a7b03a2e9f44029, type: 3}
+  itemIcons:
+  - id: rusty_shortsword
+    sprite: {fileID: -5593461421835267316, guid: 983e8e0b9e9d6074a979252a79aaee31, type: 3}
+  - id: tattered_leather
+    sprite: {fileID: 2873886700587034848, guid: 03abb90a91d837e4eb3aa88b909928e4, type: 3}
+  - id: apprentice_wand
+    sprite: {fileID: -5431324545663877608, guid: 87570159941a27448908053a3245ec9e, type: 3}
+  - id: mana_charm
+    sprite: {fileID: 5660636746481551422, guid: 071705e9f8fb21748ac06ec32c947d6f, type: 3}
+  - id: chitin_plate
+    sprite: {fileID: 139671446622936642, guid: 45dbf650bcde9c54cbb0615b355ebf6b, type: 3}
+  - id: venom_fang
+    sprite: {fileID: -9042429937017946954, guid: 2d965f8d252724645bde2a1e52fa77bd, type: 3}
+  - id: hex_focus
+    sprite: {fileID: -4666213723435570626, guid: 98b9e2c9590511d48998f52f4dd87b56, type: 3}
+  - id: lifedrinker_locket
+    sprite: {fileID: -6376543487102244773, guid: ed19880601234c844bbaf98be8dbaf04, type: 3}
+  - id: dragonbone_blade
+    sprite: {fileID: -814581240700515885, guid: 4267d50302ccb11418436c0f71681b72, type: 3}
+  - id: scale_aegis
+    sprite: {fileID: -7796760069532638125, guid: d7189405afe5e154ab2d2ebbf88b984c, type: 3}
+  - id: bone_pauldrons
+    sprite: {fileID: 139671446622936642, guid: 45dbf650bcde9c54cbb0615b355ebf6b, type: 3}
+  - id: grave_signet
+    sprite: {fileID: -6205583724797508915, guid: 5a56841e30b19d849923f80c9fe32427, type: 3}
+  - id: troll_hide_cloak
+    sprite: {fileID: 3322556806283316023, guid: ace1aa69949c0b4438064d655fcd5b77, type: 3}
+  - id: ember_core
+    sprite: {fileID: -4052842101772191210, guid: 2d498df2fd4436d439ce5e488c4f31a8, type: 3}
+  statIcons:
+  - id: maxHealth
+    sprite: {fileID: 8404654356116829985, guid: 06696d79e3d186b4a8a555098408e467, type: 3}
+  - id: maxMana
+    sprite: {fileID: 9192399446507429819, guid: 079261b0f6b4772478a7fd5774971983, type: 3}
+  - id: attack
+    sprite: {fileID: 2684750602124186590, guid: 177dbdbf1bb38d942a3b531f8962d73f, type: 3}
+  - id: defense
+    sprite: {fileID: 6404778677824247896, guid: ae4b207b8136bca498664d78c0d7fbf9, type: 3}
+  - id: magic
+    sprite: {fileID: 3185874089565593972, guid: b98ff9d367aef9a418e99364f55a1fae, type: 3}
