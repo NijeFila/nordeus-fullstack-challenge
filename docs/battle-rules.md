@@ -2,6 +2,20 @@
 
 The rules the prototype follows. Formulas are kept simple, explicit, and integer-based so the client and server stay in lockstep.
 
+## Hero Class Selection
+
+Before the run starts the client shows a class picker populated from `RunConfig.heroClasses`. Picking a class seeds the active hero's `stats`, `equippedMoves`, and `learnedMovePool` from the class's `startingStats`, `startingMoves`, and `startingLearnedMoves`. From that point on every rule below applies identically regardless of class — there are no class-only branches in the damage, healing, or effect pipeline.
+
+The four prototype classes are tuned around the same per-level stat growth (`rules.statGainPerLevel`) and use only existing effect kinds, so monsters and `/battle/next-move` are unaffected by the player's choice.
+
+Classes:
+- **Knight** — balanced stats, original default kit (`slash`, `shield_up`, `battle_cry`, `second_wind`).
+- **Ranger** — higher Attack, lower Defense and Magic, leans on `rend` for sustained damage.
+- **Mage** — high Magic and Max Mana, low Defense; `arcane_focus` (BuffMagic) plus `firebolt` / `mana_drain`.
+- **Cleric** — high HP and Magic, lower Attack; `blessed_mend` (Heal), `smite` (magic damage), defensive blessings.
+
+The legacy `RunConfig.hero` field still describes the Knight's starting state for clients that have not adopted the picker.
+
 ## Turn Flow
 
 1. A battle begins with both the hero and the monster at full HP and full mana. Hero HP and mana are reset to `stats.maxHealth` and `stats.maxMana` at the start of every encounter; there is no HP or mana carry-over between battles.

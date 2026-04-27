@@ -72,9 +72,25 @@ Monsters are scaled to an encounter's level on the client using the same per-lev
 
 The monster catalog for the prototype: Goblin Warrior, Goblin Mage, Giant Spider, Skeleton Knight, Forest Troll, Witch, Fire Elemental, Dragon.
 
+## HeroClass
+
+Role: a selectable hero archetype offered by the server. Returned in `RunConfig.heroClasses`. The client shows a class picker before the run starts and seeds the active `Hero` from the chosen entry.
+
+Fields:
+- `id` (string) — stable identifier (`knight`, `ranger`, `mage`, `cleric`).
+- `name` (string)
+- `description` (string)
+- `startingStats` (Stats) — values the hero begins the run with at level 1.
+- `startingMoves` (string[]) — move ids equipped at the start of the run; capped at `equippedMoveSlots`.
+- `startingLearnedMoves` (string[]) — move ids the hero already knows at the start; should be a superset of `startingMoves` so Move Management has options to swap in.
+
+`RunConfigResponse.defaultHeroClassId` selects the entry the picker highlights by default. The legacy `RunConfigResponse.hero` field continues to mirror that default class so older clients that ignore the picker still work unchanged.
+
+The class catalog for the prototype: Knight (balanced), Ranger (high attack, bleed), Mage (high magic, fragile), Cleric (high health and magic, support-focused).
+
 ## Hero
 
-Role: the player-controlled entity, persistent across the run. In the prototype the hero is the Knight.
+Role: the player-controlled entity, persistent across the run. The Hero is seeded from the chosen `HeroClass`; in the legacy single-class flow it is always the Knight.
 
 Fields:
 - `id` (string) — constant, e.g. `"knight"`.
@@ -131,7 +147,9 @@ Role: the payload returned by `GET /run/config`. Self-contained description of a
 
 Fields:
 - `runId` (string) — identifier for the run instance.
-- `hero` (Hero) — starting hero state.
+- `hero` (Hero) — starting hero state. Mirrors the class identified by `defaultHeroClassId`; kept for clients that have not adopted the class picker.
+- `heroClasses` (HeroClass[]) — selectable archetypes shown by the client's class picker.
+- `defaultHeroClassId` (string) — id of the class to highlight in the picker by default.
 - `encounters` (Encounter[]) — ordered list of battles.
 - `monsters` (Monster[]) — catalog referenced by encounters.
 - `moves` (Move[]) — catalog referenced by hero and monsters.

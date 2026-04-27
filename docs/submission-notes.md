@@ -28,7 +28,8 @@ Notes on what is implemented in this submission, what was intentionally left out
 - Environmental effects per encounter, plus a level-up choice panel that lets the player invest each gain into one of `rules.levelUpChoices`.
 - Items, item management, and a small in-run shop with a gold economy. Items are stateless catalog entries; ownership and equipped state live on the client.
 - Custom localization layer (English + Serbian Latin) covering UI labels and dynamic data names with English fallback.
-- **Expanded content (this submission):** three new monsters (Skeleton Knight, Forest Troll, Fire Elemental) with four moves each, three new environments (Crypt, Ancient Forest, Ember Chamber), and four new item drops (Bone Pauldrons, Grave Signet, Troll Hide Cloak, Ember Core). The default encounter list now runs eight battles ramping from Lv 1 to Lv 7.
+- **Expanded content:** three new monsters (Skeleton Knight, Forest Troll, Fire Elemental) with four moves each, three new environments (Crypt, Ancient Forest, Ember Chamber), and four new item drops (Bone Pauldrons, Grave Signet, Troll Hide Cloak, Ember Core). The default encounter list now runs eight battles ramping from Lv 1 to Lv 7.
+- **Hero classes (this submission):** `RunConfigResponse.heroClasses` exposes four selectable archetypes — Knight (balanced), Ranger (high attack with bleed), Mage (burst caster), Cleric (durable supporter). Each class declares `startingStats`, `startingMoves`, and `startingLearnedMoves`; the client lets the player pick one before the run starts and seeds the active Hero from that entry. The legacy `hero` field is preserved as a Knight-shaped default for clients that have not adopted the picker. Three small class-flavor moves (`arcane_focus`, `blessed_mend`, `smite`) were added to round out Mage and Cleric kits, all using effect kinds that already existed in the engine.
 
 ## Known Limitations
 

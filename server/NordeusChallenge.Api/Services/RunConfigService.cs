@@ -16,6 +16,7 @@ public class RunConfigService
         var items = BuildItems();
         var shopOffers = BuildShopOffers();
         var rules = BuildRules();
+        var heroClasses = BuildHeroClasses();
 
         return new RunConfigResponse
         {
@@ -27,9 +28,111 @@ public class RunConfigService
             Environments = environments,
             Items = items,
             ShopOffers = shopOffers,
-            Rules = rules
+            Rules = rules,
+            HeroClasses = heroClasses,
+            DefaultHeroClassId = "knight"
         };
     }
+
+    private static List<HeroClass> BuildHeroClasses() => new()
+    {
+        // Knight: balanced, the original default. Identical to BuildHero() so a
+        // client that ignores HeroClasses still gets the same starting state.
+        new HeroClass
+        {
+            Id = "knight",
+            Name = "Knight",
+            Description = "Balanced melee fighter. Reliable damage, solid defense, and a small self-heal.",
+            StartingStats = new Stats
+            {
+                MaxHealth = 100,
+                MaxMana = 20,
+                Attack = 20,
+                Defense = 15,
+                Magic = 20
+            },
+            StartingMoves = new List<string> { "slash", "shield_up", "battle_cry", "second_wind" },
+            StartingLearnedMoves = new List<string>
+            {
+                "slash", "shield_up", "battle_cry", "second_wind",
+                "power_stance", "iron_skin", "rend"
+            }
+        },
+
+        // Ranger: light striker. Higher attack, weak magic, leans on bleed and evasion.
+        new HeroClass
+        {
+            Id = "ranger",
+            Name = "Ranger",
+            Description = "Agile striker. Trades raw HP for higher Attack and bleeding follow-ups.",
+            StartingStats = new Stats
+            {
+                MaxHealth = 90,
+                MaxMana = 18,
+                Attack = 24,
+                Defense = 12,
+                Magic = 8
+            },
+            // Uses existing moves: slash (physical), rend (bleed), iron_skin
+            // (defensive), second_wind (heal). All effect kinds already supported.
+            StartingMoves = new List<string> { "slash", "rend", "iron_skin", "second_wind" },
+            StartingLearnedMoves = new List<string>
+            {
+                "slash", "rend", "iron_skin", "second_wind",
+                "power_stance", "battle_cry"
+            }
+        },
+
+        // Mage: glass cannon. High magic and mana, fragile defense.
+        new HeroClass
+        {
+            Id = "mage",
+            Name = "Mage",
+            Description = "Burst caster. High Magic and Max Mana, low Defense. Lives or dies by spell timing.",
+            StartingStats = new Stats
+            {
+                MaxHealth = 80,
+                MaxMana = 35,
+                Attack = 8,
+                Defense = 10,
+                Magic = 24
+            },
+            // Uses existing moves: firebolt (magic dmg), mana_drain (debuff
+            // magic), arcane_focus (new magic buff, see BuildMoves), hex_shield
+            // (light defense). Effect kinds: DebuffMagic, BuffMagic, BuffDefense.
+            StartingMoves = new List<string> { "firebolt", "mana_drain", "arcane_focus", "hex_shield" },
+            StartingLearnedMoves = new List<string>
+            {
+                "firebolt", "mana_drain", "arcane_focus", "hex_shield",
+                "arcane_surge", "second_wind"
+            }
+        },
+
+        // Cleric: durable supporter. Strong heal, magic damage, defense buff.
+        new HeroClass
+        {
+            Id = "cleric",
+            Name = "Cleric",
+            Description = "Durable support. Strong heals and defensive blessings, modest magic damage.",
+            StartingStats = new Stats
+            {
+                MaxHealth = 110,
+                MaxMana = 28,
+                Attack = 10,
+                Defense = 14,
+                Magic = 18
+            },
+            // Uses existing moves: blessed_mend (new heal, see BuildMoves),
+            // smite (new magic dmg, see BuildMoves), shield_up (BuffDefense),
+            // iron_skin (DamageReduction).
+            StartingMoves = new List<string> { "blessed_mend", "smite", "shield_up", "iron_skin" },
+            StartingLearnedMoves = new List<string>
+            {
+                "blessed_mend", "smite", "shield_up", "iron_skin",
+                "battle_cry", "second_wind"
+            }
+        }
+    };
 
     private static List<ShopOffer> BuildShopOffers() => new()
     {
@@ -604,6 +707,50 @@ public class RunConfigService
                 Target = "Opponent"
             },
             Description = "A tearing strike that leaves the foe bleeding."
+        },
+
+        // ---------- Class-specific moves (Mage, Cleric) ----------
+        new Move
+        {
+            Id = "arcane_focus",
+            Name = "Arcane Focus",
+            Category = "Buff",
+            Power = 0,
+            ManaCost = 3,
+            Effect = new MoveEffect
+            {
+                Kind = "BuffMagic",
+                Amount = 5,
+                DurationTurns = 2,
+                Target = "Self"
+            },
+            Description = "Gathers latent energy, raising Magic for 2 turns."
+        },
+        new Move
+        {
+            Id = "blessed_mend",
+            Name = "Blessed Mend",
+            Category = "Heal",
+            Power = 0,
+            ManaCost = 4,
+            Effect = new MoveEffect
+            {
+                Kind = "Heal",
+                Amount = 28,
+                DurationTurns = 0,
+                Target = "Self"
+            },
+            Description = "A whispered prayer that knits wounds closed."
+        },
+        new Move
+        {
+            Id = "smite",
+            Name = "Smite",
+            Category = "Magic",
+            Power = 16,
+            ManaCost = 3,
+            Effect = null,
+            Description = "A column of radiant force."
         },
 
         // ---------- Goblin Warrior ----------

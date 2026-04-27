@@ -42,6 +42,41 @@ No parameters. No body.
     "equippedMoves": ["slash", "shield_up", "battle_cry", "second_wind"],
     "learnedMovePool": ["slash", "shield_up", "battle_cry", "second_wind"]
   },
+  "defaultHeroClassId": "knight",
+  "heroClasses": [
+    {
+      "id": "knight",
+      "name": "Knight",
+      "description": "Balanced melee fighter. Reliable damage, solid defense, and a small self-heal.",
+      "startingStats": { "maxHealth": 100, "maxMana": 20, "attack": 20, "defense": 15, "magic": 20 },
+      "startingMoves": ["slash", "shield_up", "battle_cry", "second_wind"],
+      "startingLearnedMoves": ["slash", "shield_up", "battle_cry", "second_wind", "power_stance", "iron_skin", "rend"]
+    },
+    {
+      "id": "ranger",
+      "name": "Ranger",
+      "description": "Agile striker. Trades raw HP for higher Attack and bleeding follow-ups.",
+      "startingStats": { "maxHealth": 90, "maxMana": 18, "attack": 24, "defense": 12, "magic": 8 },
+      "startingMoves": ["slash", "rend", "iron_skin", "second_wind"],
+      "startingLearnedMoves": ["slash", "rend", "iron_skin", "second_wind", "power_stance", "battle_cry"]
+    },
+    {
+      "id": "mage",
+      "name": "Mage",
+      "description": "Burst caster. High Magic and Max Mana, low Defense. Lives or dies by spell timing.",
+      "startingStats": { "maxHealth": 80, "maxMana": 35, "attack": 8, "defense": 10, "magic": 24 },
+      "startingMoves": ["firebolt", "mana_drain", "arcane_focus", "hex_shield"],
+      "startingLearnedMoves": ["firebolt", "mana_drain", "arcane_focus", "hex_shield", "arcane_surge", "second_wind"]
+    },
+    {
+      "id": "cleric",
+      "name": "Cleric",
+      "description": "Durable support. Strong heals and defensive blessings, modest magic damage.",
+      "startingStats": { "maxHealth": 110, "maxMana": 28, "attack": 10, "defense": 14, "magic": 18 },
+      "startingMoves": ["blessed_mend", "smite", "shield_up", "iron_skin"],
+      "startingLearnedMoves": ["blessed_mend", "smite", "shield_up", "iron_skin", "battle_cry", "second_wind"]
+    }
+  ],
   "encounters": [
     { "index": 0, "monsterId": "goblin_warrior",  "level": 1, "environmentId": "training_fields" },
     { "index": 1, "monsterId": "goblin_mage",     "level": 2, "environmentId": "arcane_library"  },
@@ -231,6 +266,8 @@ No parameters. No body.
 ```
 
 **Notes**
+- `heroClasses` carries the selectable archetypes shown by the client's class picker. The client lets the player pick one before starting a run; the chosen class's `startingStats`, `startingMoves`, and `startingLearnedMoves` seed the active hero. `defaultHeroClassId` identifies the class the picker highlights by default.
+- The legacy `hero` field is preserved for backward compatibility and mirrors the class identified by `defaultHeroClassId`. Clients that have not been updated to read `heroClasses` continue to receive the original Knight starting state.
 - The full `moves` catalog is returned once so the client never has to look up a move by id out-of-band.
 - The example above shows a subset of monsters, moves, and environments for brevity. The real response includes every monster referenced by `encounters`, every move referenced by the hero or any monster, and every environment referenced by an encounter.
 - `encounters` is ordered; the client advances through it one battle at a time.
