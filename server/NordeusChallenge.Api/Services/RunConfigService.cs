@@ -260,7 +260,7 @@ public class RunConfigService
         {
             Id = "witch",
             Name = "Witch",
-            BaseStats = new Stats { MaxHealth = 80, MaxMana = 25, Attack = 8, Defense = 8, Magic = 18 },
+            BaseStats = new Stats { MaxHealth = 80, MaxMana = 25, Attack = 8, Defense = 8, Magic = 15 },
             Moves = new List<string> { "shadow_bolt", "drain_life", "curse", "dark_pact", "bleeding_curse" },
             ItemDrops = new List<string> { "hex_focus", "lifedrinker_locket" }
         },
@@ -292,7 +292,7 @@ public class RunConfigService
         {
             Id = "fire_elemental",
             Name = "Fire Elemental",
-            BaseStats = new Stats { MaxHealth = 95, MaxMana = 28, Attack = 8, Defense = 9, Magic = 17 },
+            BaseStats = new Stats { MaxHealth = 95, MaxMana = 28, Attack = 8, Defense = 9, Magic = 14 },
             Moves = new List<string> { "flame_burst", "scorching_aura", "ignite", "mana_flare" },
             ItemDrops = new List<string> { "ember_core" }
         }
@@ -858,7 +858,7 @@ public class RunConfigService
             Id = "flame_breath",
             Name = "Flame Breath",
             Category = "Magic",
-            Power = 24,
+            Power = 20,
             ManaCost = 6,
             Effect = null,
             Description = "A powerful cone of fire."
@@ -969,7 +969,7 @@ public class RunConfigService
             Id = "heavy_club",
             Name = "Heavy Club",
             Category = "Physical",
-            Power = 22,
+            Power = 18,
             Effect = null,
             Description = "A crushing swing with a massive club."
         },
@@ -1086,7 +1086,7 @@ public class RunConfigService
     private static RulesConfig BuildRules() => new()
     {
         BuffDurationTurns = 2,
-        XpPerVictory = 25,
+        XpPerVictory = 35,
         XpPerLevel = 100,
         StatGainPerLevel = new Stats
         {
@@ -1097,7 +1097,7 @@ public class RunConfigService
             Magic = 2
         },
         EquippedMoveSlots = 4,
-        GoldPerVictory = 15,
+        GoldPerVictory = 20,
         EquippedItemSlots = new Dictionary<string, int>
         {
             { "weapon", 1 },
