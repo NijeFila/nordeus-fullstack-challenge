@@ -42,6 +42,25 @@ No parameters. No body.
     "equippedMoves": ["slash", "shield_up", "battle_cry", "second_wind"],
     "learnedMovePool": ["slash", "shield_up", "battle_cry", "second_wind"]
   },
+  "endlessMode": {
+    "enabled": true,
+    "startingFloor": 1,
+    "eliteEvery": 5,
+    "shopEvery": 3,
+    "bossEvery": 10,
+    "baseLevel": 1,
+    "levelIncreaseEvery": 2,
+    "rewardGoldBase": 15,
+    "rewardGoldPerFloor": 2,
+    "xpBase": 30,
+    "xpPerFloor": 3,
+    "endlessGoldScalingBp": 0,
+    "endlessXpScalingBp": 0,
+    "monsterPool": ["goblin_warrior", "goblin_mage", "giant_spider", "skeleton_knight", "forest_troll"],
+    "eliteMonsterPool": ["witch", "fire_elemental", "forest_troll", "skeleton_knight"],
+    "bossMonsterPool": ["dragon"],
+    "environmentPool": ["training_fields", "arcane_library", "spider_nest", "dark_altar", "dragon_peak", "crypt", "ancient_forest", "ember_chamber"]
+  },
   "startingMapNodeId": "start_goblin_warrior",
   "mapNodes": [
     { "id": "start_goblin_warrior", "depth": 0, "position": 0, "type": "Battle", "encounterIndex": 0, "connectedTo": ["goblin_mage_path", "spider_path"] },
@@ -282,6 +301,7 @@ No parameters. No body.
 - `heroClasses` carries the selectable archetypes shown by the client's class picker. The client lets the player pick one before starting a run; the chosen class's `startingStats`, `startingMoves`, and `startingLearnedMoves` seed the active hero. `defaultHeroClassId` identifies the class the picker highlights by default.
 - The legacy `hero` field is preserved for backward compatibility and mirrors the class identified by `defaultHeroClassId`. Clients that have not been updated to read `heroClasses` continue to receive the original Knight starting state.
 - `mapNodes` describes a small branching run map. The player begins on the node identified by `startingMapNodeId` and unlocks every node listed in the cleared node's `connectedTo` after winning that battle (or leaving a Shop). `Battle`, `Elite`, and `Boss` nodes set `encounterIndex` to a slot in `encounters`; `Shop` nodes use `encounterIndex: -1` and route the player to the existing shop screen. Defeating the unique `Boss` node ends the run successfully. The linear `encounters` list is still emitted, so older clients can continue to walk encounters sequentially.
+- `endlessMode` carries Endless Mode rules and content pools. When `endlessMode.enabled` is `true` the client may offer an Endless Mode entry point (separate from the standard run). The server does not track endless progress; the client rolls each floor on demand from these inputs. Floor periods (`eliteEvery`, `shopEvery`, `bossEvery`) are resolved with a fixed precedence of **Boss > Elite > Shop > Battle**. Pools (`monsterPool`, `eliteMonsterPool`, `bossMonsterPool`, `environmentPool`) reference ids already present in `monsters` and `environments`, so Endless Mode reuses the existing battle pipeline and ships no new content. Defeat ends the endless run; the standard branching run is unaffected.
 - The full `moves` catalog is returned once so the client never has to look up a move by id out-of-band.
 - The example above shows a subset of monsters, moves, and environments for brevity. The real response includes every monster referenced by `encounters`, every move referenced by the hero or any monster, and every environment referenced by an encounter.
 - `encounters` is ordered; the client advances through it one battle at a time.

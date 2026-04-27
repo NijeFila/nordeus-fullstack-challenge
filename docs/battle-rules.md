@@ -2,6 +2,32 @@
 
 The rules the prototype follows. Formulas are kept simple, explicit, and integer-based so the client and server stay in lockstep.
 
+## Endless Mode
+
+Endless Mode is an optional, side-by-side game mode the client offers when `RunConfig.endlessMode.enabled` is `true`. It reuses every existing combat rule (damage formulas, status effects, environments, items, shop, level-up choices) without modification. Only floor generation and reward scaling are new, and both live entirely on the client — the server only ships pools and curves.
+
+**Floor type** — for floor `f`, with periods drawn from `endlessMode`:
+- If `bossEvery > 0` and `f % bossEvery == 0` → **Boss** (sample from `bossMonsterPool`).
+- Else if `eliteEvery > 0` and `f % eliteEvery == 0` → **Elite** (sample from `eliteMonsterPool`).
+- Else if `shopEvery > 0` and `f % shopEvery == 0` → **Shop** (no battle; opens the existing shop screen).
+- Else → **Battle** (sample from `monsterPool`).
+
+The fixed precedence Boss > Elite > Shop > Battle resolves overlapping periods (e.g. floor 10 with `eliteEvery = 5` and `bossEvery = 10` is a Boss floor).
+
+**Encounter level** — `baseLevel + (floor - 1) / levelIncreaseEvery` (integer division). A `levelIncreaseEvery` of `0` keeps every floor at `baseLevel`. Monster stats then go through the existing `Monster Scaling` formula, so no new math is introduced.
+
+**Environment** — the client picks an entry from `environmentPool` for each floor (typically by cycling on `floor % environmentPool.Count` or rolling uniformly). Environment effects are applied through the existing pipeline.
+
+**Rewards** — on victory the linear formulas are:
+- `gold = rewardGoldBase + (floor - 1) * rewardGoldPerFloor`
+- `xp   = xpBase        + (floor - 1) * xpPerFloor`
+
+`endlessGoldScalingBp` and `endlessXpScalingBp` are optional multipliers in basis points (`100 = +1.00x`); when positive, the client multiplies the linear value by `1 + bp / 100.0`. The prototype ships both at `0` (no multiplier) so the curve stays purely linear.
+
+**End conditions** — defeat ends the endless run; victory continues to the next floor. There is no boss-of-runs end state in Endless Mode.
+
+The standard branching run (`mapNodes` / `encounters`) is unaffected. Endless Mode coexists with it and uses the same hero, items, and class kits.
+
 ## Run Map
 
 The run is laid out as a small branching graph in `RunConfig.mapNodes`. The player begins on `RunConfig.startingMapNodeId` and, after clearing a node, may travel to any node listed in that node's `connectedTo`. Every path eventually converges on the unique `Boss` node — defeating it ends the run successfully.

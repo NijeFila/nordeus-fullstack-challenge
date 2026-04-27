@@ -18,6 +18,7 @@ public class RunConfigService
         var rules = BuildRules();
         var heroClasses = BuildHeroClasses();
         var mapNodes = BuildMapNodes();
+        var endless = BuildEndlessMode();
 
         return new RunConfigResponse
         {
@@ -33,9 +34,75 @@ public class RunConfigService
             HeroClasses = heroClasses,
             DefaultHeroClassId = "knight",
             MapNodes = mapNodes,
-            StartingMapNodeId = "start_goblin_warrior"
+            StartingMapNodeId = "start_goblin_warrior",
+            EndlessMode = endless
         };
     }
+
+    // Endless Mode rules. The server only ships pools and curves; the client
+    // rolls each floor on demand from these inputs. Ids must match those
+    // returned by BuildMonsters() / BuildEnvironments() so the existing battle
+    // pipeline keeps working unchanged.
+    private static EndlessModeConfig BuildEndlessMode() => new()
+    {
+        Enabled = true,
+        StartingFloor = 1,
+
+        // Pacing periods. Floor numbers divisible by EliteEvery / BossEvery
+        // become Elite / Boss encounters; numbers divisible by ShopEvery (and
+        // not by an encounter period) become Shop interludes. The client
+        // resolves overlaps with a fixed precedence: Boss > Elite > Shop > Battle.
+        EliteEvery = 5,
+        ShopEvery = 3,
+        BossEvery = 10,
+
+        // Encounter level scaling. Floor 1 = BaseLevel; the level rises by 1
+        // every LevelIncreaseEvery floors. 0 keeps the level fixed.
+        BaseLevel = 1,
+        LevelIncreaseEvery = 2,
+
+        // Linear reward curves. The client adds the per-floor terms each
+        // victory; multipliers below stay at 0 (disabled) for the prototype.
+        RewardGoldBase = 15,
+        RewardGoldPerFloor = 2,
+        XpBase = 30,
+        XpPerFloor = 3,
+        EndlessGoldScalingBp = 0,
+        EndlessXpScalingBp = 0,
+
+        // Pools draw exclusively from existing catalog ids so no new monster,
+        // environment, or move data is needed for Endless Mode.
+        MonsterPool = new List<string>
+        {
+            "goblin_warrior",
+            "goblin_mage",
+            "giant_spider",
+            "skeleton_knight",
+            "forest_troll"
+        },
+        EliteMonsterPool = new List<string>
+        {
+            "witch",
+            "fire_elemental",
+            "forest_troll",
+            "skeleton_knight"
+        },
+        BossMonsterPool = new List<string>
+        {
+            "dragon"
+        },
+        EnvironmentPool = new List<string>
+        {
+            "training_fields",
+            "arcane_library",
+            "spider_nest",
+            "dark_altar",
+            "dragon_peak",
+            "crypt",
+            "ancient_forest",
+            "ember_chamber"
+        }
+    };
 
     // Branching run map. Encounter indices line up with BuildEncounters():
     //   0 = goblin_warrior, 1 = goblin_mage, 2 = giant_spider,

@@ -31,4 +31,8 @@ public class RunConfigResponse
     // Id of the starting node on the map. The boss node is identified by
     // having type == "Boss"; no separate field is needed for it.
     public string StartingMapNodeId { get; set; } = string.Empty;
+
+    // Endless Mode rules. Optional — when EndlessMode.Enabled is false the
+    // client ignores this object entirely and only the standard run is shown.
+    public EndlessModeConfig EndlessMode { get; set; } = new();
 }

@@ -121,6 +121,28 @@ Fields:
 - `level` (int) — the level at which the monster is instantiated.
 - `environmentId` (string) — reference into the environment catalog. Selects the battlefield used for this encounter.
 
+## EndlessModeConfig
+
+Role: rules and pools the client uses to generate floors for Endless Mode. The server never tracks a player's endless run; it only ships the configuration once with the rest of `RunConfig`.
+
+Fields:
+- `enabled` (bool) — when `false` the client hides the Endless Mode entry point and ignores the rest of this object.
+- `startingFloor` (int) — floor number the run starts on (1-based).
+- `eliteEvery` (int) — every Nth floor becomes an Elite encounter; `0` disables Elites.
+- `shopEvery` (int) — every Nth floor becomes a Shop interlude (does not consume a battle slot if it overlaps an encounter period). `0` disables Shops.
+- `bossEvery` (int) — every Nth floor becomes a Boss encounter; `0` disables Bosses, leaving an endless monster grind.
+- `baseLevel` (int) — encounter level on floor 1.
+- `levelIncreaseEvery` (int) — encounter level rises by 1 every Nth floor; `0` keeps the level fixed at `baseLevel`.
+- `rewardGoldBase` (int) and `rewardGoldPerFloor` (int) — gold reward formula `rewardGoldBase + (floor - 1) * rewardGoldPerFloor`.
+- `xpBase` (int) and `xpPerFloor` (int) — XP reward formula, same shape.
+- `endlessGoldScalingBp` (int) and `endlessXpScalingBp` (int) — optional multipliers expressed in basis points (`100 = +1.00x`) so they serialize cleanly without floats. `0` (or any non-positive value) means "no multiplier; use the linear curve". The client multiplies the linear formula by `1 + bp / 100.0` when the bp is positive.
+- `monsterPool` (string[]) — monster ids the client samples from for normal floors.
+- `eliteMonsterPool` (string[]) — monster ids for Elite floors.
+- `bossMonsterPool` (string[]) — monster ids for Boss floors.
+- `environmentPool` (string[]) — environment ids the client cycles through to pick a battlefield for each floor.
+
+The client resolves overlapping periods with a fixed precedence: **Boss > Elite > Shop > Battle**. So on floor 10 (divisible by 10 and 5), the Boss period wins.
+
 ## RunMapNode
 
 Role: a single node on the branching run map. The full set of nodes forms a small directed acyclic graph that fans out from a starting node and converges on the single Boss node.
@@ -166,6 +188,7 @@ Fields:
 - `defaultHeroClassId` (string) — id of the class to highlight in the picker by default.
 - `mapNodes` (RunMapNode[]) — branching run-map graph. Nodes reference encounters by index; clients that don't read this field continue to walk `encounters` linearly.
 - `startingMapNodeId` (string) — id of the node the player begins on. The boss node is the unique entry whose `type == "Boss"`.
+- `endlessMode` (EndlessModeConfig) — rules and pools the client uses to generate Endless Mode floors. When `endlessMode.enabled` is `false` the standard run is the only option.
 - `encounters` (Encounter[]) — ordered list of battles.
 - `monsters` (Monster[]) — catalog referenced by encounters.
 - `moves` (Move[]) — catalog referenced by hero and monsters.
