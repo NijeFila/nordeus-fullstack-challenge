@@ -13,6 +13,7 @@ namespace NordeusChallenge.Client.UI.Shop
         [SerializeField] private Button selectButton;
         [SerializeField] private TMP_Text label;
         [SerializeField] private TMP_Text priceText;
+        [SerializeField] private UnityEngine.UI.Image icon;
         [SerializeField] private GameObject selectedMarker;
         [SerializeField] private GameObject ownedMarker;
 
@@ -26,6 +27,7 @@ namespace NordeusChallenge.Client.UI.Shop
             bool isSelected,
             bool isOwned,
             bool affordable,
+            Sprite iconSprite,
             Action<string> onSelect)
         {
             _offerId = offerId;
@@ -33,6 +35,11 @@ namespace NordeusChallenge.Client.UI.Shop
 
             if (label != null) label.text = labelText;
             if (priceText != null) priceText.text = priceLabel;
+            if (icon != null)
+            {
+                icon.sprite = iconSprite;
+                icon.gameObject.SetActive(iconSprite != null);
+            }
 
             if (selectedMarker != null) selectedMarker.SetActive(isSelected);
             if (ownedMarker != null) ownedMarker.SetActive(isOwned);

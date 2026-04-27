@@ -28,6 +28,7 @@ namespace NordeusChallenge.Client.UI.Shop
         [SerializeField] private TMP_Text goldText;
         [SerializeField] private TMP_Text statusText;
         [SerializeField] private Button backButton;
+        [SerializeField] private NordeusChallenge.Client.Visual.VisualCatalog visualCatalog;
 
         private string _selectedOfferId;
 
@@ -84,10 +85,17 @@ namespace NordeusChallenge.Client.UI.Shop
                 string headline = $"{LocalizedNames.Name(offer)} ({LocalizedNames.OfferType(offer.type)})";
                 string priceLabel = $"{offer.price}g";
 
+                Sprite iconSprite = null;
+                if (visualCatalog != null)
+                {
+                    if (offer.type == "Item") iconSprite = visualCatalog.GetItemIcon(offer.itemId);
+                    else if (offer.type == "StatUpgrade") iconSprite = visualCatalog.GetStatIcon(offer.stat);
+                }
+
                 var view = Instantiate(offerPrefab, offersContainer);
-                view.Bind(offer.id, headline, priceLabel, selected, owned, affordable, OnOfferSelected);
-            }
-        }
+                view.Bind(offer.id, headline, priceLabel, selected, owned, affordable, iconSprite, OnOfferSelected);
+                }
+                }
 
         private void OnOfferSelected(string offerId)
         {
