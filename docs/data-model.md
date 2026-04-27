@@ -7,11 +7,11 @@ Core domain objects used by both the client and server. Field types are given at
 Role: the four numeric attributes that drive combat.
 
 Fields:
-- `maxHealth` (int) — hit points ceiling.
-- `maxMana` (int) — mana pool ceiling. `0` means the entity has no mana resource.
-- `attack` (int) — scales physical damage dealt.
-- `defense` (int) — reduces incoming physical damage.
-- `magic` (int) — scales magic damage dealt and healing.
+- `maxHealth` (int), hit points ceiling.
+- `maxMana` (int), mana pool ceiling. `0` means the entity has no mana resource.
+- `attack` (int), scales physical damage dealt.
+- `defense` (int), reduces incoming physical damage.
+- `magic` (int), scales magic damage dealt and healing.
 
 Stats are used both as base values (on monsters) and as the current values on a battling entity after level-ups and buffs.
 
@@ -20,28 +20,28 @@ Stats are used both as base values (on monsters) and as the current values on a 
 Role: an action a hero or monster can take on its turn.
 
 Fields:
-- `id` (string) — stable identifier.
-- `name` (string) — display name.
-- `category` (enum) — `Physical`, `Magic`, `Buff`, `Debuff`, `Heal`.
-- `power` (int) — base power used by the damage or heal formula. `0` for pure buffs/debuffs.
-- `manaCost` (int | null) — optional mana cost paid by the caster on use. Omitted when the move is free.
-- `hpCost` (int | null) — optional HP cost paid by the caster on use. Omitted when the move is free. The caster cannot be reduced below `1` HP by paying this cost.
-- `effect` (MoveEffect | null) — optional secondary effect applied alongside or instead of damage.
-- `description` (string) — short UI text.
+- `id` (string), stable identifier.
+- `name` (string), display name.
+- `category` (enum), `Physical`, `Magic`, `Buff`, `Debuff`, `Heal`.
+- `power` (int), base power used by the damage or heal formula. `0` for pure buffs/debuffs.
+- `manaCost` (int | null), optional mana cost paid by the caster on use. Omitted when the move is free.
+- `hpCost` (int | null), optional HP cost paid by the caster on use. Omitted when the move is free. The caster cannot be reduced below `1` HP by paying this cost.
+- `effect` (MoveEffect | null), optional secondary effect applied alongside or instead of damage.
+- `description` (string), short UI text.
 
 ## MoveEffect
 
 Role: a structured description of what a move does beyond its base damage. Kept intentionally narrow for the prototype.
 
 Fields:
-- `kind` (enum) — one of:
-  - `BuffAttack`, `BuffDefense`, `BuffMagic`, `DebuffAttack`, `DebuffDefense`, `DebuffMagic` — stat-modifier effects.
-  - `Heal` — flat heal applied immediately.
-  - `Bleed`, `Poison` — damage-over-time on the target; `amount` is dealt at the end of each turn the effect is active.
-  - `DamageIncrease`, `DamageReduction` — flat modifiers applied after the base damage formula. `DamageIncrease` adds `amount` to outgoing damage; `DamageReduction` subtracts `amount` from incoming damage. Both clamp the final damage to a minimum of `1`.
-- `amount` (int) — meaning depends on `kind` (stat delta, heal amount, per-turn DoT damage, or flat damage delta).
-- `durationTurns` (int) — for everything except `Heal`, how many turns the effect remains active.
-- `target` (enum) — `Self` or `Opponent`.
+- `kind` (enum), one of:
+  - `BuffAttack`, `BuffDefense`, `BuffMagic`, `DebuffAttack`, `DebuffDefense`, `DebuffMagic`, stat-modifier effects.
+  - `Heal`, flat heal applied immediately.
+  - `Bleed`, `Poison`, damage-over-time on the target; `amount` is dealt at the end of each turn the effect is active.
+  - `DamageIncrease`, `DamageReduction`, flat modifiers applied after the base damage formula. `DamageIncrease` adds `amount` to outgoing damage; `DamageReduction` subtracts `amount` from incoming damage. Both clamp the final damage to a minimum of `1`.
+- `amount` (int), meaning depends on `kind` (stat delta, heal amount, per-turn DoT damage, or flat damage delta).
+- `durationTurns` (int), for everything except `Heal`, how many turns the effect remains active.
+- `target` (enum), `Self` or `Opponent`.
 
 Heals are treated as an effect rather than damage so the same `Move` shape covers every action.
 
@@ -50,10 +50,10 @@ Heals are treated as an effect rather than damage so the same `Move` shape cover
 Role: a buff or debuff currently applied to a battling entity. Exists only during a battle on the client.
 
 Fields:
-- `sourceMoveId` (string) — which move applied it (for UI and debugging).
-- `kind` (enum) — same enum as `MoveEffect.kind` (excluding `Heal`).
-- `amount` (int) — signed delta applied to the affected stat, per-turn DoT damage, or flat damage delta, depending on `kind`.
-- `turnsRemaining` (int) — decremented at the end of each turn; removed when it reaches 0.
+- `sourceMoveId` (string), which move applied it (for UI and debugging).
+- `kind` (enum), same enum as `MoveEffect.kind` (excluding `Heal`).
+- `amount` (int), signed delta applied to the affected stat, per-turn DoT damage, or flat damage delta, depending on `kind`.
+- `turnsRemaining` (int), decremented at the end of each turn; removed when it reaches 0.
 
 A battling entity holds a list of these. Effective stats during a turn are base stats plus the sum of matching active effects.
 
@@ -64,9 +64,9 @@ Role: an opponent entity the hero can face in an encounter.
 Fields:
 - `id` (string)
 - `name` (string)
-- `baseStats` (Stats) — values at level 1.
-- `moves` (string[]) — ids of moves this monster can use.
-- `itemDrops` (string[]) — ids of items this monster can drop on victory. The client picks from this list when awarding loot; an empty list means the monster never drops gear.
+- `baseStats` (Stats), values at level 1.
+- `moves` (string[]), ids of moves this monster can use.
+- `itemDrops` (string[]), ids of items this monster can drop on victory. The client picks from this list when awarding loot; an empty list means the monster never drops gear.
 
 Monsters are scaled to an encounter's level on the client using the same per-level gains as the hero.
 
@@ -77,12 +77,12 @@ The monster catalog for the prototype: Goblin Warrior, Goblin Mage, Giant Spider
 Role: a selectable hero archetype offered by the server. Returned in `RunConfig.heroClasses`. The client shows a class picker before the run starts and seeds the active `Hero` from the chosen entry.
 
 Fields:
-- `id` (string) — stable identifier (`knight`, `ranger`, `mage`, `cleric`).
+- `id` (string), stable identifier (`knight`, `ranger`, `mage`, `cleric`).
 - `name` (string)
 - `description` (string)
-- `startingStats` (Stats) — values the hero begins the run with at level 1.
-- `startingMoves` (string[]) — move ids equipped at the start of the run; capped at `equippedMoveSlots`.
-- `startingLearnedMoves` (string[]) — move ids the hero already knows at the start; should be a superset of `startingMoves` so Move Management has options to swap in.
+- `startingStats` (Stats), values the hero begins the run with at level 1.
+- `startingMoves` (string[]), move ids equipped at the start of the run; capped at `equippedMoveSlots`.
+- `startingLearnedMoves` (string[]), move ids the hero already knows at the start; should be a superset of `startingMoves` so Move Management has options to swap in.
 
 `RunConfigResponse.defaultHeroClassId` selects the entry the picker highlights by default. The legacy `RunConfigResponse.hero` field continues to mirror that default class so older clients that ignore the picker still work unchanged.
 
@@ -93,13 +93,13 @@ The class catalog for the prototype: Knight (balanced), Ranger (high attack, ble
 Role: the player-controlled entity, persistent across the run. The Hero is seeded from the chosen `HeroClass`; in the legacy single-class flow it is always the Knight.
 
 Fields:
-- `id` (string) — constant, e.g. `"knight"`.
+- `id` (string), constant, e.g. `"knight"`.
 - `name` (string)
 - `level` (int)
-- `xp` (int) — progress toward the next level.
-- `stats` (Stats) — current stats including level-up gains.
-- `equippedMoves` (string[]) — ids of moves usable in battle; up to `equippedMoveSlots` entries (4 in the prototype).
-- `learnedMovePool` (string[]) — ids of every move the hero has ever learned.
+- `xp` (int), progress toward the next level.
+- `stats` (Stats), current stats including level-up gains.
+- `equippedMoves` (string[]), ids of moves usable in battle; up to `equippedMoveSlots` entries (4 in the prototype).
+- `learnedMovePool` (string[]), ids of every move the hero has ever learned.
 
 The hero's current HP is not stored on this object between battles; it is reset to `stats.maxHealth` at the start of every encounter.
 
@@ -116,30 +116,30 @@ Role: the full set of moves the hero has unlocked across a run. Also not a separ
 Role: a single battle slot in the run's encounter list.
 
 Fields:
-- `index` (int) — position in the run, starting at 0.
-- `monsterId` (string) — reference into the monster catalog.
-- `level` (int) — the level at which the monster is instantiated.
-- `environmentId` (string) — reference into the environment catalog. Selects the battlefield used for this encounter.
+- `index` (int), position in the run, starting at 0.
+- `monsterId` (string), reference into the monster catalog.
+- `level` (int), the level at which the monster is instantiated.
+- `environmentId` (string), reference into the environment catalog. Selects the battlefield used for this encounter.
 
 ## EndlessModeConfig
 
 Role: rules and pools the client uses to generate floors for Endless Mode. The server never tracks a player's endless run; it only ships the configuration once with the rest of `RunConfig`.
 
 Fields:
-- `enabled` (bool) — when `false` the client hides the Endless Mode entry point and ignores the rest of this object.
-- `startingFloor` (int) — floor number the run starts on (1-based).
-- `eliteEvery` (int) — every Nth floor becomes an Elite encounter; `0` disables Elites.
-- `shopEvery` (int) — every Nth floor becomes a Shop interlude (does not consume a battle slot if it overlaps an encounter period). `0` disables Shops.
-- `bossEvery` (int) — every Nth floor becomes a Boss encounter; `0` disables Bosses, leaving an endless monster grind.
-- `baseLevel` (int) — encounter level on floor 1.
-- `levelIncreaseEvery` (int) — encounter level rises by 1 every Nth floor; `0` keeps the level fixed at `baseLevel`.
-- `rewardGoldBase` (int) and `rewardGoldPerFloor` (int) — gold reward formula `rewardGoldBase + (floor - 1) * rewardGoldPerFloor`.
-- `xpBase` (int) and `xpPerFloor` (int) — XP reward formula, same shape.
-- `endlessGoldScalingBp` (int) and `endlessXpScalingBp` (int) — optional multipliers expressed in basis points (`100 = +1.00x`) so they serialize cleanly without floats. `0` (or any non-positive value) means "no multiplier; use the linear curve". The client multiplies the linear formula by `1 + bp / 100.0` when the bp is positive.
-- `monsterPool` (string[]) — monster ids the client samples from for normal floors.
-- `eliteMonsterPool` (string[]) — monster ids for Elite floors.
-- `bossMonsterPool` (string[]) — monster ids for Boss floors.
-- `environmentPool` (string[]) — environment ids the client cycles through to pick a battlefield for each floor.
+- `enabled` (bool), when `false` the client hides the Endless Mode entry point and ignores the rest of this object.
+- `startingFloor` (int), floor number the run starts on (1-based).
+- `eliteEvery` (int), every Nth floor becomes an Elite encounter; `0` disables Elites.
+- `shopEvery` (int), every Nth floor becomes a Shop interlude (does not consume a battle slot if it overlaps an encounter period). `0` disables Shops.
+- `bossEvery` (int), every Nth floor becomes a Boss encounter; `0` disables Bosses, leaving an endless monster grind.
+- `baseLevel` (int), encounter level on floor 1.
+- `levelIncreaseEvery` (int), encounter level rises by 1 every Nth floor; `0` keeps the level fixed at `baseLevel`.
+- `rewardGoldBase` (int) and `rewardGoldPerFloor` (int), gold reward formula `rewardGoldBase + (floor - 1) * rewardGoldPerFloor`.
+- `xpBase` (int) and `xpPerFloor` (int). XP reward formula, same shape.
+- `endlessGoldScalingBp` (int) and `endlessXpScalingBp` (int), optional multipliers expressed in basis points (`100 = +1.00x`) so they serialize cleanly without floats. `0` (or any non-positive value) means "no multiplier; use the linear curve". The client multiplies the linear formula by `1 + bp / 100.0` when the bp is positive.
+- `monsterPool` (string[]), monster ids the client samples from for normal floors.
+- `eliteMonsterPool` (string[]), monster ids for Elite floors.
+- `bossMonsterPool` (string[]), monster ids for Boss floors.
+- `environmentPool` (string[]), environment ids the client cycles through to pick a battlefield for each floor.
 
 The client resolves overlapping periods with a fixed precedence: **Boss > Elite > Shop > Battle**. So on floor 10 (divisible by 10 and 5), the Boss period wins.
 
@@ -148,12 +148,12 @@ The client resolves overlapping periods with a fixed precedence: **Boss > Elite 
 Role: a single node on the branching run map. The full set of nodes forms a small directed acyclic graph that fans out from a starting node and converges on the single Boss node.
 
 Fields:
-- `id` (string) — stable identifier referenced by other nodes' `connectedTo`.
-- `depth` (int) — layer index, `0` at the start, increasing toward the boss.
-- `position` (int) — horizontal slot within the layer (`0..N` left to right). Layout hint only; logic depends on `connectedTo`.
-- `type` (string) — one of `"Battle"`, `"Elite"`, `"Shop"`, `"Boss"`. Elite is rendered differently on the client but uses the same encounter pipeline as Battle.
-- `encounterIndex` (int) — index into `RunConfig.encounters` for `Battle` / `Elite` / `Boss` nodes. `Shop` nodes use `-1` since `JsonUtility` cannot deserialize a nullable int cleanly.
-- `connectedTo` (string[]) — node ids the player can travel to after clearing this node. Empty on the Boss node.
+- `id` (string), stable identifier referenced by other nodes' `connectedTo`.
+- `depth` (int), layer index, `0` at the start, increasing toward the boss.
+- `position` (int), horizontal slot within the layer (`0..N` left to right). Layout hint only; logic depends on `connectedTo`.
+- `type` (string), one of `"Battle"`, `"Elite"`, `"Shop"`, `"Boss"`. Elite is rendered differently on the client but uses the same encounter pipeline as Battle.
+- `encounterIndex` (int), index into `RunConfig.encounters` for `Battle` / `Elite` / `Boss` nodes. `Shop` nodes use `-1` since `JsonUtility` cannot deserialize a nullable int cleanly.
+- `connectedTo` (string[]), node ids the player can travel to after clearing this node. Empty on the Boss node.
 
 The map's starting node is identified by `RunConfig.startingMapNodeId`; the boss node is identified by `type == "Boss"`. The linear `encounters` list is still emitted, so clients that have not adopted the map can keep walking the run sequentially without breaking.
 
@@ -165,13 +165,13 @@ Fields (all integer modifiers, default `0` meaning "no effect"):
 - `id` (string)
 - `name` (string)
 - `description` (string)
-- `physicalDamageBonus` (int) — added to outgoing Physical move damage by either combatant on this battlefield.
-- `magicDamageBonus` (int) — added to outgoing Magic move damage by either combatant.
-- `healingBonus` (int) — added to the amount restored by `Heal` effects. Can be negative to dampen healing.
-- `endOfTurnDamage` (int) — flat HP loss applied to both combatants at the end of every turn (in addition to DoTs). Bypasses Defense and `DamageReduction`.
-- `poisonBonusTurns` (int) — extra turns appended to the duration of newly applied `Poison` effects on this battlefield.
-- `bleedBonusDamage` (int) — added to each `Bleed` tick's per-turn damage.
-- `manaRegenBonus` (int) — mana restored to both combatants at the end of every turn.
+- `physicalDamageBonus` (int), added to outgoing Physical move damage by either combatant on this battlefield.
+- `magicDamageBonus` (int), added to outgoing Magic move damage by either combatant.
+- `healingBonus` (int), added to the amount restored by `Heal` effects. Can be negative to dampen healing.
+- `endOfTurnDamage` (int), flat HP loss applied to both combatants at the end of every turn (in addition to DoTs). Bypasses Defense and `DamageReduction`.
+- `poisonBonusTurns` (int), extra turns appended to the duration of newly applied `Poison` effects on this battlefield.
+- `bleedBonusDamage` (int), added to each `Bleed` tick's per-turn damage.
+- `manaRegenBonus` (int), mana restored to both combatants at the end of every turn.
 
 Environments are deliberately symmetric: they apply to both hero and monster so the battlefield reads as a place, not as a hero-only buff.
 
@@ -182,40 +182,40 @@ The environment catalog for the prototype: Training Fields, Arcane Library, Spid
 Role: the payload returned by `GET /run/config`. Self-contained description of an entire run.
 
 Fields:
-- `runId` (string) — identifier for the run instance.
-- `hero` (Hero) — starting hero state. Mirrors the class identified by `defaultHeroClassId`; kept for clients that have not adopted the class picker.
-- `heroClasses` (HeroClass[]) — selectable archetypes shown by the client's class picker.
-- `defaultHeroClassId` (string) — id of the class to highlight in the picker by default.
-- `mapNodes` (RunMapNode[]) — branching run-map graph. Nodes reference encounters by index; clients that don't read this field continue to walk `encounters` linearly.
-- `startingMapNodeId` (string) — id of the node the player begins on. The boss node is the unique entry whose `type == "Boss"`.
-- `endlessMode` (EndlessModeConfig) — rules and pools the client uses to generate Endless Mode floors. When `endlessMode.enabled` is `false` the standard run is the only option.
-- `encounters` (Encounter[]) — ordered list of battles.
-- `monsters` (Monster[]) — catalog referenced by encounters.
-- `moves` (Move[]) — catalog referenced by hero and monsters.
-- `environments` (BattleEnvironment[]) — catalog referenced by encounters.
-- `items` (Item[]) — catalog referenced by `monsters[].itemDrops` and by the hero's inventory.
-- `shopOffers` (ShopOffer[]) — catalog of in-run shop entries the client renders.
-- `rules` (object) — tunable constants: `buffDurationTurns`, `xpPerVictory`, `xpPerLevel`, `statGainPerLevel` (Stats delta, retained for backward compatibility), `equippedMoveSlots`, `levelUpChoices` (LevelUpChoice[]), `equippedItemSlots` (string→int map of cap per slot), `goldPerVictory` (int).
+- `runId` (string), identifier for the run instance.
+- `hero` (Hero), starting hero state. Mirrors the class identified by `defaultHeroClassId`; kept for clients that have not adopted the class picker.
+- `heroClasses` (HeroClass[]), selectable archetypes shown by the client's class picker.
+- `defaultHeroClassId` (string), id of the class to highlight in the picker by default.
+- `mapNodes` (RunMapNode[]), branching run-map graph. Nodes reference encounters by index; clients that don't read this field continue to walk `encounters` linearly.
+- `startingMapNodeId` (string), id of the node the player begins on. The boss node is the unique entry whose `type == "Boss"`.
+- `endlessMode` (EndlessModeConfig), rules and pools the client uses to generate Endless Mode floors. When `endlessMode.enabled` is `false` the standard run is the only option.
+- `encounters` (Encounter[]), ordered list of battles.
+- `monsters` (Monster[]), catalog referenced by encounters.
+- `moves` (Move[]), catalog referenced by hero and monsters.
+- `environments` (BattleEnvironment[]), catalog referenced by encounters.
+- `items` (Item[]), catalog referenced by `monsters[].itemDrops` and by the hero's inventory.
+- `shopOffers` (ShopOffer[]), catalog of in-run shop entries the client renders.
+- `rules` (object), tunable constants: `buffDurationTurns`, `xpPerVictory`, `xpPerLevel`, `statGainPerLevel` (Stats delta, retained for backward compatibility), `equippedMoveSlots`, `levelUpChoices` (LevelUpChoice[]), `equippedItemSlots` (string→int map of cap per slot), `goldPerVictory` (int).
 
 ## Item
 
 Role: a piece of equippable gear. Items are stateless catalog entries returned in `RunConfig.items`; ownership and equipped state live entirely on the client during a run.
 
 Fields:
-- `id` (string) — stable identifier.
-- `name` (string) — display name.
-- `description` (string) — short UI text.
-- `slot` (enum) — `weapon`, `armor`, or `trinket`.
-- `rarity` (enum) — `common`, `uncommon`, `rare`, `epic`, `legendary`. Used as a UI hint (color/badge); the server does not gate behavior on rarity.
-- `statBonuses` (ItemStatBonus[]) — flat integer bonuses applied while equipped.
+- `id` (string), stable identifier.
+- `name` (string), display name.
+- `description` (string), short UI text.
+- `slot` (enum), `weapon`, `armor`, or `trinket`.
+- `rarity` (enum), `common`, `uncommon`, `rare`, `epic`, `legendary`. Used as a UI hint (color/badge); the server does not gate behavior on rarity.
+- `statBonuses` (ItemStatBonus[]), flat integer bonuses applied while equipped.
 
 ## ItemStatBonus
 
 Role: a single flat stat increase granted by an equipped item.
 
 Fields:
-- `stat` (enum) — `maxHealth`, `maxMana`, `attack`, `defense`, or `magic`.
-- `amount` (int) — flat amount added to the matching base stat. May be negative.
+- `stat` (enum), `maxHealth`, `maxMana`, `attack`, `defense`, or `magic`.
+- `amount` (int), flat amount added to the matching base stat. May be negative.
 
 While an item is equipped, the sum of its `statBonuses` is added to the hero's base stats. These bonuses stack additively with level-up gains and with active battle effects (buffs, debuffs, `DamageIncrease`, `DamageReduction`).
 
@@ -224,16 +224,16 @@ While an item is equipped, the sum of its `statBonuses` is added to the hero's b
 Role: a single purchasable entry in the in-run shop. Returned in `RunConfig.shopOffers`. Two flavors share one shape; fields not relevant to a given `type` are empty / zero.
 
 Fields:
-- `id` (string) — stable identifier.
-- `name` (string) — display name.
-- `description` (string) — UI text.
-- `price` (int) — cost in gold.
-- `type` (enum) — `Item` or `StatUpgrade`.
-- `itemId` (string) — for `Item` offers, the id of an entry in `items`. Empty for `StatUpgrade`.
-- `stat` (enum) — for `StatUpgrade` offers, one of `maxHealth`, `maxMana`, `attack`, `defense`, `magic`. Empty for `Item`.
-- `amount` (int) — for `StatUpgrade` offers, the flat increase added to the chosen stat. `0` for `Item`.
+- `id` (string), stable identifier.
+- `name` (string), display name.
+- `description` (string). UI text.
+- `price` (int), cost in gold.
+- `type` (enum), `Item` or `StatUpgrade`.
+- `itemId` (string), for `Item` offers, the id of an entry in `items`. Empty for `StatUpgrade`.
+- `stat` (enum), for `StatUpgrade` offers, one of `maxHealth`, `maxMana`, `attack`, `defense`, `magic`. Empty for `Item`.
+- `amount` (int), for `StatUpgrade` offers, the flat increase added to the chosen stat. `0` for `Item`.
 
-Buying an `Item` offer adds the referenced item to the hero's inventory (no-op if already owned). Buying a `StatUpgrade` offer raises the matching base hero stat permanently for the rest of the run. Either way, the offer's `price` is debited from the run's gold total. The server is not notified — the shop is fully client-resolved.
+Buying an `Item` offer adds the referenced item to the hero's inventory (no-op if already owned). Buying a `StatUpgrade` offer raises the matching base hero stat permanently for the rest of the run. Either way, the offer's `price` is debited from the run's gold total. The server is not notified, the shop is fully client-resolved.
 
 ## Gold (client-only)
 
@@ -251,18 +251,18 @@ The hero's inventory is not part of the wire payload. The client maintains, duri
 - An owned-items list, populated when monsters drop items on victory.
 - An equipped-items map keyed by slot (`weapon`, `armor`, `trinket`). The map respects the per-slot caps in `rules.equippedItemSlots` (default `{ "weapon": 1, "armor": 1, "trinket": 2 }`).
 
-Equipping or unequipping changes the hero's effective base stats immediately. Items are run-scoped only — there is no persistence across runs.
+Equipping or unequipping changes the hero's effective base stats immediately. Items are run-scoped only, there is no persistence across runs.
 
 ## LevelUpChoice
 
 Role: a single attribute increase the player can pick when the hero levels up. The client renders the list from `rules.levelUpChoices`, lets the player pick one, and applies its stat delta to the hero during the post-battle flow.
 
 Fields:
-- `id` (string) — stable identifier (e.g. `"health"`, `"attack"`).
-- `name` (string) — short display label (e.g. `"+4 Attack"`).
-- `description` (string) — UI text explaining the pick.
-- `stat` (enum) — which stat to increase. One of `health` (MaxHealth), `mana` (MaxMana), `attack`, `defense`, `magic`.
-- `amount` (int) — flat amount added to the chosen stat.
+- `id` (string), stable identifier (e.g. `"health"`, `"attack"`).
+- `name` (string), short display label (e.g. `"+4 Attack"`).
+- `description` (string). UI text explaining the pick.
+- `stat` (enum), which stat to increase. One of `health` (MaxHealth), `mana` (MaxMana), `attack`, `defense`, `magic`.
+- `amount` (int), flat amount added to the chosen stat.
 
 Older clients that still consume `rules.statGainPerLevel` keep working unchanged; newer clients drive level-ups from `levelUpChoices` and ignore `statGainPerLevel`.
 
@@ -272,18 +272,18 @@ Role: the live state of an ongoing battle on the client. Also the shape the clie
 
 Fields:
 - `encounterIndex` (int)
-- `turn` (int) — increments each full round, starting at 1.
+- `turn` (int), increments each full round, starting at 1.
 - `hero`:
-  - `stats` (Stats) — current base stats.
-  - `health` (int) — current HP.
-  - `mana` (int) — current MP.
+  - `stats` (Stats), current base stats.
+  - `health` (int), current HP.
+  - `mana` (int), current MP.
   - `activeEffects` (ActiveStatusEffect[])
 - `monster`:
   - `monsterId` (string)
   - `level` (int)
-  - `stats` (Stats) — scaled stats.
+  - `stats` (Stats), scaled stats.
   - `health` (int)
-  - `mana` (int) — current MP.
+  - `mana` (int), current MP.
   - `activeEffects` (ActiveStatusEffect[])
 
 Both combatants start each battle at `stats.maxHealth` and `stats.maxMana`. Mana, like HP, does not carry over between encounters.
@@ -294,11 +294,11 @@ Role: the outcome of a finished battle, consumed by the Post-Battle flow.
 
 Fields:
 - `encounterIndex` (int)
-- `outcome` (enum) — `Victory` or `Defeat`.
+- `outcome` (enum), `Victory` or `Defeat`.
 - `turnsTaken` (int)
-- `xpAwarded` (int) — `0` on defeat.
+- `xpAwarded` (int), `0` on defeat.
 - `leveledUp` (bool)
 - `newLevel` (int | null)
-- `learnedMoveId` (string | null) — a move learned after victory, if any.
+- `learnedMoveId` (string | null), a move learned after victory, if any.
 
 On `Defeat`, no progression is applied and the same encounter remains the current one, available to replay. On `Victory`, the client advances to the next encounter; if there is none, the run is complete.

@@ -361,7 +361,7 @@ GET /battle/next-move?monsterId=witch&monsterLevel=4&monsterHealth=20&monsterMax
 ```
 
 **Errors**
-- `400 Bad Request` — unknown `monsterId`, missing required parameters, non-positive `monsterMaxHealth` or `heroMaxHealth`, or `turn < 1`.
+- `400 Bad Request`: unknown `monsterId`, missing required parameters, non-positive `monsterMaxHealth` or `heroMaxHealth`, or `turn < 1`.
 
 **Notes**
 - The server selects from the monster's declared `moves` in the run config. No move is returned that the monster does not own.

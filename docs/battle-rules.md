@@ -4,9 +4,9 @@ The rules the prototype follows. Formulas are kept simple, explicit, and integer
 
 ## Endless Mode
 
-Endless Mode is an optional, side-by-side game mode the client offers when `RunConfig.endlessMode.enabled` is `true`. It reuses every existing combat rule (damage formulas, status effects, environments, items, shop, level-up choices) without modification. Only floor generation and reward scaling are new, and both live entirely on the client — the server only ships pools and curves.
+Endless Mode is an optional, side-by-side game mode the client offers when `RunConfig.endlessMode.enabled` is `true`. It reuses every existing combat rule (damage formulas, status effects, environments, items, shop, level-up choices) without modification. Only floor generation and reward scaling are new, and both live entirely on the client. The server only ships pools and curves.
 
-**Floor type** — for floor `f`, with periods drawn from `endlessMode`:
+**Floor type**: for floor `f`, with periods drawn from `endlessMode`:
 - If `bossEvery > 0` and `f % bossEvery == 0` → **Boss** (sample from `bossMonsterPool`).
 - Else if `eliteEvery > 0` and `f % eliteEvery == 0` → **Elite** (sample from `eliteMonsterPool`).
 - Else if `shopEvery > 0` and `f % shopEvery == 0` → **Shop** (no battle; opens the existing shop screen).
@@ -14,43 +14,43 @@ Endless Mode is an optional, side-by-side game mode the client offers when `RunC
 
 The fixed precedence Boss > Elite > Shop > Battle resolves overlapping periods (e.g. floor 10 with `eliteEvery = 5` and `bossEvery = 10` is a Boss floor).
 
-**Encounter level** — `baseLevel + (floor - 1) / levelIncreaseEvery` (integer division). A `levelIncreaseEvery` of `0` keeps every floor at `baseLevel`. Monster stats then go through the existing `Monster Scaling` formula, so no new math is introduced.
+**Encounter level**: `baseLevel + (floor - 1) / levelIncreaseEvery` (integer division). A `levelIncreaseEvery` of `0` keeps every floor at `baseLevel`. Monster stats then go through the existing `Monster Scaling` formula, so no new math is introduced.
 
-**Environment** — the client picks an entry from `environmentPool` for each floor (typically by cycling on `floor % environmentPool.Count` or rolling uniformly). Environment effects are applied through the existing pipeline.
+**Environment**: the client picks an entry from `environmentPool` for each floor (typically by cycling on `floor % environmentPool.Count` or rolling uniformly). Environment effects are applied through the existing pipeline.
 
-**Rewards** — on victory the linear formulas are:
+**Rewards**: on victory the linear formulas are:
 - `gold = rewardGoldBase + (floor - 1) * rewardGoldPerFloor`
 - `xp   = xpBase        + (floor - 1) * xpPerFloor`
 
 `endlessGoldScalingBp` and `endlessXpScalingBp` are optional multipliers in basis points (`100 = +1.00x`); when positive, the client multiplies the linear value by `1 + bp / 100.0`. The prototype ships both at `0` (no multiplier) so the curve stays purely linear.
 
-**End conditions** — defeat ends the endless run; victory continues to the next floor. There is no boss-of-runs end state in Endless Mode.
+**End conditions**: defeat ends the endless run; victory continues to the next floor. There is no boss-of-runs end state in Endless Mode.
 
 The standard branching run (`mapNodes` / `encounters`) is unaffected. Endless Mode coexists with it and uses the same hero, items, and class kits.
 
 ## Run Map
 
-The run is laid out as a small branching graph in `RunConfig.mapNodes`. The player begins on `RunConfig.startingMapNodeId` and, after clearing a node, may travel to any node listed in that node's `connectedTo`. Every path eventually converges on the unique `Boss` node — defeating it ends the run successfully.
+The run is laid out as a small branching graph in `RunConfig.mapNodes`. The player begins on `RunConfig.startingMapNodeId` and, after clearing a node, may travel to any node listed in that node's `connectedTo`. Every path eventually converges on the unique `Boss` node. Defeating it ends the run successfully.
 
 Node types:
-- **Battle** — opens the standard battle scene against the encounter at `encounterIndex`. Cleared on victory; the run is not lost on defeat (the node simply remains the current node and can be replayed).
-- **Elite** — same battle pipeline as Battle, just rendered differently on the client (different node icon, "Elite" label). The encounter, scaling, and reward formulas are unchanged. No new server logic.
-- **Shop** — opens the existing in-run shop scene. `encounterIndex` is `-1`; nothing happens in the battle pipeline. Leaving the shop counts as "clearing" the node and unlocks its connected nodes.
-- **Boss** — the run's final encounter. Always Dragon in the prototype. Victory ends the run; defeat behaves like any other battle defeat (the node stays current).
+- **Battle**: opens the standard battle scene against the encounter at `encounterIndex`. Cleared on victory; the run is not lost on defeat (the node simply remains the current node and can be replayed).
+- **Elite**: same battle pipeline as Battle, just rendered differently on the client (different node icon, "Elite" label). The encounter, scaling, and reward formulas are unchanged. No new server logic.
+- **Shop**: opens the existing in-run shop scene. `encounterIndex` is `-1`; nothing happens in the battle pipeline. Leaving the shop counts as "clearing" the node and unlocks its connected nodes.
+- **Boss**: the run's final encounter. Always Dragon in the prototype. Victory ends the run; defeat behaves like any other battle defeat (the node stays current).
 
 The linear `encounters` list is still returned for backward compatibility. A client that has not adopted the map can keep walking it sequentially without breaking. None of the rules below differ between the linear and branching path; both consult the same `encounters` slot via `encounterIndex`.
 
 ## Hero Class Selection
 
-Before the run starts the client shows a class picker populated from `RunConfig.heroClasses`. Picking a class seeds the active hero's `stats`, `equippedMoves`, and `learnedMovePool` from the class's `startingStats`, `startingMoves`, and `startingLearnedMoves`. From that point on every rule below applies identically regardless of class — there are no class-only branches in the damage, healing, or effect pipeline.
+Before the run starts the client shows a class picker populated from `RunConfig.heroClasses`. Picking a class seeds the active hero's `stats`, `equippedMoves`, and `learnedMovePool` from the class's `startingStats`, `startingMoves`, and `startingLearnedMoves`. From that point on every rule below applies identically regardless of class; there are no class-only branches in the damage, healing, or effect pipeline.
 
 The four prototype classes are tuned around the same per-level stat growth (`rules.statGainPerLevel`) and use only existing effect kinds, so monsters and `/battle/next-move` are unaffected by the player's choice.
 
 Classes:
-- **Knight** — balanced stats, original default kit (`slash`, `shield_up`, `battle_cry`, `second_wind`).
-- **Ranger** — higher Attack, lower Defense and Magic, leans on `rend` for sustained damage.
-- **Mage** — high Magic and Max Mana, low Defense; `arcane_focus` (BuffMagic) plus `firebolt` / `mana_drain`.
-- **Cleric** — high HP and Magic, lower Attack; `blessed_mend` (Heal), `smite` (magic damage), defensive blessings.
+- **Knight**: balanced stats, original default kit (`slash`, `shield_up`, `battle_cry`, `second_wind`).
+- **Ranger**: higher Attack, lower Defense and Magic, leans on `rend` for sustained damage.
+- **Mage**: high Magic and Max Mana, low Defense; `arcane_focus` (BuffMagic) plus `firebolt` / `mana_drain`.
+- **Cleric**: high HP and Magic, lower Attack; `blessed_mend` (Heal), `smite` (magic damage), defensive blessings.
 
 The legacy `RunConfig.hero` field still describes the Knight's starting state for clients that have not adopted the picker.
 
@@ -58,8 +58,8 @@ The legacy `RunConfig.hero` field still describes the Knight's starting state fo
 
 1. A battle begins with both the hero and the monster at full HP and full mana. Hero HP and mana are reset to `stats.maxHealth` and `stats.maxMana` at the start of every encounter; there is no HP or mana carry-over between battles.
 2. Each turn has two phases, resolved in order:
-   1. **Hero phase** — the player picks one of the hero's equipped moves. The move resolves immediately.
-   2. **Monster phase** — the client calls `GET /battle/next-move` with the current state and resolves the returned move.
+   1. **Hero phase**: the player picks one of the hero's equipped moves. The move resolves immediately.
+   2. **Monster phase**: the client calls `GET /battle/next-move` with the current state and resolves the returned move.
 3. At the end of each turn:
    - Damage-over-time effects (`Bleed`, `Poison`) tick on each affected combatant: `health -= amount`, clamped to `0`.
    - Durations on all `ActiveStatusEffect`s are decremented by 1.
@@ -142,7 +142,7 @@ Result: a buff or debuff cast on turn N is active for turn N and turn N+1, then 
 
 ## Damage-over-time (Bleed, Poison)
 
-`Bleed` and `Poison` are status effects that sit on the target as `ActiveStatusEffect`s and deal `amount` damage at the end of every turn while active. They use the same duration mechanic as buffs and ignore Defense and `DamageReduction`. Multiple sources of the same kind do not stack on the same target — re-application refreshes duration but does not double the per-turn tick.
+`Bleed` and `Poison` are status effects that sit on the target as `ActiveStatusEffect`s and deal `amount` damage at the end of every turn while active. They use the same duration mechanic as buffs and ignore Defense and `DamageReduction`. Multiple sources of the same kind do not stack on the same target. Re-application refreshes duration but does not double the per-turn tick.
 
 ## Flat damage modifiers (DamageIncrease, DamageReduction)
 
@@ -159,13 +159,13 @@ Each encounter declares an `environmentId` that resolves to a `BattleEnvironment
 - `bleedBonusDamage` is added to each `Bleed` tick's per-turn damage.
 - `manaRegenBonus` is added to both combatants' mana at end-of-turn, clamped to `maxMana`. Entities with `maxMana = 0` do not regenerate.
 
-Environments apply symmetrically to both combatants — they describe a place, not a buff. If `environmentId` is unknown to the client (older bundle), it falls back to "no environment" and combat resolves as before.
+Environments apply symmetrically to both combatants; they describe a place, not a buff. If `environmentId` is unknown to the client (older bundle), it falls back to "no environment" and combat resolves as before.
 
 ## Win / Loss Conditions
 
-- **Battle victory** — monster HP reaches `0`. The hero advances to the next encounter.
-- **Battle defeat** — hero HP reaches `0`. The run does not end: the same encounter remains the current one and can be replayed. Nothing permanent is lost on defeat — the hero keeps their level, XP, stats, learned moves, and equipped moves. No XP is awarded.
-- **Run victory** — the hero wins the final encounter in `RunConfig.encounters`. The run ends successfully.
+- **Battle victory**: monster HP reaches `0`. The hero advances to the next encounter.
+- **Battle defeat**: hero HP reaches `0`. The run does not end: the same encounter remains the current one and can be replayed. Nothing permanent is lost on defeat: the hero keeps their level, XP, stats, learned moves, and equipped moves. No XP is awarded.
+- **Run victory**: the hero wins the final encounter in `RunConfig.encounters`. The run ends successfully.
 
 The hero's HP is always reset to full at the start of each encounter, including replays.
 
@@ -221,7 +221,7 @@ The server's `GET /battle/next-move` returns a move id drawn from the monster's 
 4. **Skip redundant effects.** From what's left, drop moves whose `effect.kind` is already active on the relevant target (a `Self` buff already on the monster, or an `Opponent` debuff/DoT already on the hero). Active effects come from the optional `monsterEffects` and `heroEffects` query parameters.
 5. **Mild offensive bias.** Among the remaining moves, pick a damaging move with probability ~0.7, otherwise pick uniformly from all remaining options.
 
-Selection is deterministic only in the sense that it respects this layered rule; the random fallback is intentionally non-deterministic so repeat battles feel different. If the optional state parameters are omitted, the corresponding step degrades gracefully — an unknown `monsterMana` simply skips the affordability check so older clients still get a valid move.
+Selection is deterministic only in the sense that it respects this layered rule; the random fallback is intentionally non-deterministic so repeat battles feel different. If the optional state parameters are omitted, the corresponding step degrades gracefully: an unknown `monsterMana` simply skips the affordability check so older clients still get a valid move.
 
 ## Prototype Simplifications
 
@@ -234,6 +234,6 @@ Intentional simplifications for the challenge scope:
 - At most one level-up is resolved per battle; any remaining XP carries over to the next victory rather than being discarded.
 - Hero HP is reset to full at the start of every encounter. There is no HP carry-over and no between-battle healing mechanic.
 - Defeat does not end the run. The current encounter is simply replayed. No XP is gained, and no progression is rolled back.
-- Monster move selection is deliberately shallow — a low-HP heal rule plus uniform random — so behavior is easy to reason about and extend.
+- Monster move selection is deliberately shallow (a low-HP heal rule plus uniform random) so behavior is easy to reason about and extend.
 - Environment effects are flat integers and apply to both sides; the server does not factor environments into `/battle/next-move`, keeping the bot's contract unchanged.
 - No persistence: starting a new run always begins from the server's default configuration.
