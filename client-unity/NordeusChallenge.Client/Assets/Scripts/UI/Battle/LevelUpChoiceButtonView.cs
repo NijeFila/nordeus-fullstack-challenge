@@ -1,4 +1,5 @@
 using System;
+using NordeusChallenge.Client.Localization;
 using NordeusChallenge.Client.Models;
 using TMPro;
 using UnityEngine;
@@ -38,11 +39,11 @@ namespace NordeusChallenge.Client.UI.Battle
 
             if (labelText != null)
             {
-                labelText.text = choice != null ? choice.name : string.Empty;
+                labelText.text = LocalizedNames.Name(choice);
             }
             if (descriptionText != null)
             {
-                descriptionText.text = choice != null ? choice.description : string.Empty;
+                descriptionText.text = LocalizedNames.Description(choice);
             }
         }
 

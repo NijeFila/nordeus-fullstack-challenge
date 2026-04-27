@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using NordeusChallenge.Client.Localization;
 using NordeusChallenge.Client.Models;
 using TMPro;
 using UnityEngine;
@@ -31,7 +32,7 @@ namespace NordeusChallenge.Client.UI.Battle
 
             if (label != null)
             {
-                label.text = move != null ? move.name : string.Empty;
+                label.text = LocalizedNames.Name(move);
             }
 
             UpdateCostLabel();
@@ -79,11 +80,11 @@ namespace NordeusChallenge.Client.UI.Battle
             }
 
             var sb = new StringBuilder();
-            if (_move.manaCost > 0) sb.Append($"{_move.manaCost} MP");
+            if (_move.manaCost > 0) sb.Append($"{_move.manaCost} {Loc.Tr("label.mp", "MP")}");
             if (_move.hpCost > 0)
             {
                 if (sb.Length > 0) sb.Append("  ");
-                sb.Append($"{_move.hpCost} HP");
+                sb.Append($"{_move.hpCost} {Loc.Tr("label.hp", "HP")}");
             }
             costLabel.text = sb.ToString();
         }

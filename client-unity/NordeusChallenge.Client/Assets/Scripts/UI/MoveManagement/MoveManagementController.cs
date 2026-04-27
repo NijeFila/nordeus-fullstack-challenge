@@ -1,4 +1,5 @@
 using NordeusChallenge.Client.Core;
+using NordeusChallenge.Client.Localization;
 using NordeusChallenge.Client.Models;
 using NordeusChallenge.Client.Runtime;
 using NordeusChallenge.Client.UI.Common;
@@ -57,7 +58,7 @@ namespace NordeusChallenge.Client.UI.MoveManagement
                 || GameSession.Instance.CurrentRun == null
                 || GameSession.Instance.CurrentHero == null)
             {
-                SetStatus("No active run.");
+                SetStatus(Loc.Tr("ui.common.no_active_run", "No active run."));
                 ClearContainer(equippedContainer);
                 ClearContainer(learnedContainer);
                 UpdateSelectedMove();
@@ -92,8 +93,8 @@ namespace NordeusChallenge.Client.UI.MoveManagement
                 MoveDto move = hasMove ? GameSession.Instance.GetMoveById(moveId) : null;
 
                 string labelText = hasMove
-                    ? $"Slot {i + 1}: {FormatMoveLine(move, moveId)}"
-                    : $"Slot {i + 1}: Empty";
+                    ? string.Format(Loc.Tr("moves.slot_label", "Slot {0}: {1}"), i + 1, FormatMoveLine(move, moveId))
+                    : string.Format(Loc.Tr("moves.slot_empty", "Slot {0}: Empty"), i + 1);
                 Sprite iconSprite = (hasMove && visualCatalog != null) ? visualCatalog.GetMoveIcon(moveId) : null;
 
                 var view = Instantiate(equippedSlotPrefab, equippedContainer);
@@ -139,7 +140,7 @@ namespace NordeusChallenge.Client.UI.MoveManagement
         {
             if (string.IsNullOrEmpty(_selectedMoveId))
             {
-                SetStatus("Select a learned move first.");
+                SetStatus(Loc.Tr("moves.select_first", "Select a learned move first."));
                 return;
             }
 
@@ -225,21 +226,22 @@ namespace NordeusChallenge.Client.UI.MoveManagement
             if (move == null)
             {
                 return string.IsNullOrEmpty(_selectedMoveId)
-                    ? "Select a learned move to see details."
+                    ? Loc.Tr("moves.detail_hint", "Select a learned move to see details.")
                     : $"<b>{_selectedMoveId}</b>";
             }
 
             var sb = new System.Text.StringBuilder();
-            sb.Append($"<b>{move.name}</b>  ({move.category}");
+            sb.Append($"<b>{LocalizedNames.Name(move)}</b>  ({LocalizedNames.Category(move.category)}");
             if (move.power > 0)
             {
-                sb.Append($", Pow {move.power}");
+                sb.Append($", {Loc.Tr("label.power", "Pow")} {move.power}");
             }
             sb.Append(")");
-            if (!string.IsNullOrEmpty(move.description))
+            string desc = LocalizedNames.Description(move);
+            if (!string.IsNullOrEmpty(desc))
             {
                 sb.AppendLine();
-                sb.Append(move.description);
+                sb.Append(desc);
             }
             return sb.ToString();
         }
@@ -251,9 +253,11 @@ namespace NordeusChallenge.Client.UI.MoveManagement
                 return fallbackId;
             }
 
+            string name = LocalizedNames.Name(move);
+            string category = LocalizedNames.Category(move.category);
             return move.power > 0
-                ? $"{move.name} ({move.category}, Pow {move.power})"
-                : $"{move.name} ({move.category})";
+                ? $"{name} ({category}, {Loc.Tr("label.power", "Pow")} {move.power})"
+                : $"{name} ({category})";
         }
 
         private static void ClearContainer(Transform container)

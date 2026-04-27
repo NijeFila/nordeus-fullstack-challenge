@@ -1,4 +1,5 @@
 using System.Text;
+using NordeusChallenge.Client.Localization;
 using NordeusChallenge.Client.Models;
 using TMPro;
 using UnityEngine;
@@ -19,9 +20,24 @@ namespace NordeusChallenge.Client.UI.Common
 
         private void Awake()
         {
-            if (emptyMessageText != null && !string.IsNullOrEmpty(emptyMessage))
+            ApplyEmptyMessage();
+        }
+
+        private void OnEnable()
+        {
+            Loc.LanguageChanged += ApplyEmptyMessage;
+        }
+
+        private void OnDisable()
+        {
+            Loc.LanguageChanged -= ApplyEmptyMessage;
+        }
+
+        private void ApplyEmptyMessage()
+        {
+            if (emptyMessageText != null)
             {
-                emptyMessageText.text = emptyMessage;
+                emptyMessageText.text = Loc.Tr("battle.move_info_hint", string.IsNullOrEmpty(emptyMessage) ? "Select a move to see details." : emptyMessage);
             }
         }
 
@@ -44,7 +60,7 @@ namespace NordeusChallenge.Client.UI.Common
 
             if (nameText != null)
             {
-                nameText.text = move.name;
+                nameText.text = LocalizedNames.Name(move);
             }
 
             if (categoryText != null)
@@ -54,7 +70,8 @@ namespace NordeusChallenge.Client.UI.Common
 
             if (descriptionText != null)
             {
-                descriptionText.text = string.IsNullOrEmpty(move.description) ? string.Empty : move.description;
+                string desc = LocalizedNames.Description(move);
+                descriptionText.text = string.IsNullOrEmpty(desc) ? string.Empty : desc;
             }
         }
 
@@ -76,18 +93,18 @@ namespace NordeusChallenge.Client.UI.Common
         private static string BuildCategoryLine(MoveDto move)
         {
             var sb = new StringBuilder();
-            sb.Append(move.category);
+            sb.Append(LocalizedNames.Category(move.category));
             if (move.power > 0)
             {
-                sb.Append($" · Power {move.power}");
+                sb.Append($" · {Loc.Tr("label.power", "Power")} {move.power}");
             }
             if (move.manaCost > 0)
             {
-                sb.Append($" · {move.manaCost} MP");
+                sb.Append($" · {move.manaCost} {Loc.Tr("label.mp", "MP")}");
             }
             if (move.hpCost > 0)
             {
-                sb.Append($" · {move.hpCost} HP");
+                sb.Append($" · {move.hpCost} {Loc.Tr("label.hp", "HP")}");
             }
             if (move.effect != null && !string.IsNullOrEmpty(move.effect.kind))
             {

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using NordeusChallenge.Client.Core;
+using NordeusChallenge.Client.Localization;
 using NordeusChallenge.Client.Models;
 using NordeusChallenge.Client.Runtime;
 using TMPro;
@@ -34,13 +35,13 @@ namespace NordeusChallenge.Client.UI.ItemManagement
         [SerializeField] private Button backButton;
 
         // Fixed slot order shown in the equipped column. Trinket appears twice
-        // because trinket cap is 2.
-        private static readonly (string Slot, int Index, string Label)[] SlotLayout =
+        // because trinket cap is 2. Label is a localization key resolved at render time.
+        private static readonly (string Slot, int Index, string LabelKey, string LabelFallback)[] SlotLayout =
         {
-            ("weapon",  0, "Weapon"),
-            ("armor",   0, "Armor"),
-            ("trinket", 0, "Trinket 1"),
-            ("trinket", 1, "Trinket 2")
+            ("weapon",  0, "items.slot_weapon",   "Weapon"),
+            ("armor",   0, "items.slot_armor",    "Armor"),
+            ("trinket", 0, "items.slot_trinket1", "Trinket 1"),
+            ("trinket", 1, "items.slot_trinket2", "Trinket 2")
         };
 
         private string _selectedItemId;
@@ -68,7 +69,7 @@ namespace NordeusChallenge.Client.UI.ItemManagement
                 || GameSession.Instance.CurrentRun == null
                 || GameSession.Instance.CurrentHero == null)
             {
-                SetStatus("No active run.");
+                SetStatus(Loc.Tr("ui.common.no_active_run", "No active run."));
                 ClearContainer(equippedContainer);
                 ClearContainer(inventoryContainer);
                 UpdateSelectedItem();
@@ -101,9 +102,10 @@ namespace NordeusChallenge.Client.UI.ItemManagement
                 bool hasItem = !string.IsNullOrEmpty(itemId);
                 ItemDto item = hasItem ? session.GetItemById(itemId) : null;
 
+                string slotLabel = Loc.Tr(slot.LabelKey, slot.LabelFallback);
                 string labelText = hasItem
-                    ? $"{slot.Label}: {FormatItemLine(item, itemId)}"
-                    : $"{slot.Label}: Empty";
+                    ? string.Format(Loc.Tr("items.slot_label", "{0}: {1}"), slotLabel, FormatItemLine(item, itemId))
+                    : string.Format(Loc.Tr("items.slot_empty", "{0}: Empty"), slotLabel);
 
                 bool slotMatchesSelection = selectedItem != null && selectedItem.slot == slot.Slot;
                 bool selectedAlreadyHere = slotMatchesSelection && itemId == _selectedItemId;
@@ -141,7 +143,7 @@ namespace NordeusChallenge.Client.UI.ItemManagement
                 bool isSelected = itemId == _selectedItemId;
                 bool isEquipped = session.IsItemEquipped(itemId);
 
-                string suffix = isEquipped ? "  [equipped]" : string.Empty;
+                string suffix = isEquipped ? "  " + Loc.Tr("ui.run.equipped_tag", "[equipped]") : string.Empty;
                 string labelText = FormatItemLine(item, itemId) + suffix;
 
                 var view = Instantiate(inventoryItemPrefab, inventoryContainer);
@@ -162,13 +164,13 @@ namespace NordeusChallenge.Client.UI.ItemManagement
         {
             if (string.IsNullOrEmpty(_selectedItemId))
             {
-                SetStatus("Select an item from your inventory first.");
+                SetStatus(Loc.Tr("items.select_first", "Select an item from your inventory first."));
                 return;
             }
 
             if (!TryParseSlotKey(slotKey, out string slot, out int index))
             {
-                SetStatus("Invalid slot.");
+                SetStatus(Loc.Tr("items.invalid_slot", "Invalid slot."));
                 return;
             }
 
@@ -176,19 +178,22 @@ namespace NordeusChallenge.Client.UI.ItemManagement
             var item = session.GetItemById(_selectedItemId);
             if (item == null)
             {
-                SetStatus("Unknown item.");
+                SetStatus(Loc.Tr("items.unknown_item", "Unknown item."));
                 return;
             }
 
             if (item.slot != slot)
             {
-                SetStatus($"{item.name} cannot be equipped in the {slot} slot.");
+                SetStatus(string.Format(
+                    Loc.Tr("items.cannot_equip", "{0} cannot be equipped in the {1} slot."),
+                    LocalizedNames.Name(item),
+                    LocalizedNames.Slot(slot)));
                 return;
             }
 
             if (!session.IsItemOwned(_selectedItemId))
             {
-                SetStatus("That item is not in your inventory.");
+                SetStatus(Loc.Tr("items.not_in_inventory", "That item is not in your inventory."));
                 return;
             }
 
@@ -214,11 +219,11 @@ namespace NordeusChallenge.Client.UI.ItemManagement
 
             if (session.EquipItem(_selectedItemId))
             {
-                SetStatus($"Equipped {item.name}.");
+                SetStatus(string.Format(Loc.Tr("items.equipped_msg", "Equipped {0}."), LocalizedNames.Name(item)));
             }
             else
             {
-                SetStatus($"Could not equip {item.name}.");
+                SetStatus(string.Format(Loc.Tr("items.could_not_equip", "Could not equip {0}."), LocalizedNames.Name(item)));
             }
 
             Refresh();
@@ -237,7 +242,9 @@ namespace NordeusChallenge.Client.UI.ItemManagement
             var item = GameSession.Instance.GetItemById(itemId);
             if (GameSession.Instance.UnequipItem(itemId))
             {
-                SetStatus(item != null ? $"Unequipped {item.name}." : "Unequipped.");
+                SetStatus(item != null
+                    ? string.Format(Loc.Tr("items.unequipped_msg", "Unequipped {0}."), LocalizedNames.Name(item))
+                    : Loc.Tr("items.unequipped_generic", "Unequipped."));
             }
 
             Refresh();
@@ -275,17 +282,17 @@ namespace NordeusChallenge.Client.UI.ItemManagement
 
             if (item == null)
             {
-                selectedItemText.text = "Select an item to see details.";
+                selectedItemText.text = Loc.Tr("items.detail_hint", "Select an item to see details.");
                 return;
             }
 
             var sb = new StringBuilder();
-            sb.Append($"<b>{item.name}</b>");
+            sb.Append($"<b>{LocalizedNames.Name(item)}</b>");
             sb.AppendLine();
-            sb.Append(Capitalize(item.slot));
+            sb.Append(LocalizedNames.Slot(item.slot));
             if (!string.IsNullOrEmpty(item.rarity))
             {
-                sb.Append($"  |  {Capitalize(item.rarity)}");
+                sb.Append($"  |  {LocalizedNames.Rarity(item.rarity)}");
             }
             if (item.statBonuses != null && item.statBonuses.Count > 0)
             {
@@ -295,13 +302,15 @@ namespace NordeusChallenge.Client.UI.ItemManagement
                     var b = item.statBonuses[i];
                     if (b == null) continue;
                     if (i > 0) sb.Append("  ");
-                    sb.Append(b.amount >= 0 ? $"+{b.amount} {b.stat}" : $"{b.amount} {b.stat}");
+                    string statName = LocalizedNames.Stat(b.stat);
+                    sb.Append(b.amount >= 0 ? $"+{b.amount} {statName}" : $"{b.amount} {statName}");
                 }
             }
-            if (!string.IsNullOrEmpty(item.description))
+            string desc = LocalizedNames.Description(item);
+            if (!string.IsNullOrEmpty(desc))
             {
                 sb.AppendLine();
-                sb.Append(item.description);
+                sb.Append(desc);
             }
             selectedItemText.text = sb.ToString();
         }
@@ -319,12 +328,12 @@ namespace NordeusChallenge.Client.UI.ItemManagement
 
             var bonuses = GameSession.Instance.GetEquippedItemStatBonuses();
             heroSummaryText.text =
-                $"{hero.name} (Lv {hero.level})\n" +
-                $"HP {hero.stats.maxHealth}{Bonus(bonuses.maxHealth)}  |  " +
-                $"MP {hero.stats.maxMana}{Bonus(bonuses.maxMana)}\n" +
-                $"ATK {hero.stats.attack}{Bonus(bonuses.attack)}  |  " +
-                $"DEF {hero.stats.defense}{Bonus(bonuses.defense)}  |  " +
-                $"MAG {hero.stats.magic}{Bonus(bonuses.magic)}";
+                $"{LocalizedNames.Name(hero)} ({Loc.Tr("label.level_short", "Lv")} {hero.level})\n" +
+                $"{Loc.Tr("label.hp", "HP")} {hero.stats.maxHealth}{Bonus(bonuses.maxHealth)}  |  " +
+                $"{Loc.Tr("label.mp", "MP")} {hero.stats.maxMana}{Bonus(bonuses.maxMana)}\n" +
+                $"{Loc.Tr("label.atk", "ATK")} {hero.stats.attack}{Bonus(bonuses.attack)}  |  " +
+                $"{Loc.Tr("label.def", "DEF")} {hero.stats.defense}{Bonus(bonuses.defense)}  |  " +
+                $"{Loc.Tr("label.mag", "MAG")} {hero.stats.magic}{Bonus(bonuses.magic)}";
         }
 
         // ---------- Helpers ----------
@@ -352,7 +361,8 @@ namespace NordeusChallenge.Client.UI.ItemManagement
         private static string FormatItemLine(ItemDto item, string fallbackId)
         {
             if (item == null) return fallbackId;
-            return string.IsNullOrEmpty(item.rarity) ? item.name : $"{item.name} [{item.rarity}]";
+            string name = LocalizedNames.Name(item);
+            return string.IsNullOrEmpty(item.rarity) ? name : $"{name} [{LocalizedNames.Rarity(item.rarity)}]";
         }
 
         private static string Bonus(int amount)

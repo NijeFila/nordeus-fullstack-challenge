@@ -1,5 +1,6 @@
 using System.Text;
 using NordeusChallenge.Client.Core;
+using NordeusChallenge.Client.Localization;
 using NordeusChallenge.Client.Models;
 using NordeusChallenge.Client.Runtime;
 using TMPro;
@@ -50,7 +51,7 @@ namespace NordeusChallenge.Client.UI.Shop
                 || GameSession.Instance.CurrentRun == null
                 || GameSession.Instance.CurrentHero == null)
             {
-                SetStatus("No active run.");
+                SetStatus(Loc.Tr("ui.common.no_active_run", "No active run."));
                 ClearOffers();
                 UpdateGoldText();
                 UpdateSelectedOffer();
@@ -80,7 +81,7 @@ namespace NordeusChallenge.Client.UI.Shop
                 bool affordable = session.CanAffordShopOffer(offer);
                 bool selected = offer.id == _selectedOfferId;
 
-                string headline = $"{offer.name} ({offer.type})";
+                string headline = $"{LocalizedNames.Name(offer)} ({LocalizedNames.OfferType(offer.type)})";
                 string priceLabel = $"{offer.price}g";
 
                 var view = Instantiate(offerPrefab, offersContainer);
@@ -100,7 +101,7 @@ namespace NordeusChallenge.Client.UI.Shop
             var offer = FindSelectedOffer();
             if (offer == null)
             {
-                SetStatus("Select an offer first.");
+                SetStatus(Loc.Tr("shop.select_first", "Select an offer first."));
                 return;
             }
 
@@ -110,7 +111,7 @@ namespace NordeusChallenge.Client.UI.Shop
             }
             else
             {
-                SetStatus(string.IsNullOrEmpty(reason) ? "Could not buy this offer." : reason);
+                SetStatus(string.IsNullOrEmpty(reason) ? Loc.Tr("shop.could_not_buy", "Could not buy this offer.") : reason);
             }
 
             Refresh();
@@ -118,29 +119,24 @@ namespace NordeusChallenge.Client.UI.Shop
 
         private static string BuildPurchaseMessage(ShopOfferDto offer)
         {
+            string offerName = LocalizedNames.Name(offer);
             switch (offer.type)
             {
                 case "Item":
-                    return $"Bought {offer.name}. Added to inventory.";
+                    return string.Format(Loc.Tr("shop.bought_item", "Bought {0}. Added to inventory."), offerName);
                 case "StatUpgrade":
-                    return $"Bought {offer.name}. {FormatStatUpgrade(offer.stat, offer.amount)}";
+                    return string.Format(Loc.Tr("shop.bought_stat", "Bought {0}. {1}"), offerName, FormatStatUpgrade(offer.stat, offer.amount));
                 default:
-                    return $"Bought {offer.name}.";
+                    return string.Format(Loc.Tr("shop.bought_generic", "Bought {0}."), offerName);
             }
         }
 
         private static string FormatStatUpgrade(string stat, int amount)
         {
-            string sign = amount >= 0 ? "+" : string.Empty;
-            switch (stat)
-            {
-                case "maxHealth": return $"Max Health {sign}{amount}.";
-                case "maxMana":   return $"Max Mana {sign}{amount}.";
-                case "attack":    return $"Attack {sign}{amount}.";
-                case "defense":   return $"Defense {sign}{amount}.";
-                case "magic":     return $"Magic {sign}{amount}.";
-                default:          return $"{stat} {sign}{amount}.";
-            }
+            string statName = LocalizedNames.Stat(stat);
+            return amount >= 0
+                ? string.Format(Loc.Tr("shop.stat_upgrade", "{0} +{1}."), statName, amount)
+                : string.Format(Loc.Tr("shop.stat_upgrade_neg", "{0} {1}."), statName, amount);
         }
 
         private void UpdateSelectedOffer()
@@ -155,21 +151,21 @@ namespace NordeusChallenge.Client.UI.Shop
             if (buyButton != null)
             {
                 bool canBuy = false;
-                string label = "Buy";
+                string label = Loc.Tr("shop.buy", "Buy");
                 if (offer != null && GameSession.Instance != null)
                 {
                     if (GameSession.Instance.IsShopOfferAlreadyOwned(offer))
                     {
-                        label = "Owned";
+                        label = Loc.Tr("shop.owned", "Owned");
                     }
                     else if (!GameSession.Instance.CanAffordShopOffer(offer))
                     {
-                        label = $"Need {offer.price}g";
+                        label = string.Format(Loc.Tr("shop.need_gold", "Need {0}g"), offer.price);
                     }
                     else
                     {
                         canBuy = true;
-                        label = $"Buy ({offer.price}g)";
+                        label = string.Format(Loc.Tr("shop.buy_with_price", "Buy ({0}g)"), offer.price);
                     }
                 }
                 buyButton.interactable = canBuy;
@@ -181,13 +177,13 @@ namespace NordeusChallenge.Client.UI.Shop
         {
             if (offer == null)
             {
-                return "Select an offer to see details.";
+                return Loc.Tr("shop.detail_hint", "Select an offer to see details.");
             }
 
             var sb = new StringBuilder();
-            sb.Append($"<b>{offer.name}</b>");
+            sb.Append($"<b>{LocalizedNames.Name(offer)}</b>");
             sb.AppendLine();
-            sb.Append($"Price: {offer.price}g  |  Type: {offer.type}");
+            sb.Append(string.Format(Loc.Tr("shop.price_label", "Price: {0}g  |  Type: {1}"), offer.price, LocalizedNames.OfferType(offer.type)));
 
             if (offer.type == "Item" && !string.IsNullOrEmpty(offer.itemId))
             {
@@ -197,8 +193,8 @@ namespace NordeusChallenge.Client.UI.Shop
                 if (item != null)
                 {
                     sb.AppendLine();
-                    sb.Append($"Item: {item.name}");
-                    if (!string.IsNullOrEmpty(item.slot)) sb.Append($"  ({item.slot})");
+                    sb.Append($"{Loc.Tr("shop.type.Item", "Item")}: {LocalizedNames.Name(item)}");
+                    if (!string.IsNullOrEmpty(item.slot)) sb.Append($"  ({LocalizedNames.Slot(item.slot)})");
                     if (item.statBonuses != null && item.statBonuses.Count > 0)
                     {
                         sb.AppendLine();
@@ -208,7 +204,7 @@ namespace NordeusChallenge.Client.UI.Shop
                             if (b == null) continue;
                             if (i > 0) sb.Append("  ");
                             string sign = b.amount >= 0 ? "+" : string.Empty;
-                            sb.Append($"{sign}{b.amount} {b.stat}");
+                            sb.Append($"{sign}{b.amount} {LocalizedNames.Stat(b.stat)}");
                         }
                     }
                 }
@@ -219,10 +215,11 @@ namespace NordeusChallenge.Client.UI.Shop
                 sb.Append(FormatStatUpgrade(offer.stat, offer.amount));
             }
 
-            if (!string.IsNullOrEmpty(offer.description))
+            string desc = LocalizedNames.Description(offer);
+            if (!string.IsNullOrEmpty(desc))
             {
                 sb.AppendLine();
-                sb.Append(offer.description);
+                sb.Append(desc);
             }
 
             return sb.ToString();
@@ -247,7 +244,7 @@ namespace NordeusChallenge.Client.UI.Shop
         {
             if (goldText == null) return;
             int gold = GameSession.Instance != null ? GameSession.Instance.CurrentGold : 0;
-            goldText.text = $"Gold: {gold}";
+            goldText.text = string.Format(Loc.Tr("ui.run.gold", "Gold: {0}"), gold);
         }
 
         private void OnBackClicked()

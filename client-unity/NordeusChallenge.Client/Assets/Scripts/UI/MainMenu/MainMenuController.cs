@@ -1,4 +1,5 @@
 using NordeusChallenge.Client.Core;
+using NordeusChallenge.Client.Localization;
 using NordeusChallenge.Client.Models;
 using NordeusChallenge.Client.Networking;
 using NordeusChallenge.Client.Runtime;
@@ -68,7 +69,7 @@ namespace NordeusChallenge.Client.UI.MainMenu
 
             _requestInFlight = true;
             SetStartInteractable(false);
-            SetStatus("Loading run...");
+            SetStatus(Loc.Tr("ui.main_menu.loading", "Loading run..."));
 
             StartCoroutine(_apiClient.GetRunConfig(OnRunConfigSuccess, OnRunConfigError));
         }
@@ -90,7 +91,7 @@ namespace NordeusChallenge.Client.UI.MainMenu
         private void OnRunConfigError(string error)
         {
             _requestInFlight = false;
-            SetStatus($"Could not start run. {error}");
+            SetStatus(string.Format(Loc.Tr("ui.main_menu.error", "Could not start run. {0}"), error));
             SetStartInteractable(true);
         }
 

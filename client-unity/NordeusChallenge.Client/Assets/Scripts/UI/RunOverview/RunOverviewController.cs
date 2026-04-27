@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using NordeusChallenge.Client.Core;
+using NordeusChallenge.Client.Localization;
 using NordeusChallenge.Client.Models;
 using NordeusChallenge.Client.Runtime;
 using TMPro;
@@ -49,7 +50,7 @@ namespace NordeusChallenge.Client.UI.RunOverview
 
             if (GameSession.Instance == null || GameSession.Instance.CurrentRun == null)
             {
-                SetText(heroText, "No active run.");
+                SetText(heroText, Loc.Tr("ui.common.no_active_run", "No active run."));
                 SetText(equippedMovesText, string.Empty);
                 SetText(equippedItemsText, string.Empty);
                 SetText(inventoryText, string.Empty);
@@ -89,7 +90,7 @@ namespace NordeusChallenge.Client.UI.RunOverview
         {
             if (goldText == null) return;
             int gold = GameSession.Instance != null ? GameSession.Instance.CurrentGold : 0;
-            goldText.text = $"Gold: {gold}";
+            goldText.text = string.Format(Loc.Tr("ui.run.gold", "Gold: {0}"), gold);
         }
 
         private void OnShopClicked()
@@ -101,22 +102,28 @@ namespace NordeusChallenge.Client.UI.RunOverview
         {
             if (hero == null)
             {
-                SetText(heroText, "No hero data.");
+                SetText(heroText, Loc.Tr("ui.common.no_hero_data", "No hero data."));
                 return;
             }
 
             var bonuses = GameSession.Instance.GetEquippedItemStatBonuses();
+            string lv = Loc.Tr("label.level_short", "Lv");
+            string hp = Loc.Tr("label.hp", "HP");
+            string atk = Loc.Tr("label.atk", "ATK");
+            string def = Loc.Tr("label.def", "DEF");
+            string mag = Loc.Tr("label.mag", "MAG");
+            string xp = Loc.Tr("label.xp", "XP");
             var sb = new StringBuilder();
-            sb.AppendLine($"{hero.name} (Lv {hero.level})");
+            sb.AppendLine($"{LocalizedNames.Name(hero)} ({lv} {hero.level})");
             if (hero.stats != null)
             {
                 sb.AppendLine(
-                    $"HP {hero.stats.maxHealth}{FormatBonus(bonuses.maxHealth)} | " +
-                    $"ATK {hero.stats.attack}{FormatBonus(bonuses.attack)} | " +
-                    $"DEF {hero.stats.defense}{FormatBonus(bonuses.defense)} | " +
-                    $"MAG {hero.stats.magic}{FormatBonus(bonuses.magic)}");
+                    $"{hp} {hero.stats.maxHealth}{FormatBonus(bonuses.maxHealth)} | " +
+                    $"{atk} {hero.stats.attack}{FormatBonus(bonuses.attack)} | " +
+                    $"{def} {hero.stats.defense}{FormatBonus(bonuses.defense)} | " +
+                    $"{mag} {hero.stats.magic}{FormatBonus(bonuses.magic)}");
             }
-            sb.Append($"XP {hero.xp}");
+            sb.Append($"{xp} {hero.xp}");
             SetText(heroText, sb.ToString());
         }
 
@@ -130,18 +137,19 @@ namespace NordeusChallenge.Client.UI.RunOverview
         {
             if (hero == null || hero.equippedMoves == null || hero.equippedMoves.Count == 0)
             {
-                SetText(equippedMovesText, "No equipped moves.");
+                SetText(equippedMovesText, Loc.Tr("ui.run.no_equipped_moves", "No equipped moves."));
                 return;
             }
 
             var sb = new StringBuilder();
-            sb.AppendLine("Equipped Moves:");
+            sb.AppendLine(Loc.Tr("ui.run.equipped_moves", "Equipped Moves:"));
+            string powLabel = Loc.Tr("label.power", "Pow");
             for (int i = 0; i < hero.equippedMoves.Count; i++)
             {
                 string moveId = hero.equippedMoves[i];
                 var move = GameSession.Instance.GetMoveById(moveId);
                 if (move == null) { sb.AppendLine($"- {moveId}"); continue; }
-                sb.AppendLine($"- {move.name} ({move.category}, Pow {move.power})");
+                sb.AppendLine($"- {LocalizedNames.Name(move)} ({LocalizedNames.Category(move.category)}, {powLabel} {move.power})");
             }
             SetText(equippedMovesText, sb.ToString().TrimEnd());
         }
@@ -152,7 +160,8 @@ namespace NordeusChallenge.Client.UI.RunOverview
 
             var session = GameSession.Instance;
             var sb = new StringBuilder();
-            sb.AppendLine("Equipped Items:");
+            sb.AppendLine(Loc.Tr("ui.run.equipped_items", "Equipped Items:"));
+            string emptyWord = Loc.Tr("ui.common.empty", "Empty");
             bool anyEquipped = false;
 
             for (int s = 0; s < ItemSlotOrder.Length; s++)
@@ -163,24 +172,24 @@ namespace NordeusChallenge.Client.UI.RunOverview
 
                 if (equipped == null || equipped.Count == 0)
                 {
-                    sb.AppendLine($"- {Capitalize(slot)} (0/{cap}): Empty");
+                    sb.AppendLine($"- {LocalizedNames.Slot(slot)} (0/{cap}): {emptyWord}");
                     continue;
                 }
 
                 anyEquipped = true;
-                sb.Append($"- {Capitalize(slot)} ({equipped.Count}/{cap}): ");
+                sb.Append($"- {LocalizedNames.Slot(slot)} ({equipped.Count}/{cap}): ");
                 for (int i = 0; i < equipped.Count; i++)
                 {
                     if (i > 0) sb.Append(", ");
                     var item = session.GetItemById(equipped[i]);
-                    sb.Append(item != null ? item.name : equipped[i]);
+                    sb.Append(item != null ? LocalizedNames.Name(item) : equipped[i]);
                 }
                 sb.AppendLine();
             }
 
             if (!anyEquipped)
             {
-                SetText(equippedItemsText, "Equipped Items: none.");
+                SetText(equippedItemsText, Loc.Tr("ui.run.equipped_items_none", "Equipped Items: none."));
                 return;
             }
 
@@ -196,17 +205,18 @@ namespace NordeusChallenge.Client.UI.RunOverview
 
             if (inventory == null || inventory.Count == 0)
             {
-                SetText(inventoryText, "Inventory: empty.");
+                SetText(inventoryText, Loc.Tr("ui.run.inventory_empty", "Inventory: empty."));
                 return;
             }
 
             var sb = new StringBuilder();
-            sb.AppendLine($"Inventory ({inventory.Count}):");
+            sb.AppendLine(string.Format(Loc.Tr("ui.run.inventory", "Inventory ({0}):"), inventory.Count));
+            string equippedTag = " " + Loc.Tr("ui.run.equipped_tag", "[equipped]");
             for (int i = 0; i < inventory.Count; i++)
             {
                 var item = session.GetItemById(inventory[i]);
-                string name = item != null ? item.name : inventory[i];
-                string equippedNote = session.IsItemEquipped(inventory[i]) ? " [equipped]" : string.Empty;
+                string name = item != null ? LocalizedNames.Name(item) : inventory[i];
+                string equippedNote = session.IsItemEquipped(inventory[i]) ? equippedTag : string.Empty;
                 sb.AppendLine($"- {name}{equippedNote}");
             }
             SetText(inventoryText, sb.ToString().TrimEnd());
@@ -221,22 +231,25 @@ namespace NordeusChallenge.Client.UI.RunOverview
 
             var session = GameSession.Instance;
 
+            string lvShort = Loc.Tr("label.level_short", "Lv");
             for (int i = 0; i < run.encounters.Count; i++)
             {
                 var encounter = run.encounters[i];
                 var monster = session.GetMonsterById(encounter.monsterId);
-                string monsterName = monster != null ? monster.name : encounter.monsterId;
+                string monsterName = monster != null ? LocalizedNames.Name(monster) : encounter.monsterId;
 
                 bool unlocked = session.IsEncounterUnlocked(encounter.index);
                 bool cleared = session.IsEncounterCleared(encounter.index);
 
-                string status = !unlocked ? "Locked" : (cleared ? "Cleared" : "Available");
+                string status = !unlocked
+                    ? Loc.Tr("status.locked", "Locked")
+                    : (cleared ? Loc.Tr("status.cleared", "Cleared") : Loc.Tr("status.available", "Available"));
                 var environment = session.GetEnvironmentById(encounter.environmentId);
-                string environmentName = environment != null ? environment.name : null;
+                string environmentName = environment != null ? LocalizedNames.Name(environment) : null;
 
                 string label = string.IsNullOrEmpty(environmentName)
-                    ? $"{encounter.index + 1}. {monsterName} (Lv {encounter.level}) - {status}"
-                    : $"{encounter.index + 1}. {monsterName} (Lv {encounter.level}) - {environmentName} - {status}";
+                    ? $"{encounter.index + 1}. {monsterName} ({lvShort} {encounter.level}) - {status}"
+                    : $"{encounter.index + 1}. {monsterName} ({lvShort} {encounter.level}) - {environmentName} - {status}";
 
                 var view = Instantiate(encounterButtonPrefab, encountersContainer);
                 view.Bind(encounter.index, label, unlocked, OnEncounterSelected);

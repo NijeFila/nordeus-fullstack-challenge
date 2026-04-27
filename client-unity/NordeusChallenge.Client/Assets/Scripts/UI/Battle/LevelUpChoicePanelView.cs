@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NordeusChallenge.Client.Localization;
 using NordeusChallenge.Client.Models;
 using NordeusChallenge.Client.Runtime;
 using TMPro;
@@ -67,8 +68,8 @@ namespace NordeusChallenge.Client.UI.Battle
 
             root.SetActive(true);
 
-            if (titleText != null) titleText.text = "Level Up";
-            if (levelText != null) levelText.text = $"Level {newLevel}";
+            if (titleText != null) titleText.text = Loc.Tr("levelup.title", "Level Up");
+            if (levelText != null) levelText.text = string.Format(Loc.Tr("levelup.level_label", "Level {0}"), newLevel);
             UpdateSummary();
             BuildButtons();
 
@@ -174,10 +175,12 @@ namespace NordeusChallenge.Client.UI.Battle
                 return;
             }
 
-            string remaining = pending > 0 ? $"\nPicks remaining: {pending}" : "\nAll picks spent.";
+            string remaining = pending > 0
+                ? "\n" + string.Format(Loc.Tr("levelup.picks_remaining", "Picks remaining: {0}"), pending)
+                : "\n" + Loc.Tr("levelup.picks_done", "All picks spent.");
             summaryText.text =
-                $"HP {hero.stats.maxHealth}  |  MP {hero.stats.maxMana}\n" +
-                $"ATK {hero.stats.attack}  |  DEF {hero.stats.defense}  |  MAG {hero.stats.magic}" +
+                $"{Loc.Tr("label.hp", "HP")} {hero.stats.maxHealth}  |  {Loc.Tr("label.mp", "MP")} {hero.stats.maxMana}\n" +
+                $"{Loc.Tr("label.atk", "ATK")} {hero.stats.attack}  |  {Loc.Tr("label.def", "DEF")} {hero.stats.defense}  |  {Loc.Tr("label.mag", "MAG")} {hero.stats.magic}" +
                 remaining;
         }
     }

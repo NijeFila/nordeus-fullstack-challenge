@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using NordeusChallenge.Client.Core;
+using NordeusChallenge.Client.Localization;
 using NordeusChallenge.Client.Models;
 using NordeusChallenge.Client.Networking;
 using NordeusChallenge.Client.Runtime;
@@ -105,7 +106,7 @@ namespace NordeusChallenge.Client.UI.Battle
 
             if (GameSession.Instance == null || GameSession.Instance.CurrentRun == null)
             {
-                SetStatus("No active run.");
+                SetStatus(Loc.Tr("ui.common.no_active_run", "No active run."));
                 return;
             }
 
@@ -147,10 +148,13 @@ namespace NordeusChallenge.Client.UI.Battle
             if (monsterHpBar != null) monsterHpBar.SetImmediate(_monsterHealth, _monsterMaxHealth);
             RenderMoves(_hero);
             RefreshAffordability();
-            AppendLog($"A wild {_monster.name} appears.");
+            AppendLog(string.Format(Loc.Tr("battle.appears", "A wild {0} appears."), LocalizedNames.Name(_monster)));
             if (_environment != null)
             {
-                AppendLog($"Environment: {_environment.name} - {_environment.description}");
+                AppendLog(string.Format(
+                    Loc.Tr("battle.environment_intro", "Environment: {0} - {1}"),
+                    LocalizedNames.Name(_environment),
+                    LocalizedNames.Description(_environment)));
             }
         }
 
@@ -173,7 +177,10 @@ namespace NordeusChallenge.Client.UI.Battle
 
             if (!CanAfford(move, isHero: true))
             {
-                AppendLog($"{move.name} is unavailable: {AffordabilityReason(move, isHero: true)}.");
+                AppendLog(string.Format(
+                    Loc.Tr("battle.move_unavailable", "{0} is unavailable: {1}."),
+                    LocalizedNames.Name(move),
+                    AffordabilityReason(move, isHero: true)));
                 return;
             }
 
@@ -247,8 +254,8 @@ namespace NordeusChallenge.Client.UI.Battle
             ResolveMove(
                 move,
                 isHeroAttacker: true,
-                attackerName: _hero.name,
-                defenderName: _monster.name);
+                attackerName: LocalizedNames.Name(_hero),
+                defenderName: LocalizedNames.Name(_monster));
         }
 
         private IEnumerator ResolveMonsterTurn()
@@ -287,7 +294,10 @@ namespace NordeusChallenge.Client.UI.Battle
             // but verify locally so HP/mana costs are paid honestly.
             if (!CanAfford(move, isHero: false))
             {
-                AppendLog($"{_monster.name} could not afford {move.name} and hesitates.");
+                AppendLog(string.Format(
+                    Loc.Tr("battle.move_unavailable", "{0} is unavailable: {1}."),
+                    LocalizedNames.Name(move),
+                    Loc.Tr("battle.reason_unavailable", "unavailable")));
                 yield break;
             }
 
@@ -295,8 +305,8 @@ namespace NordeusChallenge.Client.UI.Battle
             ResolveMove(
                 move,
                 isHeroAttacker: false,
-                attackerName: _monster.name,
-                defenderName: _hero.name);
+                attackerName: LocalizedNames.Name(_monster),
+                defenderName: LocalizedNames.Name(_hero));
         }
 
         // ---------- Resource costs ----------
@@ -314,27 +324,27 @@ namespace NordeusChallenge.Client.UI.Battle
         {
             int mana = isHero ? _heroMana : _monsterMana;
             int hp = isHero ? _heroHealth : _monsterHealth;
-            if (move.manaCost > 0 && mana < move.manaCost) return "not enough mana";
-            if (move.hpCost > 0 && hp <= move.hpCost) return "not enough HP";
-            return "unavailable";
+            if (move.manaCost > 0 && mana < move.manaCost) return Loc.Tr("battle.reason_no_mana", "not enough mana");
+            if (move.hpCost > 0 && hp <= move.hpCost) return Loc.Tr("battle.reason_no_hp", "not enough HP");
+            return Loc.Tr("battle.reason_unavailable", "unavailable");
         }
 
         private void PayCosts(MoveDto move, bool isHero)
         {
-            string casterName = isHero ? _hero.name : _monster.name;
+            string casterName = isHero ? LocalizedNames.Name(_hero) : LocalizedNames.Name(_monster);
 
             if (move.manaCost > 0)
             {
                 if (isHero) _heroMana = Mathf.Max(0, _heroMana - move.manaCost);
                 else _monsterMana = Mathf.Max(0, _monsterMana - move.manaCost);
-                AppendLog($"{casterName} spent {move.manaCost} mana.");
+                AppendLog(string.Format(Loc.Tr("battle.spent_mana", "{0} spent {1} mana."), casterName, move.manaCost));
             }
 
             if (move.hpCost > 0)
             {
                 if (isHero) _heroHealth = Mathf.Max(1, _heroHealth - move.hpCost);
                 else _monsterHealth = Mathf.Max(1, _monsterHealth - move.hpCost);
-                AppendLog($"{casterName} paid {move.hpCost} HP.");
+                AppendLog(string.Format(Loc.Tr("battle.paid_hp", "{0} paid {1} HP."), casterName, move.hpCost));
             }
         }
 
@@ -360,6 +370,11 @@ namespace NordeusChallenge.Client.UI.Battle
             int attackerMagic = EffectiveMagic(isHeroAttacker);
             int defenderDefense = EffectiveDefense(!isHeroAttacker);
 
+            string moveName = LocalizedNames.Name(move);
+            string usedDamage = Loc.Tr("battle.used_move_damage", "{0} used {1}. {2} took {3} damage.");
+            string usedHeal = Loc.Tr("battle.used_move_heal", "{0} used {1}. Restored {2} HP.");
+            string usedSimple = Loc.Tr("battle.used_move", "{0} used {1}.");
+
             switch (move.category)
             {
                 case "Physical":
@@ -368,7 +383,7 @@ namespace NordeusChallenge.Client.UI.Battle
                     int damage = AdjustOutgoingDamage(raw, isHeroAttacker, defenderIsHero: !isHeroAttacker);
                     ApplyDamage(isHeroAttacker, damage);
                     PlayDamageFeedback(isHeroAttacker, damage);
-                    AppendLog($"{attackerName} used {move.name}. {defenderName} took {damage} damage.");
+                    AppendLog(string.Format(usedDamage, attackerName, moveName, defenderName, damage));
                     break;
                 }
                 case "Magic":
@@ -377,25 +392,21 @@ namespace NordeusChallenge.Client.UI.Battle
                     int damage = AdjustOutgoingDamage(raw, isHeroAttacker, defenderIsHero: !isHeroAttacker);
                     ApplyDamage(isHeroAttacker, damage);
                     PlayDamageFeedback(isHeroAttacker, damage);
-                    AppendLog($"{attackerName} used {move.name}. {defenderName} took {damage} damage.");
+                    AppendLog(string.Format(usedDamage, attackerName, moveName, defenderName, damage));
                     break;
                 }
                 case "Heal":
                 {
                     int healed = ApplyHeal(isHeroAttacker, move, attackerMagic);
                     PlayHealFeedback(isHeroAttacker, healed);
-                    AppendLog($"{attackerName} used {move.name}. Restored {healed} HP.");
+                    AppendLog(string.Format(usedHeal, attackerName, moveName, healed));
                     break;
                 }
                 case "Buff":
                 case "Debuff":
-                {
-                    AppendLog($"{attackerName} used {move.name}.");
-                    break;
-                }
                 default:
                 {
-                    AppendLog($"{attackerName} used {move.name}.");
+                    AppendLog(string.Format(usedSimple, attackerName, moveName));
                     break;
                 }
             }
@@ -489,7 +500,7 @@ namespace NordeusChallenge.Client.UI.Battle
             if (heroDot > 0)
             {
                 _heroHealth = Mathf.Max(0, _heroHealth - heroDot);
-                AppendLog($"{_hero.name} suffers {heroDot} damage from status effects.");
+                AppendLog(string.Format(Loc.Tr("battle.dot_damage", "{0} suffers {1} damage from status effects."), LocalizedNames.Name(_hero), heroDot));
                 if (feedbackView != null && heroVisuals != null)
                 {
                     feedbackView.PlayHit(heroVisuals, heroDot);
@@ -499,7 +510,7 @@ namespace NordeusChallenge.Client.UI.Battle
             if (monsterDot > 0)
             {
                 _monsterHealth = Mathf.Max(0, _monsterHealth - monsterDot);
-                AppendLog($"{_monster.name} suffers {monsterDot} damage from status effects.");
+                AppendLog(string.Format(Loc.Tr("battle.dot_damage", "{0} suffers {1} damage from status effects."), LocalizedNames.Name(_monster), monsterDot));
                 if (feedbackView != null && monsterVisuals != null)
                 {
                     feedbackView.PlayHit(monsterVisuals, monsterDot);
@@ -619,9 +630,11 @@ namespace NordeusChallenge.Client.UI.Battle
                 return;
             }
 
-            environmentText.text = string.IsNullOrEmpty(_environment.description)
-                ? _environment.name
-                : $"<b>{_environment.name}</b>\n{_environment.description}";
+            string envName = LocalizedNames.Name(_environment);
+            string envDesc = LocalizedNames.Description(_environment);
+            environmentText.text = string.IsNullOrEmpty(envDesc)
+                ? envName
+                : $"<b>{envName}</b>\n{envDesc}";
         }
 
         private void ApplyEnvironmentEndOfTurn()
@@ -631,7 +644,7 @@ namespace NordeusChallenge.Client.UI.Battle
             int dmg = _environment.endOfTurnDamage;
             _heroHealth = Mathf.Max(0, _heroHealth - dmg);
             _monsterHealth = Mathf.Max(0, _monsterHealth - dmg);
-            AppendLog($"The {_environment.name} deals {dmg} damage to both combatants.");
+            AppendLog(string.Format(Loc.Tr("battle.environment_damage", "The {0} deals {1} damage to both combatants."), LocalizedNames.Name(_environment), dmg));
 
             if (feedbackView != null)
             {
@@ -646,7 +659,7 @@ namespace NordeusChallenge.Client.UI.Battle
         {
             if (heroNameText != null)
             {
-                heroNameText.text = $"{_hero.name} (Lv {_hero.level})";
+                heroNameText.text = $"{LocalizedNames.Name(_hero)} ({Loc.Tr("label.level_short", "Lv")} {_hero.level})";
             }
             if (heroVisuals != null && heroVisuals.portrait != null && visualCatalog != null)
             {
@@ -664,7 +677,7 @@ namespace NordeusChallenge.Client.UI.Battle
         {
             if (monsterNameText != null)
             {
-                monsterNameText.text = $"{_monster.name} (Lv {_encounter.level})";
+                monsterNameText.text = $"{LocalizedNames.Name(_monster)} ({Loc.Tr("label.level_short", "Lv")} {_encounter.level})";
             }
             if (monsterVisuals != null && monsterVisuals.portrait != null && visualCatalog != null)
             {
@@ -710,7 +723,7 @@ namespace NordeusChallenge.Client.UI.Battle
         {
             if (heroStatsText != null)
             {
-                heroStatsText.text = $"ATK {EffectiveAttack(true)} | DEF {EffectiveDefense(true)} | MAG {EffectiveMagic(true)}";
+                heroStatsText.text = $"{Loc.Tr("label.atk", "ATK")} {EffectiveAttack(true)} | {Loc.Tr("label.def", "DEF")} {EffectiveDefense(true)} | {Loc.Tr("label.mag", "MAG")} {EffectiveMagic(true)}";
             }
         }
 
@@ -718,7 +731,7 @@ namespace NordeusChallenge.Client.UI.Battle
         {
             if (monsterStatsText != null)
             {
-                monsterStatsText.text = $"ATK {EffectiveAttack(false)} | DEF {EffectiveDefense(false)} | MAG {EffectiveMagic(false)}";
+                monsterStatsText.text = $"{Loc.Tr("label.atk", "ATK")} {EffectiveAttack(false)} | {Loc.Tr("label.def", "DEF")} {EffectiveDefense(false)} | {Loc.Tr("label.mag", "MAG")} {EffectiveMagic(false)}";
             }
         }
 
@@ -726,7 +739,7 @@ namespace NordeusChallenge.Client.UI.Battle
         {
             if (heroHealthText != null)
             {
-                heroHealthText.text = $"HP {_heroHealth} / {_heroMaxHealth}";
+                heroHealthText.text = $"{Loc.Tr("label.hp", "HP")} {_heroHealth} / {_heroMaxHealth}";
             }
         }
 
@@ -734,20 +747,20 @@ namespace NordeusChallenge.Client.UI.Battle
         {
             if (monsterHealthText != null)
             {
-                monsterHealthText.text = $"HP {_monsterHealth} / {_monsterMaxHealth}";
+                monsterHealthText.text = $"{Loc.Tr("label.hp", "HP")} {_monsterHealth} / {_monsterMaxHealth}";
             }
         }
 
         private void UpdateHeroManaText()
         {
             if (heroManaText == null) return;
-            heroManaText.text = _heroMaxMana > 0 ? $"MP {_heroMana} / {_heroMaxMana}" : string.Empty;
+            heroManaText.text = _heroMaxMana > 0 ? $"{Loc.Tr("label.mp", "MP")} {_heroMana} / {_heroMaxMana}" : string.Empty;
         }
 
         private void UpdateMonsterManaText()
         {
             if (monsterManaText == null) return;
-            monsterManaText.text = _monsterMaxMana > 0 ? $"MP {_monsterMana} / {_monsterMaxMana}" : string.Empty;
+            monsterManaText.text = _monsterMaxMana > 0 ? $"{Loc.Tr("label.mp", "MP")} {_monsterMana} / {_monsterMaxMana}" : string.Empty;
         }
 
         private void UpdateHeroStatusEffectsText()
@@ -844,7 +857,7 @@ namespace NordeusChallenge.Client.UI.Battle
 
             if (heroWon)
             {
-                string headline = $"Victory against {_monster.name}.";
+                string headline = string.Format(Loc.Tr("battle.victory_against", "Victory against {0}."), LocalizedNames.Name(_monster));
                 AppendLog(headline);
 
                 var reward = GameSession.Instance != null
@@ -855,35 +868,39 @@ namespace NordeusChallenge.Client.UI.Battle
 
                 if (reward != null)
                 {
-                    AppendLog($"+{reward.XpGained} XP.");
+                    AppendLog(string.Format(Loc.Tr("battle.xp_gain", "+{0} XP."), reward.XpGained));
                     if (reward.GoldGained > 0)
                     {
-                        AppendLog($"+{reward.GoldGained} gold (total {reward.CurrentGold}).");
+                        AppendLog(string.Format(Loc.Tr("battle.gold_gain", "+{0} gold (total {1})."), reward.GoldGained, reward.CurrentGold));
                     }
                     if (reward.LeveledUp)
                     {
-                        AppendLog($"Level up! Now Lv {reward.NewLevel}.");
+                        AppendLog(string.Format(Loc.Tr("battle.level_up", "Level up! Now Lv {0}."), reward.NewLevel));
                     }
                     if (reward.NewMoveLearned)
                     {
-                        string equippedNote = reward.AutoEquipped ? " (auto-equipped)" : "";
-                        AppendLog($"Learned {reward.LearnedMoveName}.{equippedNote}");
+                        AppendLog(string.Format(
+                            Loc.Tr(reward.AutoEquipped ? "battle.learned_move_auto" : "battle.learned_move",
+                                reward.AutoEquipped ? "Learned {0} (auto-equipped)." : "Learned {0}."),
+                            reward.LearnedMoveName));
                     }
                     if (reward.ItemDropped)
                     {
                         if (reward.ItemAddedToInventory)
                         {
-                            string equippedNote = reward.ItemAutoEquipped ? " (auto-equipped)" : "";
-                            AppendLog($"Found {reward.DroppedItemName}.{equippedNote}");
+                            AppendLog(string.Format(
+                                Loc.Tr(reward.ItemAutoEquipped ? "battle.found_item_auto" : "battle.found_item",
+                                    reward.ItemAutoEquipped ? "Found {0} (auto-equipped)." : "Found {0}."),
+                                reward.DroppedItemName));
                         }
                         else if (reward.ItemAlreadyOwned)
                         {
-                            AppendLog($"Found {reward.DroppedItemName} (duplicate, already owned).");
+                            AppendLog(string.Format(Loc.Tr("battle.found_duplicate", "Found {0} (duplicate, already owned)."), reward.DroppedItemName));
                         }
                     }
                     if (reward.UnlockedNextEncounter)
                     {
-                        AppendLog($"Encounter {reward.NextUnlockedIndex + 1} unlocked.");
+                        AppendLog(string.Format(Loc.Tr("battle.unlocked", "Encounter {0} unlocked."), reward.NextUnlockedIndex + 1));
                     }
                 }
 
@@ -891,7 +908,7 @@ namespace NordeusChallenge.Client.UI.Battle
             }
             else
             {
-                string message = $"Defeated by {_monster.name}.";
+                string message = string.Format(Loc.Tr("battle.defeated_by", "Defeated by {0}."), LocalizedNames.Name(_monster));
                 SetStatus(message);
                 AppendLog(message);
             }
@@ -946,32 +963,34 @@ namespace NordeusChallenge.Client.UI.Battle
 
             var sb = new StringBuilder();
             sb.Append(headline);
-            sb.Append($" +{reward.XpGained} XP.");
+            sb.Append(' ').Append(string.Format(Loc.Tr("battle.xp_gain", "+{0} XP."), reward.XpGained));
             if (reward.GoldGained > 0)
             {
-                sb.Append($" +{reward.GoldGained} gold.");
+                sb.Append(' ').Append(string.Format(Loc.Tr("battle.gold_gain", "+{0} gold (total {1})."), reward.GoldGained, reward.CurrentGold));
             }
             if (reward.LeveledUp)
             {
-                sb.Append($" Level up to Lv {reward.NewLevel}.");
+                sb.Append(' ').Append(string.Format(Loc.Tr("battle.level_up", "Level up! Now Lv {0}."), reward.NewLevel));
             }
             if (reward.NewMoveLearned)
             {
-                sb.Append(reward.AutoEquipped
-                    ? $" Learned {reward.LearnedMoveName} (auto-equipped)."
-                    : $" Learned {reward.LearnedMoveName}.");
+                sb.Append(' ').Append(string.Format(
+                    Loc.Tr(reward.AutoEquipped ? "battle.learned_move_auto" : "battle.learned_move",
+                        reward.AutoEquipped ? "Learned {0} (auto-equipped)." : "Learned {0}."),
+                    reward.LearnedMoveName));
             }
             if (reward.ItemDropped)
             {
                 if (reward.ItemAddedToInventory)
                 {
-                    sb.Append(reward.ItemAutoEquipped
-                        ? $" Found {reward.DroppedItemName} (auto-equipped)."
-                        : $" Found {reward.DroppedItemName}.");
+                    sb.Append(' ').Append(string.Format(
+                        Loc.Tr(reward.ItemAutoEquipped ? "battle.found_item_auto" : "battle.found_item",
+                            reward.ItemAutoEquipped ? "Found {0} (auto-equipped)." : "Found {0}."),
+                        reward.DroppedItemName));
                 }
                 else if (reward.ItemAlreadyOwned)
                 {
-                    sb.Append($" {reward.DroppedItemName} dropped (duplicate).");
+                    sb.Append(' ').Append(string.Format(Loc.Tr("battle.found_duplicate", "Found {0} (duplicate, already owned)."), reward.DroppedItemName));
                 }
             }
             return sb.ToString();
@@ -1073,24 +1092,25 @@ namespace NordeusChallenge.Client.UI.Battle
             }
 
             var sb = new StringBuilder();
-            sb.Append($"<b>{move.name}</b>  ({move.category}");
+            sb.Append($"<b>{LocalizedNames.Name(move)}</b>  ({LocalizedNames.Category(move.category)}");
             if (move.power > 0)
             {
-                sb.Append($", Pow {move.power}");
+                sb.Append($", {Loc.Tr("label.power", "Pow")} {move.power}");
             }
             if (move.manaCost > 0)
             {
-                sb.Append($", {move.manaCost} MP");
+                sb.Append($", {move.manaCost} {Loc.Tr("label.mp", "MP")}");
             }
             if (move.hpCost > 0)
             {
-                sb.Append($", {move.hpCost} HP");
+                sb.Append($", {move.hpCost} {Loc.Tr("label.hp", "HP")}");
             }
             sb.Append(")");
-            if (!string.IsNullOrEmpty(move.description))
+            string desc = LocalizedNames.Description(move);
+            if (!string.IsNullOrEmpty(desc))
             {
                 sb.AppendLine();
-                sb.Append(move.description);
+                sb.Append(desc);
             }
             moveInfoText.text = sb.ToString();
         }
