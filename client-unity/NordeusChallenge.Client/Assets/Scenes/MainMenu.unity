@@ -7130,6 +7130,7 @@ GameObject:
   - component: {fileID: 1042805877}
   - component: {fileID: 1042805879}
   - component: {fileID: 1042805878}
+  - component: {fileID: 1042805880}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -7256,6 +7257,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1042805876}
   m_CullTransparentMesh: 1
+--- !u!114 &1042805880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1042805876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45e955123b4630644b4e522efcc7cc42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NordeusChallenge.Client.Localization.LocalizedText
+  key: ui.main_menu.settings
+  fallback: 
 --- !u!1 &1043201911
 GameObject:
   m_ObjectHideFlags: 0
@@ -11818,7 +11833,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45e955123b4630644b4e522efcc7cc42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NordeusChallenge.Client.Localization.LocalizedText
-  key: 
+  key: ui.main_menu.exit
   fallback: Exit
 --- !u!1 &1889854916
 GameObject:

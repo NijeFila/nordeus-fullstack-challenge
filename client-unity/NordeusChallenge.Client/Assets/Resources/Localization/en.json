@@ -13,6 +13,7 @@
     { "key": "ui.main_menu.continue_run", "value": "Continue Run" },
     { "key": "ui.main_menu.delete_save", "value": "Delete Save" },
     { "key": "ui.main_menu.no_save", "value": "No save file found." },
+    { "key": "ui.main_menu.settings", "value": "Settings" },
 
     { "key": "ui.options", "value": "Options" },
     { "key": "ui.settings.title", "value": "Settings" },

@@ -13,6 +13,7 @@
     { "key": "ui.main_menu.continue_run", "value": "Nastavi pohod" },
     { "key": "ui.main_menu.delete_save", "value": "Obriši snimak" },
     { "key": "ui.main_menu.no_save", "value": "Snimak nije pronađen." },
+    { "key": "ui.main_menu.settings", "value": "Podešavanja" },
 
     { "key": "ui.options", "value": "Podešavanja" },
     { "key": "ui.settings.title", "value": "Podešavanja" },
