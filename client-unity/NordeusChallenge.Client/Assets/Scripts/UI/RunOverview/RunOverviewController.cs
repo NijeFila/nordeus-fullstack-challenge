@@ -354,29 +354,35 @@ namespace NordeusChallenge.Client.UI.RunOverview
                 }
             }
 
-            if (mapContainer != null)
-            {
-                var lg = mapContainer.GetComponent<LayoutGroup>();
-                if (lg != null) lg.enabled = false;
-                var csf = mapContainer.GetComponent<ContentSizeFitter>();
-                if (csf != null) csf.enabled = false;
+            // Resolve the layers we draw into. The editor tool sets these up
+            // as children of mapContainer so layout components on the
+            // container itself don't push the nodes around.
+            var nodesLayer = ResolveLayer(mapContainer, "NodesLayer");
+            var linesLayer = ResolveLayer(mapContainer, "LinesLayer");
 
-                // Set container anchors to bottom center to scroll up
-                var rect = mapContainer.GetComponent<RectTransform>();
-                rect.anchorMin = new Vector2(0.5f, 0);
-                rect.anchorMax = new Vector2(0.5f, 0);
-                rect.pivot = new Vector2(0.5f, 0);
-            }
+            // mapContainer should already be the ScrollRect Content. We only
+            // disable layout groups / fitters here defensively; we no longer
+            // rewrite the container's anchors or pivot, which used to push the
+            // map outside the visible panel.
+            DisableAutoLayout(mapContainer);
+            DisableAutoLayout(nodesLayer);
+            DisableAutoLayout(linesLayer);
 
-            // 1. Spawn all nodes
+            // Pick the parent we actually drop nodes / lines into.
+            var nodesParent = nodesLayer != null ? nodesLayer : mapContainer.GetComponent<RectTransform>();
+            var linesParent = linesLayer != null ? linesLayer : nodesParent;
+
+            // 1. Spawn all nodes under the nodes layer.
             foreach (var node in run.mapNodes)
             {
                 if (node == null) continue;
-                var view = SpawnMapNode(node);
+                var view = SpawnMapNode(node, nodesParent);
                 _nodeViews[node.id] = view;
             }
 
-            // 2. Position nodes
+            // 2. Position nodes via anchoredPosition. The placement uses the
+            // nodesLayer's coordinate space so it inherits whatever anchor /
+            // pivot the editor tool configured (top-center, growing downward).
             int maxDepth = 0;
             foreach (var node in run.mapNodes)
             {
@@ -384,13 +390,16 @@ namespace NordeusChallenge.Client.UI.RunOverview
                 if (!_nodeViews.TryGetValue(node.id, out var view)) continue;
 
                 var rt = view.GetComponent<RectTransform>();
-                float y = node.depth * mapVerticalSpacing + (mapVerticalSpacing * 0.5f);
-                float x = (node.position - 2.5f) * mapHorizontalSpacing; // Assume ~6 lanes, center at 2.5
+                if (rt == null) continue;
+                rt.localScale = Vector3.one;
+
+                float y = -(node.depth * mapVerticalSpacing + mapVerticalSpacing * 0.5f);
+                float x = (node.position - 1f) * mapHorizontalSpacing; // 0..2 lanes, centered on 1
                 rt.anchoredPosition = new Vector2(x, y);
             }
 
-            // 3. Draw Connections
-            if (mapLinePrefab != null)
+            // 3. Draw connections under the lines layer (always behind nodes).
+            if (mapLinePrefab != null && linesParent != null)
             {
                 foreach (var node in run.mapNodes)
                 {
@@ -400,35 +409,58 @@ namespace NordeusChallenge.Client.UI.RunOverview
                     foreach (var targetId in node.connectedTo)
                     {
                         if (!_nodeViews.TryGetValue(targetId, out var endView)) continue;
-                        DrawConnection(startView.GetComponent<RectTransform>(), endView.GetComponent<RectTransform>());
+                        DrawConnection(linesParent, startView.GetComponent<RectTransform>(), endView.GetComponent<RectTransform>());
                     }
                 }
             }
 
-            // Resize container
-            if (mapContainer != null)
+            // Size the scrolling content to fit the rendered map.
+            // Width = 3 lanes (-1, 0, +1) × spacing + a margin; height = (maxDepth + 1) × vertical spacing + margin.
+            var containerRect = mapContainer as RectTransform;
+            if (containerRect != null)
             {
-                var rect = mapContainer.GetComponent<RectTransform>();
-                rect.sizeDelta = new Vector2(mapHorizontalSpacing * 6, (maxDepth + 1) * mapVerticalSpacing + 100);
+                float width = mapHorizontalSpacing * 4f;
+                float height = (maxDepth + 1) * mapVerticalSpacing + mapVerticalSpacing;
+                containerRect.sizeDelta = new Vector2(width, height);
             }
+
+            Debug.Log($"[RunOverview] Rendered {run.mapNodes.Count} map nodes under '{(nodesLayer != null ? nodesLayer.name : mapContainer.name)}' (containerSize={(containerRect != null ? containerRect.rect.size.ToString() : "n/a")}).");
         }
 
-        private void DrawConnection(RectTransform start, RectTransform end)
+        private static RectTransform ResolveLayer(Transform container, string layerName)
         {
-            var lineObj = Instantiate(mapLinePrefab, mapContainer);
-            lineObj.transform.SetAsFirstSibling(); // Lines behind nodes
+            if (container == null) return null;
+            var existing = container.Find(layerName);
+            return existing != null ? existing as RectTransform : null;
+        }
+
+        private static void DisableAutoLayout(Transform target)
+        {
+            if (target == null) return;
+            var lg = target.GetComponent<LayoutGroup>();
+            if (lg != null) lg.enabled = false;
+            var csf = target.GetComponent<ContentSizeFitter>();
+            if (csf != null) csf.enabled = false;
+        }
+
+        private void DrawConnection(RectTransform parent, RectTransform start, RectTransform end)
+        {
+            var lineObj = Instantiate(mapLinePrefab, parent);
+            lineObj.transform.SetAsFirstSibling(); // safety net inside the lines layer
             var rt = lineObj.GetComponent<RectTransform>();
+            if (rt == null) return;
+            rt.localScale = Vector3.one;
 
             Vector2 dir = end.anchoredPosition - start.anchoredPosition;
             float distance = dir.magnitude;
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
             rt.anchoredPosition = start.anchoredPosition + dir * 0.5f;
-            rt.sizeDelta = new Vector2(distance, 4f); // 4 pixels thick
+            rt.sizeDelta = new Vector2(distance, 4f);
             rt.localRotation = Quaternion.Euler(0, 0, angle);
         }
 
-        private RunMapNodeView SpawnMapNode(RunMapNodeDto node)
+        private RunMapNodeView SpawnMapNode(RunMapNodeDto node, RectTransform parent)
         {
             var session = GameSession.Instance;
 
@@ -445,10 +477,10 @@ namespace NordeusChallenge.Client.UI.RunOverview
 
             bool isCurrent = session.SelectedMapNodeId == node.id;
 
-            var view = Instantiate(mapNodePrefab, mapContainer);
+            var view = Instantiate(mapNodePrefab, parent);
             view.Bind(node.id, label, typeText, statusText, node.type, interactable, isCurrent, OnMapNodeSelected);
             return view;
-            }
+        }
 
         private string BuildMapNodeLabel(RunMapNodeDto node)
         {
@@ -525,9 +557,31 @@ namespace NordeusChallenge.Client.UI.RunOverview
         private void ClearMapContainer()
         {
             if (mapContainer == null) return;
+
+            // If the editor tool created child layers, clear them in place so we
+            // don't destroy the layer GameObjects themselves. Otherwise fall back
+            // to clearing every child of the container.
+            var nodes = mapContainer.Find("NodesLayer");
+            var lines = mapContainer.Find("LinesLayer");
+            if (nodes != null || lines != null)
+            {
+                ClearChildren(nodes);
+                ClearChildren(lines);
+                return;
+            }
+
             for (int i = mapContainer.childCount - 1; i >= 0; i--)
             {
                 Destroy(mapContainer.GetChild(i).gameObject);
+            }
+        }
+
+        private static void ClearChildren(Transform target)
+        {
+            if (target == null) return;
+            for (int i = target.childCount - 1; i >= 0; i--)
+            {
+                Destroy(target.GetChild(i).gameObject);
             }
         }
 

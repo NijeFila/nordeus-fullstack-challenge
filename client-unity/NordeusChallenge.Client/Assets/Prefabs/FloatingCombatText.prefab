@@ -98,9 +98,9 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_fontStyle: 1
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -210,5 +210,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NordeusChallenge.Client.UI.Common.FloatingCombatText
   text: {fileID: 4600520823937413514}
   canvasGroup: {fileID: 6227440323823697599}
-  lifetime: 0.8
-  riseDistance: 60
+  lifetime: 1
+  riseDistance: 80

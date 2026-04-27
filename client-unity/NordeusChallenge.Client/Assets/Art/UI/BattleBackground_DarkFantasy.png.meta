@@ -1,12 +1,12 @@
 fileFormatVersion: 2
-guid: 6988f5cf3648ebe439d408ee182d5cdd
+guid: a0d50190bab544946917be2ea6bb7c85
 labels:
 - UnityAI
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5737066990418204447
-    second: NodeToken_0
+      213: 2085895454116775997
+    second: BattleBackground_DarkFantasy_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -102,7 +102,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: NodeToken_0
+      name: BattleBackground_DarkFantasy_0
       rect:
         serializedVersion: 2
         x: 0
@@ -117,8 +117,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1e8e08fe7f7d160b0800000000000000
-      internalID: -5737066990418204447
+      spriteID: d388b3d2dd692fc10800000000000000
+      internalID: 2085895454116775997
       vertices: []
       indices: 
       edges: []
@@ -137,7 +137,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      NodeToken_0: -5737066990418204447
+      BattleBackground_DarkFantasy_0: 2085895454116775997
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
