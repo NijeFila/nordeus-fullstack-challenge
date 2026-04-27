@@ -1,0 +1,27 @@
+{
+    "asset": "7401021c0c889e447a72f77e3566f748",
+    "fileName": "019dd109-56be-728e-8233-25bee9fc9da0.jpg",
+    "prompt": "A ruined ritual chamber with a low stone altar in the centre, blood-stained but no figures present. Black candles ring the altar. Carved runes on the floor pulse faintly red. Tall, broken pillars on either side. Cold purple-blue moonlight from a hole in the ceiling mixes with the warm red rune glow. Painted dark fantasy, 16:9 landscape, ominous and quiet. No characters, no UI, no text. Bottom of the frame stays uncluttered. Shared style: dark fantasy, painted look (oil-on-canvas / matte painting feel), moody but readable, warm accents, symmetrical and stable, darker band along the bottom third.",
+    "negativePrompt": "",
+    "model": "f722aea3-8760-4eb1-a516-e2fce6476303",
+    "modelName": "Seedream 4",
+    "customSeed": -1,
+    "w3CTraceId": "795d858405b4bad7b4144adf1597bfa0",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1920,
+        "height": 1080
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

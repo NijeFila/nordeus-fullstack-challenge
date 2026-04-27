@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da5fe58e8e4158f46b20993873deb96c, type: 3}
+  m_Name: BattleEnvironmentVisualCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::NordeusChallenge.Client.Visual.BattleEnvironmentVisualCatalog
+  defaultBackground: {fileID: 21300000, guid: a0d50190bab544946917be2ea6bb7c85, type: 3}
+  defaultOverlayColor: {r: 1, g: 1, b: 1, a: 1}
+  entries:
+  - environmentId: training_fields
+    backgroundSprite: {fileID: 21300000, guid: a4277e0fab9d17b49aa10c595d5ad164, type: 3}
+    overlayColor: {r: 1, g: 1, b: 1, a: 1}
+  - environmentId: arcane_library
+    backgroundSprite: {fileID: 21300000, guid: 346a47ab70c729546bc2ec67bbae3b04, type: 3}
+    overlayColor: {r: 1, g: 1, b: 1, a: 1}
+  - environmentId: spider_nest
+    backgroundSprite: {fileID: 21300000, guid: 81cecd65632fb14429175e38f5d2b89e, type: 3}
+    overlayColor: {r: 1, g: 1, b: 1, a: 1}
+  - environmentId: dark_altar
+    backgroundSprite: {fileID: 21300000, guid: 7401021c0c889e447a72f77e3566f748, type: 3}
+    overlayColor: {r: 1, g: 1, b: 1, a: 1}
+  - environmentId: dragon_peak
+    backgroundSprite: {fileID: 21300000, guid: 982613e521935794ebf22f1b58e29f06, type: 3}
+    overlayColor: {r: 1, g: 1, b: 1, a: 1}
+  - environmentId: crypt
+    backgroundSprite: {fileID: 21300000, guid: 3ee66ecbddbcf7a42a81d9e7a8d4846b, type: 3}
+    overlayColor: {r: 0.85, g: 0.85, b: 1, a: 1}
+  - environmentId: ancient_forest
+    backgroundSprite: {fileID: 21300000, guid: 65ffbdfc314aa0942837993329ce981d, type: 3}
+    overlayColor: {r: 1, g: 1, b: 1, a: 1}
+  - environmentId: ember_chamber
+    backgroundSprite: {fileID: 2162021980957448383, guid: f42e1a55346303a418a8520a01cc9641, type: 3}
+    overlayColor: {r: 1, g: 0.85, b: 0.7, a: 1}

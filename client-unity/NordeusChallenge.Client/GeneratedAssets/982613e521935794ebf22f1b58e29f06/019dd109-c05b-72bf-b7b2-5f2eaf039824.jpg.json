@@ -1,0 +1,27 @@
+{
+    "asset": "982613e521935794ebf22f1b58e29f06",
+    "fileName": "019dd109-c05b-72bf-b7b2-5f2eaf039824.jpg",
+    "prompt": "A high mountain peak above the clouds. A flat stone plateau in the foreground, jagged dark rock spires behind, and a deep red sunset breaking through low storm clouds. Faint embers drift through the air. A subtle hint of scorched ground in the centre. No dragon visible. Painted dark fantasy, 16:9 landscape, dramatic but readable. No characters, no UI, no text. Shared style: dark fantasy, painted look (oil-on-canvas / matte painting feel), moody but readable, warm accents, symmetrical and stable, darker band along the bottom third.",
+    "negativePrompt": "",
+    "model": "f722aea3-8760-4eb1-a516-e2fce6476303",
+    "modelName": "Seedream 4",
+    "customSeed": -1,
+    "w3CTraceId": "97c6ed46496962e76a93a87b9bb527f8",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1920,
+        "height": 1080
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

@@ -1,0 +1,27 @@
+{
+    "asset": "346a47ab70c729546bc2ec67bbae3b04",
+    "fileName": "019dd109-7dd2-76dd-864d-493fb79766e3.jpg",
+    "prompt": "The interior of a vast arcane library. Tall dark wood shelves filled with worn books reach out of frame on both sides, warm candle glow on parchment, faint motes of magical dust drifting in the air. A central reading lectern stands empty in the foreground, slightly angled. Subtle blue magical glow mixed with warm candlelight. Dark fantasy painted style, 16:9 landscape, no characters, no UI, no text, calmer centre and bottom for UI overlays. Shared style: dark fantasy, painted look (oil-on-canvas / matte painting feel), moody but readable, warm accents, symmetrical and stable, darker band along the bottom third.",
+    "negativePrompt": "",
+    "model": "f722aea3-8760-4eb1-a516-e2fce6476303",
+    "modelName": "Seedream 4",
+    "customSeed": -1,
+    "w3CTraceId": "b45798e331f8feef5d2cf56fe9385aa1",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1920,
+        "height": 1080
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

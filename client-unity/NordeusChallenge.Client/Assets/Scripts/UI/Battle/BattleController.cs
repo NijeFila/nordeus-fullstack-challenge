@@ -56,6 +56,10 @@ namespace NordeusChallenge.Client.UI.Battle
         [SerializeField] private TMP_Text environmentText;
         [SerializeField] private Button backButton;
 
+        [Header("Environment Background (optional)")]
+        [SerializeField] private Image environmentBackgroundImage;
+        [SerializeField] private BattleEnvironmentVisualCatalog environmentVisualCatalog;
+
         [Header("Level Up")]
         [SerializeField] private LevelUpChoicePanelView levelUpPanel;
 
@@ -134,6 +138,7 @@ namespace NordeusChallenge.Client.UI.Battle
             _monsterScaledStats = ScaleMonsterStats(_monster.baseStats, _encounter.level, run.rules);
             _heroBattleStats = GameSession.Instance.GetHeroStatsWithItemBonuses();
             RenderEnvironment();
+            ApplyEnvironmentBackground();
 
             _heroMaxHealth = _heroBattleStats.maxHealth;
             _heroHealth = _heroMaxHealth;
@@ -151,14 +156,10 @@ namespace NordeusChallenge.Client.UI.Battle
             if (monsterHpBar != null) monsterHpBar.SetImmediate(_monsterHealth, _monsterMaxHealth);
             RenderMoves(_hero);
             RefreshAffordability();
+            // Battle intro: just the encounter line. The environment is shown
+            // in its dedicated panel (RenderEnvironment) so we don't repeat it
+            // in the rolling battle log.
             AppendLog(string.Format(Loc.Tr("battle.appears", "A wild {0} appears."), LocalizedNames.Name(_monster)));
-            if (_environment != null)
-            {
-                AppendLog(string.Format(
-                    Loc.Tr("battle.environment_intro", "Environment: {0} - {1}"),
-                    LocalizedNames.Name(_environment),
-                    LocalizedNames.Description(_environment)));
-            }
         }
 
         private void OnDestroy()
@@ -194,6 +195,11 @@ namespace NordeusChallenge.Client.UI.Battle
         {
             _inputLocked = true;
             SetMovesInteractable(false);
+
+            // Clear the previous turn's lines so the battle log only shows the
+            // current exchange. End-of-battle summaries are appended after this
+            // turn resolves, so they remain readable.
+            ClearLog();
 
             ResolveHeroMove(heroMove);
             RefreshCombatantsUi();
@@ -1061,6 +1067,35 @@ namespace NordeusChallenge.Client.UI.Battle
                 sb.AppendLine(entry);
             }
             SetLog(sb.ToString().TrimEnd());
+        }
+
+        // Clears the rolling battle log. Called at the start of each hero turn
+        // so the displayed log only describes the current exchange.
+        private void ClearLog()
+        {
+            _log.Clear();
+            SetLog(string.Empty);
+        }
+
+        // Resolves the current environment id against the visual catalog and
+        // applies the matching background sprite (or the catalog default).
+        // No-op when no Image is wired or no catalog is assigned.
+        private void ApplyEnvironmentBackground()
+        {
+            if (environmentBackgroundImage == null) return;
+            if (environmentVisualCatalog == null) return;
+
+            string envId = _environment != null ? _environment.id : null;
+            var sprite = environmentVisualCatalog.GetBackground(envId);
+            var tint = environmentVisualCatalog.GetOverlayColor(envId);
+
+            if (sprite != null)
+            {
+                environmentBackgroundImage.sprite = sprite;
+                environmentBackgroundImage.enabled = true;
+            }
+            // Tint defaults to white in the catalog; safe to apply unconditionally.
+            environmentBackgroundImage.color = tint;
         }
 
         private void SetStatus(string value)
