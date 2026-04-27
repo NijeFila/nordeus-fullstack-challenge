@@ -114,8 +114,6 @@ The Run Overview also has buttons for Move Management, Item Management, the Shop
 
 ## Known Limitations
 
-A reviewer asking "what would worry you about this?" is going to land on these, so I might as well be upfront:
-
 - No automated tests on either side. With more time this is the first thing I would add. I leaned into a working end-to-end slice across the bonus backlog instead.
 - The server is authoritative for run config and monster moves only. A dishonest client could misreport outcomes; in production I would move battle resolution server-side.
 - One save slot, no encryption, no autosave.

@@ -1,6 +1,6 @@
 # Acceptance Checklist
 
-A checklist that maps directly to the challenge requirements. I have verified each item against the current main branch.
+A checklist that maps directly to the challenge requirements.
 
 ## Client
 
