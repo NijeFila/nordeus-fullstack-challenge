@@ -70,7 +70,7 @@ Fields:
 
 Monsters are scaled to an encounter's level on the client using the same per-level gains as the hero.
 
-The monster catalog for the prototype: Goblin Warrior, Goblin Mage, Giant Spider, Witch, Dragon.
+The monster catalog for the prototype: Goblin Warrior, Goblin Mage, Giant Spider, Skeleton Knight, Forest Troll, Witch, Fire Elemental, Dragon.
 
 ## Hero
 
@@ -122,6 +122,8 @@ Fields (all integer modifiers, default `0` meaning "no effect"):
 - `manaRegenBonus` (int) — mana restored to both combatants at the end of every turn.
 
 Environments are deliberately symmetric: they apply to both hero and monster so the battlefield reads as a place, not as a hero-only buff.
+
+The environment catalog for the prototype: Training Fields, Arcane Library, Spider Nest, Crypt, Ancient Forest, Dark Altar, Ember Chamber, Dragon Peak.
 
 ## RunConfig
 

@@ -157,6 +157,8 @@ The hero's HP is always reset to full at the start of each encounter, including 
 
 A monster in an encounter with `level = L` is instantiated by applying `(L - 1)` level-ups to its `baseStats`, using the same `statGainPerLevel` rule as the hero. Monsters do not earn XP during battle.
 
+The default run lays out eight encounters in increasing difficulty: Goblin Warrior (Lv 1), Goblin Mage (Lv 2), Giant Spider (Lv 3), Skeleton Knight (Lv 4), Forest Troll (Lv 5), Witch (Lv 5), Fire Elemental (Lv 6), Dragon (Lv 7). The three mid-run additions (Skeleton Knight, Forest Troll, Fire Elemental) are tuned to be tougher than the early goblin/spider encounters but softer than the final Dragon.
+
 ## Opponent Move Selection
 
 The server's `GET /battle/next-move` returns a move id drawn from the monster's declared move list. The prototype uses a small layered rule, applied in order:

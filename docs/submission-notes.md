@@ -24,6 +24,11 @@ Notes on what is implemented in this submission, what was intentionally left out
 - Rich-text formatting (bold name) in both info panels for readability.
 - Consistent stat display (`ATK / DEF / MAG`, `HP x / y`) and running combat log in battle.
 - Graceful empty / error states (no active run, no encounter selected, unknown monster, unknown move).
+- Combat depth: status effects (Bleed, Poison, DamageIncrease, DamageReduction) layered on top of the existing Buff/Debuff/Heal kinds.
+- Environmental effects per encounter, plus a level-up choice panel that lets the player invest each gain into one of `rules.levelUpChoices`.
+- Items, item management, and a small in-run shop with a gold economy. Items are stateless catalog entries; ownership and equipped state live on the client.
+- Custom localization layer (English + Serbian Latin) covering UI labels and dynamic data names with English fallback.
+- **Expanded content (this submission):** three new monsters (Skeleton Knight, Forest Troll, Fire Elemental) with four moves each, three new environments (Crypt, Ancient Forest, Ember Chamber), and four new item drops (Bone Pauldrons, Grave Signet, Troll Hide Cloak, Ember Core). The default encounter list now runs eight battles ramping from Lv 1 to Lv 7.
 
 ## Known Limitations
 

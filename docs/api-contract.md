@@ -43,11 +43,14 @@ No parameters. No body.
     "learnedMovePool": ["slash", "shield_up", "battle_cry", "second_wind"]
   },
   "encounters": [
-    { "index": 0, "monsterId": "goblin_warrior", "level": 1, "environmentId": "training_fields" },
-    { "index": 1, "monsterId": "goblin_mage",    "level": 2, "environmentId": "arcane_library"  },
-    { "index": 2, "monsterId": "giant_spider",   "level": 3, "environmentId": "spider_nest"     },
-    { "index": 3, "monsterId": "witch",          "level": 4, "environmentId": "dark_altar"      },
-    { "index": 4, "monsterId": "dragon",         "level": 5, "environmentId": "dragon_peak"     }
+    { "index": 0, "monsterId": "goblin_warrior",  "level": 1, "environmentId": "training_fields" },
+    { "index": 1, "monsterId": "goblin_mage",     "level": 2, "environmentId": "arcane_library"  },
+    { "index": 2, "monsterId": "giant_spider",    "level": 3, "environmentId": "spider_nest"     },
+    { "index": 3, "monsterId": "skeleton_knight", "level": 4, "environmentId": "crypt"           },
+    { "index": 4, "monsterId": "forest_troll",    "level": 5, "environmentId": "ancient_forest"  },
+    { "index": 5, "monsterId": "witch",           "level": 5, "environmentId": "dark_altar"      },
+    { "index": 6, "monsterId": "fire_elemental",  "level": 6, "environmentId": "ember_chamber"   },
+    { "index": 7, "monsterId": "dragon",          "level": 7, "environmentId": "dragon_peak"     }
   ],
   "environments": [
     {

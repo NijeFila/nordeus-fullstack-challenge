@@ -155,11 +155,14 @@ public class RunConfigService
 
     private static List<Encounter> BuildEncounters() => new()
     {
-        new Encounter { Index = 0, MonsterId = "goblin_warrior", Level = 1, EnvironmentId = "training_fields" },
-        new Encounter { Index = 1, MonsterId = "goblin_mage",    Level = 2, EnvironmentId = "arcane_library"  },
-        new Encounter { Index = 2, MonsterId = "giant_spider",   Level = 3, EnvironmentId = "spider_nest"     },
-        new Encounter { Index = 3, MonsterId = "witch",          Level = 4, EnvironmentId = "dark_altar"      },
-        new Encounter { Index = 4, MonsterId = "dragon",         Level = 5, EnvironmentId = "dragon_peak"     }
+        new Encounter { Index = 0, MonsterId = "goblin_warrior",  Level = 1, EnvironmentId = "training_fields" },
+        new Encounter { Index = 1, MonsterId = "goblin_mage",     Level = 2, EnvironmentId = "arcane_library"  },
+        new Encounter { Index = 2, MonsterId = "giant_spider",    Level = 3, EnvironmentId = "spider_nest"     },
+        new Encounter { Index = 3, MonsterId = "skeleton_knight", Level = 4, EnvironmentId = "crypt"           },
+        new Encounter { Index = 4, MonsterId = "forest_troll",    Level = 5, EnvironmentId = "ancient_forest"  },
+        new Encounter { Index = 5, MonsterId = "witch",           Level = 5, EnvironmentId = "dark_altar"      },
+        new Encounter { Index = 6, MonsterId = "fire_elemental",  Level = 6, EnvironmentId = "ember_chamber"   },
+        new Encounter { Index = 7, MonsterId = "dragon",          Level = 7, EnvironmentId = "dragon_peak"     }
     };
 
     private static List<BattleEnvironment> BuildEnvironments() => new()
@@ -201,6 +204,29 @@ public class RunConfigService
             Description = "Thin mountain air pushes magic harder; healing is a touch less effective.",
             MagicDamageBonus = 3,
             HealingBonus = -3
+        },
+        new BattleEnvironment
+        {
+            Id = "crypt",
+            Name = "Crypt",
+            Description = "Cold tomb air dulls healing and lets bleeds linger a little longer.",
+            BleedBonusDamage = 1,
+            HealingBonus = -1
+        },
+        new BattleEnvironment
+        {
+            Id = "ancient_forest",
+            Name = "Ancient Forest",
+            Description = "Damp moss and old roots favor patient defenders. Poisons bite a touch harder.",
+            PoisonBonusTurns = 1
+        },
+        new BattleEnvironment
+        {
+            Id = "ember_chamber",
+            Name = "Ember Chamber",
+            Description = "Heat from glowing embers strengthens spells but withers healing.",
+            MagicDamageBonus = 2,
+            HealingBonus = -2
         }
     };
 
@@ -245,6 +271,30 @@ public class RunConfigService
             BaseStats = new Stats { MaxHealth = 120, MaxMana = 30, Attack = 18, Defense = 14, Magic = 16 },
             Moves = new List<string> { "flame_breath", "claw_swipe", "intimidate", "dragon_scales" },
             ItemDrops = new List<string> { "dragonbone_blade", "scale_aegis" }
+        },
+        new Monster
+        {
+            Id = "skeleton_knight",
+            Name = "Skeleton Knight",
+            BaseStats = new Stats { MaxHealth = 90, MaxMana = 15, Attack = 15, Defense = 12, Magic = 4 },
+            Moves = new List<string> { "bone_slash", "shield_wall", "grave_wound", "death_rattle" },
+            ItemDrops = new List<string> { "bone_pauldrons", "grave_signet" }
+        },
+        new Monster
+        {
+            Id = "forest_troll",
+            Name = "Forest Troll",
+            BaseStats = new Stats { MaxHealth = 110, MaxMana = 18, Attack = 16, Defense = 11, Magic = 6 },
+            Moves = new List<string> { "heavy_club", "regenerate", "toxic_spores", "thick_hide" },
+            ItemDrops = new List<string> { "troll_hide_cloak" }
+        },
+        new Monster
+        {
+            Id = "fire_elemental",
+            Name = "Fire Elemental",
+            BaseStats = new Stats { MaxHealth = 95, MaxMana = 28, Attack = 8, Defense = 9, Magic = 17 },
+            Moves = new List<string> { "flame_burst", "scorching_aura", "ignite", "mana_flare" },
+            ItemDrops = new List<string> { "ember_core" }
         }
     };
 
@@ -385,6 +435,64 @@ public class RunConfigService
             {
                 new ItemStatBonus { Stat = "defense", Amount = 6 },
                 new ItemStatBonus { Stat = "maxHealth", Amount = 15 }
+            }
+        },
+
+        // ---------- Skeleton Knight drops ----------
+        new Item
+        {
+            Id = "bone_pauldrons",
+            Name = "Bone Pauldrons",
+            Description = "Heavy plates fashioned from old bone. +3 Defense, +10 Max Health.",
+            Slot = "armor",
+            Rarity = "uncommon",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "defense", Amount = 3 },
+                new ItemStatBonus { Stat = "maxHealth", Amount = 10 }
+            }
+        },
+        new Item
+        {
+            Id = "grave_signet",
+            Name = "Grave Signet",
+            Description = "A cold signet ring humming with quiet menace. +2 Attack, +2 Magic.",
+            Slot = "trinket",
+            Rarity = "uncommon",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "attack", Amount = 2 },
+                new ItemStatBonus { Stat = "magic", Amount = 2 }
+            }
+        },
+
+        // ---------- Forest Troll drops ----------
+        new Item
+        {
+            Id = "troll_hide_cloak",
+            Name = "Troll Hide Cloak",
+            Description = "Thick troll hide that shrugs off blows. +3 Defense, +12 Max Health.",
+            Slot = "armor",
+            Rarity = "uncommon",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "defense", Amount = 3 },
+                new ItemStatBonus { Stat = "maxHealth", Amount = 12 }
+            }
+        },
+
+        // ---------- Fire Elemental drops ----------
+        new Item
+        {
+            Id = "ember_core",
+            Name = "Ember Core",
+            Description = "A still-warm shard of living flame. +3 Magic, +6 Max Mana.",
+            Slot = "trinket",
+            Rarity = "rare",
+            StatBonuses = new List<ItemStatBonus>
+            {
+                new ItemStatBonus { Stat = "magic", Amount = 3 },
+                new ItemStatBonus { Stat = "maxMana", Amount = 6 }
             }
         }
     };
@@ -794,6 +902,184 @@ public class RunConfigService
                 Target = "Self"
             },
             Description = "Hardens scales, raising Defense for 2 turns."
+        },
+
+        // ---------- Skeleton Knight ----------
+        new Move
+        {
+            Id = "bone_slash",
+            Name = "Bone Slash",
+            Category = "Physical",
+            Power = 18,
+            Effect = null,
+            Description = "A clean strike with a chipped bone blade."
+        },
+        new Move
+        {
+            Id = "shield_wall",
+            Name = "Shield Wall",
+            Category = "Buff",
+            Power = 0,
+            ManaCost = 2,
+            Effect = new MoveEffect
+            {
+                Kind = "DamageReduction",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Self"
+            },
+            Description = "Braces behind a tower shield, reducing incoming damage for 2 turns."
+        },
+        new Move
+        {
+            Id = "grave_wound",
+            Name = "Grave Wound",
+            Category = "Physical",
+            Power = 12,
+            ManaCost = 2,
+            Effect = new MoveEffect
+            {
+                Kind = "Bleed",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Opponent"
+            },
+            Description = "A grim cut that opens a slow, bleeding wound for 2 turns."
+        },
+        new Move
+        {
+            Id = "death_rattle",
+            Name = "Death Rattle",
+            Category = "Debuff",
+            Power = 0,
+            ManaCost = 2,
+            Effect = new MoveEffect
+            {
+                Kind = "DebuffDefense",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Opponent"
+            },
+            Description = "An unnerving rattle that lowers the opponent's Defense for 2 turns."
+        },
+
+        // ---------- Forest Troll ----------
+        new Move
+        {
+            Id = "heavy_club",
+            Name = "Heavy Club",
+            Category = "Physical",
+            Power = 22,
+            Effect = null,
+            Description = "A crushing swing with a massive club."
+        },
+        new Move
+        {
+            Id = "regenerate",
+            Name = "Regenerate",
+            Category = "Heal",
+            Power = 0,
+            ManaCost = 4,
+            Effect = new MoveEffect
+            {
+                Kind = "Heal",
+                Amount = 22,
+                DurationTurns = 0,
+                Target = "Self"
+            },
+            Description = "Knits torn flesh back together, restoring HP."
+        },
+        new Move
+        {
+            Id = "toxic_spores",
+            Name = "Toxic Spores",
+            Category = "Magic",
+            Power = 6,
+            ManaCost = 3,
+            Effect = new MoveEffect
+            {
+                Kind = "Poison",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Opponent"
+            },
+            Description = "A cloud of pungent spores that poisons the target for 2 turns."
+        },
+        new Move
+        {
+            Id = "thick_hide",
+            Name = "Thick Hide",
+            Category = "Buff",
+            Power = 0,
+            ManaCost = 2,
+            Effect = new MoveEffect
+            {
+                Kind = "BuffDefense",
+                Amount = 5,
+                DurationTurns = 2,
+                Target = "Self"
+            },
+            Description = "Toughens skin and sinew, raising Defense for 2 turns."
+        },
+
+        // ---------- Fire Elemental ----------
+        new Move
+        {
+            Id = "flame_burst",
+            Name = "Flame Burst",
+            Category = "Magic",
+            Power = 20,
+            ManaCost = 3,
+            Effect = null,
+            Description = "A sudden burst of flame."
+        },
+        new Move
+        {
+            Id = "scorching_aura",
+            Name = "Scorching Aura",
+            Category = "Buff",
+            Power = 0,
+            ManaCost = 3,
+            Effect = new MoveEffect
+            {
+                Kind = "DamageIncrease",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Self"
+            },
+            Description = "Wreathes itself in heat, increasing damage dealt for 2 turns."
+        },
+        new Move
+        {
+            Id = "ignite",
+            Name = "Ignite",
+            Category = "Magic",
+            Power = 10,
+            ManaCost = 3,
+            Effect = new MoveEffect
+            {
+                Kind = "Bleed",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Opponent"
+            },
+            Description = "Sets the target ablaze, searing them for 2 turns."
+        },
+        new Move
+        {
+            Id = "mana_flare",
+            Name = "Mana Flare",
+            Category = "Magic",
+            Power = 16,
+            ManaCost = 4,
+            Effect = new MoveEffect
+            {
+                Kind = "DebuffMagic",
+                Amount = 4,
+                DurationTurns = 2,
+                Target = "Opponent"
+            },
+            Description = "A blinding flare that scorches and saps the opponent's Magic for 2 turns."
         }
     };
 
