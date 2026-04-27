@@ -18,6 +18,7 @@ namespace NordeusChallenge.Client.Networking
         public IEnumerator GetRunConfig(Action<RunConfigResponseDto> onSuccess, Action<string> onError)
         {
             string url = _baseUrl + "/run/config";
+            Debug.Log($"[RunApiClient] Fetching run config from server... ({url})");
 
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
@@ -26,6 +27,7 @@ namespace NordeusChallenge.Client.Networking
 
                 if (request.result != UnityWebRequest.Result.Success)
                 {
+                    Debug.LogWarning($"[RunApiClient] /run/config request failed: {request.error}");
                     onError?.Invoke($"Request failed: {request.error}");
                     yield break;
                 }
@@ -49,6 +51,7 @@ namespace NordeusChallenge.Client.Networking
                     yield break;
                 }
 
+                Debug.Log("[RunApiClient] Run config loaded from server.");
                 onSuccess?.Invoke(parsed);
             }
         }

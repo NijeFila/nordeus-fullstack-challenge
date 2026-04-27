@@ -65,9 +65,22 @@ namespace NordeusChallenge.Client.EditorTools
         //  Menu items
         // ------------------------------------------------------------------
 
+        // Clears the Editor Selection before any destructive operation
+        // (DestroyImmediate, OpenScene, prefab rebuild). Without this, if the
+        // user has a RectTransform / UI object selected, the Inspector tries
+        // to refresh its editor against a now-destroyed target and throws
+        //   SerializedObjectNotCreatableException: Object at index 0 is null
+        // from RectTransformEditor.OnEnable().
+        private static void ClearSelectionToAvoidInspectorErrors()
+        {
+            Selection.activeObject = null;
+            Selection.objects = System.Array.Empty<Object>();
+        }
+
         [MenuItem("Tools/Nordeus Challenge/UI/Rebuild Run Map Node Prefab")]
         public static void RebuildMapNodePrefab()
         {
+            ClearSelectionToAvoidInspectorErrors();
             var dir = Path.GetDirectoryName(MapNodePrefabPath);
             if (!AssetDatabase.IsValidFolder(dir))
             {
@@ -166,6 +179,7 @@ namespace NordeusChallenge.Client.EditorTools
                 return;
             }
 
+            ClearSelectionToAvoidInspectorErrors();
             var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             EnsureCamera();
             EnsureEventSystem();
@@ -230,6 +244,7 @@ namespace NordeusChallenge.Client.EditorTools
                 return;
             }
 
+            ClearSelectionToAvoidInspectorErrors();
             var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             var controller = Object.FindObjectOfType<RunOverviewController>();
             if (controller == null)
@@ -404,6 +419,7 @@ namespace NordeusChallenge.Client.EditorTools
                 return;
             }
 
+            ClearSelectionToAvoidInspectorErrors();
             EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             var controller = Object.FindObjectOfType<RunOverviewController>();
             int issues = 0;
@@ -479,6 +495,7 @@ namespace NordeusChallenge.Client.EditorTools
                 return;
             }
 
+            ClearSelectionToAvoidInspectorErrors();
             EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             var controller = Object.FindObjectOfType<RunOverviewController>();
             if (controller == null)

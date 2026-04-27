@@ -27,6 +27,7 @@ namespace NordeusChallenge.Client.Networking
             int heroMaxHealth,
             int turn,
             int monsterMana,
+            string lastMonsterMoveId,
             IList<string> monsterEffectKinds,
             IList<string> heroEffectKinds,
             Action<string> onSuccess,
@@ -46,6 +47,11 @@ namespace NordeusChallenge.Client.Networking
                 turn);
 
             sb.AppendFormat(CultureInfo.InvariantCulture, "&monsterMana={0}", monsterMana);
+
+            if (!string.IsNullOrEmpty(lastMonsterMoveId))
+            {
+                sb.Append("&lastMonsterMoveId=").Append(UnityWebRequest.EscapeURL(lastMonsterMoveId));
+            }
 
             string monsterEffects = JoinKinds(monsterEffectKinds);
             if (!string.IsNullOrEmpty(monsterEffects))

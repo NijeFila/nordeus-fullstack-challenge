@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using NordeusChallenge.Client.UI.Common;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,19 +24,32 @@ namespace NordeusChallenge.Client.UI.Battle
         [SerializeField] private float healPunchScale = 1.1f;
         [SerializeField] private Color healTextColor = new Color(0.5f, 1f, 0.6f);
 
+        // Per-target baselines captured the first time we touch each transform.
+        // Without these, rapid clicks would capture an already-mutated localScale
+        // / localPosition as the "origin" and the visual would drift permanently.
+        private readonly Dictionary<RectTransform, Vector3> _baselineScale = new();
+        private readonly Dictionary<RectTransform, Vector3> _baselinePosition = new();
+
+        // Tracks the running coroutine per target so a new feedback request
+        // cancels the previous one instead of stacking on the same transform.
+        private readonly Dictionary<RectTransform, Coroutine> _runningShake = new();
+        private readonly Dictionary<RectTransform, Coroutine> _runningScale = new();
+        private readonly Dictionary<Image, Coroutine> _runningFlash = new();
+        private readonly Dictionary<Image, Color> _baselineColor = new();
+
         public void PlayHit(CombatantVisuals target, int damage)
         {
             if (target == null) return;
-            if (target.portrait != null) StartCoroutine(FlashColor(target.portrait, hitFlashColor, hitFlashDuration));
-            if (target.shakeRoot != null) StartCoroutine(Shake(target.shakeRoot, hitShakeDuration, hitShakeMagnitude));
+            if (target.portrait != null) StartFlash(target.portrait, hitFlashColor, hitFlashDuration);
+            if (target.shakeRoot != null) StartShake(target.shakeRoot, hitShakeDuration, hitShakeMagnitude);
             SpawnFloatingText(target, $"-{damage}", damageTextColor);
         }
 
         public void PlayHeal(CombatantVisuals target, int amount)
         {
             if (target == null) return;
-            if (target.portrait != null) StartCoroutine(FlashColor(target.portrait, healFlashColor, healFlashDuration));
-            if (target.shakeRoot != null) StartCoroutine(ScalePunch(target.shakeRoot, healPunchDuration, healPunchScale));
+            if (target.portrait != null) StartFlash(target.portrait, healFlashColor, healFlashDuration);
+            if (target.shakeRoot != null) StartScalePunch(target.shakeRoot, healPunchDuration, healPunchScale);
             SpawnFloatingText(target, $"+{amount}", healTextColor);
         }
 
@@ -52,57 +66,165 @@ namespace NordeusChallenge.Client.UI.Battle
             instance.Play(value, color);
         }
 
-        private static IEnumerator FlashColor(Image image, Color flash, float duration)
+        // Make sure that if the view is disabled mid-feedback (scene change,
+        // battle end), every transform we mutated is restored.
+        private void OnDisable()
         {
-            Color original = image.color;
-            image.color = flash;
-            float t = 0f;
-            while (t < duration)
+            foreach (var pair in _baselineScale)
             {
-                t += Time.deltaTime;
-                image.color = Color.Lerp(flash, original, Mathf.Clamp01(t / duration));
-                yield return null;
+                if (pair.Key != null) pair.Key.localScale = pair.Value;
             }
-            image.color = original;
+            foreach (var pair in _baselinePosition)
+            {
+                if (pair.Key != null) pair.Key.localPosition = pair.Value;
+            }
+            foreach (var pair in _baselineColor)
+            {
+                if (pair.Key != null) pair.Key.color = pair.Value;
+            }
+            _runningShake.Clear();
+            _runningScale.Clear();
+            _runningFlash.Clear();
         }
 
-        private static IEnumerator Shake(RectTransform rt, float duration, float magnitude)
+        private Vector3 GetOrCacheBaselineScale(RectTransform rt)
         {
-            Vector3 origin = rt.localPosition;
-            float t = 0f;
-            while (t < duration)
+            if (!_baselineScale.TryGetValue(rt, out var baseline))
             {
-                t += Time.deltaTime;
-                float damping = 1f - Mathf.Clamp01(t / duration);
-                float x = (Random.value * 2f - 1f) * magnitude * damping;
-                float y = (Random.value * 2f - 1f) * magnitude * damping;
-                rt.localPosition = origin + new Vector3(x, y, 0f);
-                yield return null;
+                baseline = rt.localScale;
+                _baselineScale[rt] = baseline;
             }
-            rt.localPosition = origin;
+            return baseline;
         }
 
-        private static IEnumerator ScalePunch(RectTransform rt, float duration, float peakScale)
+        private Vector3 GetOrCacheBaselinePosition(RectTransform rt)
         {
-            Vector3 origin = rt.localScale;
-            Vector3 peak = origin * peakScale;
-            float half = Mathf.Max(0.0001f, duration * 0.5f);
+            if (!_baselinePosition.TryGetValue(rt, out var baseline))
+            {
+                baseline = rt.localPosition;
+                _baselinePosition[rt] = baseline;
+            }
+            return baseline;
+        }
 
-            float t = 0f;
-            while (t < half)
+        private Color GetOrCacheBaselineColor(Image image)
+        {
+            if (!_baselineColor.TryGetValue(image, out var baseline))
             {
-                t += Time.deltaTime;
-                rt.localScale = Vector3.Lerp(origin, peak, Mathf.Clamp01(t / half));
-                yield return null;
+                baseline = image.color;
+                _baselineColor[image] = baseline;
             }
-            t = 0f;
-            while (t < half)
+            return baseline;
+        }
+
+        private void StartFlash(Image image, Color flash, float duration)
+        {
+            Color baseline = GetOrCacheBaselineColor(image);
+            if (_runningFlash.TryGetValue(image, out var running) && running != null)
             {
-                t += Time.deltaTime;
-                rt.localScale = Vector3.Lerp(peak, origin, Mathf.Clamp01(t / half));
-                yield return null;
+                StopCoroutine(running);
+                image.color = baseline;
             }
-            rt.localScale = origin;
+            _runningFlash[image] = StartCoroutine(FlashColor(image, baseline, flash, duration));
+        }
+
+        private void StartShake(RectTransform rt, float duration, float magnitude)
+        {
+            Vector3 baseline = GetOrCacheBaselinePosition(rt);
+            if (_runningShake.TryGetValue(rt, out var running) && running != null)
+            {
+                StopCoroutine(running);
+                rt.localPosition = baseline;
+            }
+            _runningShake[rt] = StartCoroutine(Shake(rt, baseline, duration, magnitude));
+        }
+
+        private void StartScalePunch(RectTransform rt, float duration, float peakScale)
+        {
+            Vector3 baseline = GetOrCacheBaselineScale(rt);
+            // Reset to baseline before launching a new punch so the second
+            // animation never compounds on top of the first.
+            if (_runningScale.TryGetValue(rt, out var running) && running != null)
+            {
+                StopCoroutine(running);
+                rt.localScale = baseline;
+            }
+            _runningScale[rt] = StartCoroutine(ScalePunch(rt, baseline, duration, peakScale));
+        }
+
+        private IEnumerator FlashColor(Image image, Color baseline, Color flash, float duration)
+        {
+            try
+            {
+                image.color = flash;
+                float t = 0f;
+                while (t < duration)
+                {
+                    t += Time.deltaTime;
+                    if (image == null) yield break;
+                    image.color = Color.Lerp(flash, baseline, Mathf.Clamp01(t / duration));
+                    yield return null;
+                }
+            }
+            finally
+            {
+                if (image != null) image.color = baseline;
+                _runningFlash.Remove(image);
+            }
+        }
+
+        private IEnumerator Shake(RectTransform rt, Vector3 baseline, float duration, float magnitude)
+        {
+            try
+            {
+                float t = 0f;
+                while (t < duration)
+                {
+                    t += Time.deltaTime;
+                    if (rt == null) yield break;
+                    float damping = 1f - Mathf.Clamp01(t / duration);
+                    float x = (Random.value * 2f - 1f) * magnitude * damping;
+                    float y = (Random.value * 2f - 1f) * magnitude * damping;
+                    rt.localPosition = baseline + new Vector3(x, y, 0f);
+                    yield return null;
+                }
+            }
+            finally
+            {
+                if (rt != null) rt.localPosition = baseline;
+                _runningShake.Remove(rt);
+            }
+        }
+
+        private IEnumerator ScalePunch(RectTransform rt, Vector3 baseline, float duration, float peakScale)
+        {
+            try
+            {
+                Vector3 peak = baseline * peakScale;
+                float half = Mathf.Max(0.0001f, duration * 0.5f);
+
+                float t = 0f;
+                while (t < half)
+                {
+                    t += Time.deltaTime;
+                    if (rt == null) yield break;
+                    rt.localScale = Vector3.Lerp(baseline, peak, Mathf.Clamp01(t / half));
+                    yield return null;
+                }
+                t = 0f;
+                while (t < half)
+                {
+                    t += Time.deltaTime;
+                    if (rt == null) yield break;
+                    rt.localScale = Vector3.Lerp(peak, baseline, Mathf.Clamp01(t / half));
+                    yield return null;
+                }
+            }
+            finally
+            {
+                if (rt != null) rt.localScale = baseline;
+                _runningScale.Remove(rt);
+            }
         }
     }
 }

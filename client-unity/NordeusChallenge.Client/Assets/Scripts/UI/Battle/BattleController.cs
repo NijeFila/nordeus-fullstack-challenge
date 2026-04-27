@@ -87,7 +87,12 @@ namespace NordeusChallenge.Client.UI.Battle
         private bool _inputLocked;
 
         private const int MaxLogLines = 8;
-        private const int ManaRegenPerTurn = 5;
+        // Regen has to stay below the lowest meaningful manaCost (2) so paid
+        // costs remain visible turn-over-turn; otherwise resource costs become
+        // a no-op once steady state is reached.
+        private const int ManaRegenPerTurn = 1;
+
+        private string _lastMonsterMoveId;
 
         private readonly List<ActiveEffect> _heroEffects = new();
         private readonly List<ActiveEffect> _monsterEffects = new();
@@ -188,6 +193,11 @@ namespace NordeusChallenge.Client.UI.Battle
                 return;
             }
 
+            // Lock and disable buttons synchronously so spam clicks queued in
+            // the same frame are dropped before they ever reach this method.
+            _inputLocked = true;
+            SetMovesInteractable(false);
+
             StartCoroutine(RunTurn(move));
         }
 
@@ -203,6 +213,7 @@ namespace NordeusChallenge.Client.UI.Battle
 
             ResolveHeroMove(heroMove);
             RefreshCombatantsUi();
+            RefreshAffordability();
 
             if (_monsterHealth <= 0)
             {
@@ -281,6 +292,7 @@ namespace NordeusChallenge.Client.UI.Battle
                 _heroMaxHealth,
                 _turn,
                 _monsterMana,
+                _lastMonsterMoveId,
                 CollectKinds(_monsterEffects),
                 CollectKinds(_heroEffects),
                 id => selectedMoveId = id,
@@ -316,6 +328,8 @@ namespace NordeusChallenge.Client.UI.Battle
                 isHeroAttacker: false,
                 attackerName: LocalizedNames.Name(_monster),
                 defenderName: LocalizedNames.Name(_hero));
+
+            _lastMonsterMoveId = move.id;
         }
 
         // ---------- Resource costs ----------

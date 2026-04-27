@@ -15,6 +15,7 @@ public static class BattleEndpoints
             int? heroHealth,
             int? heroMaxHealth,
             int? monsterMana,
+            string? lastMonsterMoveId,
             string? monsterEffects,
             string? heroEffects,
             int? turn,
@@ -43,6 +44,7 @@ public static class BattleEndpoints
                 heroHealth.Value,
                 heroMaxHealth.Value,
                 monsterMana,
+                lastMonsterMoveId,
                 ParseEffects(monsterEffects),
                 ParseEffects(heroEffects));
 

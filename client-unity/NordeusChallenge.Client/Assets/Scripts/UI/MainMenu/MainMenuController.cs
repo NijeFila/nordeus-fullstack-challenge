@@ -115,6 +115,7 @@ namespace NordeusChallenge.Client.UI.MainMenu
 
             if (_pendingContinue)
             {
+                Debug.Log("[MainMenu] Restoring save data onto freshly fetched run config.");
                 GameSession.Instance.SetCurrentRun(run);
                 var data = SaveGameService.TryRead();
                 if (data == null)

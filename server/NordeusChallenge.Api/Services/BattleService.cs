@@ -27,6 +27,7 @@ public class BattleService
         int heroHealth,
         int heroMaxHealth,
         int? monsterMana,
+        string? lastMonsterMoveId,
         IReadOnlyCollection<string> monsterActiveEffects,
         IReadOnlyCollection<string> heroActiveEffects)
     {
@@ -64,8 +65,30 @@ public class BattleService
             return (free ?? availableMoves[0]).Id;
         }
 
-        // 2. Heal when low — only if affordable.
-        if (monsterMaxHealth > 0)
+        // Anti-loop: if the previous monster move was a heal, the monster may
+        // not pick a heal again this turn. This breaks the "heal-every-turn"
+        // pattern that otherwise negates all hero damage.
+        bool justHealed = false;
+        if (!string.IsNullOrEmpty(lastMonsterMoveId))
+        {
+            var last = availableMoves.FirstOrDefault(m => m.Id == lastMonsterMoveId);
+            if (last is not null && IsHealMove(last))
+            {
+                justHealed = true;
+            }
+        }
+
+        if (justHealed)
+        {
+            var nonHeal = affordable.Where(m => !IsHealMove(m)).ToList();
+            if (nonHeal.Count > 0)
+            {
+                affordable = nonHeal;
+            }
+        }
+
+        // 2. Heal when low — only if affordable and not already healed last turn.
+        if (!justHealed && monsterMaxHealth > 0)
         {
             double ratio = (double)monsterHealth / monsterMaxHealth;
             if (ratio < LowSelfHealthRatio)
