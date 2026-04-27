@@ -20,6 +20,22 @@ namespace NordeusChallenge.Client.Runtime
 
         private readonly HashSet<int> _clearedEncounters = new();
 
+        // ---------- Branching map state ----------
+
+        public string SelectedMapNodeId { get; private set; }
+
+        // True once a Boss node has been cleared this run.
+        public bool RunCompleted { get; private set; }
+
+        private readonly HashSet<string> _clearedNodeIds = new();
+        private readonly HashSet<string> _availableNodeIds = new();
+
+        public IReadOnlyCollection<string> ClearedNodeIds => _clearedNodeIds;
+        public IReadOnlyCollection<string> AvailableNodeIds => _availableNodeIds;
+
+        public bool HasMap =>
+            CurrentRun != null && CurrentRun.mapNodes != null && CurrentRun.mapNodes.Count > 0;
+
         private readonly System.Random _random = new();
 
         private int _pendingLevelUps;
@@ -75,6 +91,7 @@ namespace NordeusChallenge.Client.Runtime
             _pendingLevelUps = 0;
             _currentGold = 0;
             ResetInventory();
+            ResetMapProgress();
         }
 
         public void ClearCurrentRun()
@@ -88,6 +105,7 @@ namespace NordeusChallenge.Client.Runtime
             _pendingLevelUps = 0;
             _currentGold = 0;
             ResetInventory();
+            ResetMapProgress();
         }
 
         // Initializes the active hero from the chosen class. Replaces whatever
@@ -112,6 +130,7 @@ namespace NordeusChallenge.Client.Runtime
             _pendingLevelUps = 0;
             _currentGold = 0;
             ResetInventory();
+            ResetMapProgress();
         }
 
         // Resolves a hero class from CurrentRun by id, or falls back to
@@ -425,6 +444,100 @@ namespace NordeusChallenge.Client.Runtime
             }
         }
 
+        // ---------- Branching map ----------
+
+        public RunMapNodeDto GetMapNodeById(string nodeId)
+        {
+            if (CurrentRun == null || CurrentRun.mapNodes == null || string.IsNullOrEmpty(nodeId)) return null;
+            for (int i = 0; i < CurrentRun.mapNodes.Count; i++)
+            {
+                if (CurrentRun.mapNodes[i] != null && CurrentRun.mapNodes[i].id == nodeId)
+                    return CurrentRun.mapNodes[i];
+            }
+            return null;
+        }
+
+        public bool IsMapNodeAvailable(string nodeId) =>
+            !string.IsNullOrEmpty(nodeId) && _availableNodeIds.Contains(nodeId);
+
+        public bool IsMapNodeCleared(string nodeId) =>
+            !string.IsNullOrEmpty(nodeId) && _clearedNodeIds.Contains(nodeId);
+
+        // Stores the player's choice from the map screen. Battle and Shop nodes
+        // both call this — Battle nodes also bind the encounter index so the
+        // battle scene resolves the right monster from the existing pipeline.
+        public void SetSelectedMapNode(string nodeId)
+        {
+            SelectedMapNodeId = nodeId;
+
+            var node = GetMapNodeById(nodeId);
+            if (node != null && node.encounterIndex >= 0)
+            {
+                SelectedEncounterIndex = node.encounterIndex;
+            }
+        }
+
+        // Marks the currently selected node cleared and unlocks the nodes it
+        // points at. Returns true when the cleared node was a Boss.
+        public bool MarkSelectedMapNodeCleared()
+        {
+            if (string.IsNullOrEmpty(SelectedMapNodeId)) return false;
+
+            var node = GetMapNodeById(SelectedMapNodeId);
+            if (node == null) return false;
+
+            _clearedNodeIds.Add(node.id);
+            _availableNodeIds.Remove(node.id);
+
+            // Unlock connected nodes; cleared nodes are not re-added.
+            if (node.connectedTo != null)
+            {
+                for (int i = 0; i < node.connectedTo.Count; i++)
+                {
+                    string next = node.connectedTo[i];
+                    if (string.IsNullOrEmpty(next)) continue;
+                    if (_clearedNodeIds.Contains(next)) continue;
+                    _availableNodeIds.Add(next);
+                }
+            }
+
+            bool isBoss = node.type == "Boss";
+            if (isBoss)
+            {
+                RunCompleted = true;
+            }
+            return isBoss;
+        }
+
+        private void ResetMapProgress()
+        {
+            SelectedMapNodeId = null;
+            RunCompleted = false;
+            _clearedNodeIds.Clear();
+            _availableNodeIds.Clear();
+
+            if (CurrentRun == null || CurrentRun.mapNodes == null || CurrentRun.mapNodes.Count == 0)
+            {
+                return;
+            }
+
+            // Seed the available set. If startingMapNodeId is provided we trust
+            // it; otherwise we unlock every depth-0 node so the player can still
+            // start the run.
+            string startId = CurrentRun.startingMapNodeId;
+            if (!string.IsNullOrEmpty(startId) && GetMapNodeById(startId) != null)
+            {
+                _availableNodeIds.Add(startId);
+                return;
+            }
+
+            for (int i = 0; i < CurrentRun.mapNodes.Count; i++)
+            {
+                var n = CurrentRun.mapNodes[i];
+                if (n != null && n.depth == 0) _availableNodeIds.Add(n.id);
+            }
+        }
+
         // ---------- Victory rewards ----------
 
         public VictoryRewardResult ApplyVictoryRewards(int encounterIndex)
@@ -480,6 +593,17 @@ namespace NordeusChallenge.Client.Runtime
                 HighestUnlockedEncounterIndex = encounterIndex + 1;
                 result.UnlockedNextEncounter = true;
                 result.NextUnlockedIndex = HighestUnlockedEncounterIndex;
+            }
+
+            // Branching map: clear the selected node and unlock its successors.
+            // If no map node is selected (older client flow), this is a no-op.
+            if (HasMap && !string.IsNullOrEmpty(SelectedMapNodeId))
+            {
+                bool wasBoss = MarkSelectedMapNodeCleared();
+                if (wasBoss)
+                {
+                    result.RunCompleted = true;
+                }
             }
 
             return result;

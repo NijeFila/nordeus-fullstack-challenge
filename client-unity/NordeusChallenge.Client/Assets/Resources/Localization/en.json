@@ -9,6 +9,16 @@
     { "key": "ui.main_menu.loading", "value": "Loading run..." },
     { "key": "ui.main_menu.error", "value": "Could not start run. {0}" },
 
+    { "key": "ui.map.title", "value": "Run Map" },
+    { "key": "ui.map.node.battle", "value": "Battle" },
+    { "key": "ui.map.node.elite", "value": "Elite" },
+    { "key": "ui.map.node.shop", "value": "Shop" },
+    { "key": "ui.map.node.boss", "value": "Boss" },
+    { "key": "ui.map.status.locked", "value": "Locked" },
+    { "key": "ui.map.status.available", "value": "Available" },
+    { "key": "ui.map.status.cleared", "value": "Cleared" },
+    { "key": "ui.map.run_victory", "value": "Run complete! Dragon defeated." },
+
     { "key": "ui.class_selection.title", "value": "Choose Your Class" },
     { "key": "ui.class_selection.choose", "value": "Begin Run" },
     { "key": "ui.class_selection.back", "value": "Back" },

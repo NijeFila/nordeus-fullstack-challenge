@@ -31,6 +31,13 @@ namespace NordeusChallenge.Client.UI.RunOverview
         [SerializeField] private Transform encountersContainer;
         [SerializeField] private EncounterButtonView encounterButtonPrefab;
 
+        [Header("Run Map (optional)")]
+        [Tooltip("Used when RunConfig.mapNodes is present. Leave empty to keep the linear list.")]
+        [SerializeField] private Transform mapContainer;
+        [SerializeField] private RunMapNodeView mapNodePrefab;
+        [SerializeField] private TMP_Text mapTitleText;
+        [SerializeField] private TMP_Text runVictoryText;
+
         private static readonly string[] ItemSlotOrder = { "weapon", "armor", "trinket" };
 
         private void Start()
@@ -71,7 +78,22 @@ namespace NordeusChallenge.Client.UI.RunOverview
             RenderEquippedItems();
             RenderInventory();
             RenderGold();
-            RenderEncounters(run);
+
+            // Use the branching map renderer when the server returned one and
+            // the scene has a map container wired up. Otherwise fall back to
+            // the legacy linear encounter list so older scene wiring still works.
+            if (GameSession.Instance.HasMap && mapContainer != null && mapNodePrefab != null)
+            {
+                ClearEncountersContainer();
+                RenderMap();
+            }
+            else
+            {
+                ClearMapContainer();
+                if (mapTitleText != null) mapTitleText.gameObject.SetActive(false);
+                if (runVictoryText != null) runVictoryText.gameObject.SetActive(false);
+                RenderEncounters(run);
+            }
         }
 
         private void OnDestroy()
@@ -277,6 +299,152 @@ namespace NordeusChallenge.Client.UI.RunOverview
 
             GameSession.Instance.SetSelectedEncounterIndex(encounterIndex);
             SceneManager.LoadScene(SceneNames.Battle);
+        }
+
+        // ---------- Branching map rendering ----------
+
+        private void RenderMap()
+        {
+            ClearMapContainer();
+
+            if (mapTitleText != null)
+            {
+                mapTitleText.gameObject.SetActive(true);
+                mapTitleText.text = Loc.Tr("ui.map.title", "Run Map");
+            }
+
+            var session = GameSession.Instance;
+            var run = session.CurrentRun;
+
+            if (runVictoryText != null)
+            {
+                bool show = session.RunCompleted;
+                runVictoryText.gameObject.SetActive(show);
+                if (show)
+                {
+                    runVictoryText.text = Loc.Tr("ui.map.run_victory", "Run complete! Dragon defeated.");
+                }
+            }
+
+            // Render in (depth, position) order so the layout group naturally
+            // groups nodes by layer. Group containers are intentionally not
+            // created here — a single Vertical/Grid Layout Group on the
+            // mapContainer is enough for a readable list.
+            var sorted = new List<RunMapNodeDto>(run.mapNodes);
+            sorted.Sort((a, b) =>
+            {
+                if (a == null) return 1;
+                if (b == null) return -1;
+                int c = a.depth.CompareTo(b.depth);
+                return c != 0 ? c : a.position.CompareTo(b.position);
+            });
+
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                var node = sorted[i];
+                if (node == null) continue;
+                SpawnMapNode(node);
+            }
+        }
+
+        private void SpawnMapNode(RunMapNodeDto node)
+        {
+            var session = GameSession.Instance;
+
+            bool cleared = session.IsMapNodeCleared(node.id);
+            bool available = session.IsMapNodeAvailable(node.id);
+            bool interactable = available && !cleared && !session.RunCompleted;
+
+            string typeText = LocalizeNodeType(node.type);
+            string statusText = cleared
+                ? Loc.Tr("ui.map.status.cleared", "Cleared")
+                : (available ? Loc.Tr("ui.map.status.available", "Available")
+                             : Loc.Tr("ui.map.status.locked", "Locked"));
+            string label = BuildMapNodeLabel(node);
+
+            var view = Instantiate(mapNodePrefab, mapContainer);
+            view.Bind(node.id, label, typeText, statusText, node.type, interactable, OnMapNodeSelected);
+        }
+
+        private string BuildMapNodeLabel(RunMapNodeDto node)
+        {
+            if (node == null) return string.Empty;
+
+            // Shop nodes have no encounter data — just show type + a depth cue.
+            if (node.encounterIndex < 0)
+            {
+                return $"D{node.depth}. {LocalizeNodeType(node.type)}";
+            }
+
+            var session = GameSession.Instance;
+            var encounter = session.GetEncounterByIndex(node.encounterIndex);
+            if (encounter == null)
+            {
+                return $"D{node.depth}. {LocalizeNodeType(node.type)}";
+            }
+
+            var monster = session.GetMonsterById(encounter.monsterId);
+            string monsterName = monster != null ? LocalizedNamesProxy(monster) : encounter.monsterId;
+            string envName = string.Empty;
+            if (!string.IsNullOrEmpty(encounter.environmentId))
+            {
+                var env = session.GetEnvironmentById(encounter.environmentId);
+                if (env != null) envName = LocalizedNamesProxy(env);
+            }
+
+            string lvShort = Loc.Tr("label.level_short", "Lv");
+            return string.IsNullOrEmpty(envName)
+                ? $"D{node.depth}. {monsterName} ({lvShort} {encounter.level})"
+                : $"D{node.depth}. {monsterName} ({lvShort} {encounter.level}) — {envName}";
+        }
+
+        private static string LocalizeNodeType(string type)
+        {
+            switch (type)
+            {
+                case "Battle": return Loc.Tr("ui.map.node.battle", "Battle");
+                case "Elite":  return Loc.Tr("ui.map.node.elite",  "Elite");
+                case "Shop":   return Loc.Tr("ui.map.node.shop",   "Shop");
+                case "Boss":   return Loc.Tr("ui.map.node.boss",   "Boss");
+                default:       return type ?? string.Empty;
+            }
+        }
+
+        // Small wrappers to avoid pulling extra namespaces into the file.
+        private static string LocalizedNamesProxy(MonsterDto m) =>
+            NordeusChallenge.Client.Localization.LocalizedNames.Name(m);
+
+        private static string LocalizedNamesProxy(BattleEnvironmentDto e) =>
+            NordeusChallenge.Client.Localization.LocalizedNames.Name(e);
+
+        private void OnMapNodeSelected(string nodeId)
+        {
+            var session = GameSession.Instance;
+            if (session == null) return;
+
+            var node = session.GetMapNodeById(nodeId);
+            if (node == null) return;
+            if (!session.IsMapNodeAvailable(nodeId)) return;
+
+            session.SetSelectedMapNode(nodeId);
+
+            if (node.type == "Shop")
+            {
+                SceneManager.LoadScene(SceneNames.Shop);
+                return;
+            }
+
+            // Battle / Elite / Boss all flow through the same battle pipeline.
+            SceneManager.LoadScene(SceneNames.Battle);
+        }
+
+        private void ClearMapContainer()
+        {
+            if (mapContainer == null) return;
+            for (int i = mapContainer.childCount - 1; i >= 0; i--)
+            {
+                Destroy(mapContainer.GetChild(i).gameObject);
+            }
         }
 
         private void ClearEncountersContainer()

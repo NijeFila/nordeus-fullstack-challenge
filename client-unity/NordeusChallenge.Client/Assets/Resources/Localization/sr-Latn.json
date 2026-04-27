@@ -9,6 +9,16 @@
     { "key": "ui.main_menu.loading", "value": "Učitavanje pohoda..." },
     { "key": "ui.main_menu.error", "value": "Pohod nije mogao da počne. {0}" },
 
+    { "key": "ui.map.title", "value": "Mapa pohoda" },
+    { "key": "ui.map.node.battle", "value": "Borba" },
+    { "key": "ui.map.node.elite", "value": "Elita" },
+    { "key": "ui.map.node.shop", "value": "Radnja" },
+    { "key": "ui.map.node.boss", "value": "Šef" },
+    { "key": "ui.map.status.locked", "value": "Zaključano" },
+    { "key": "ui.map.status.available", "value": "Dostupno" },
+    { "key": "ui.map.status.cleared", "value": "Završeno" },
+    { "key": "ui.map.run_victory", "value": "Pohod završen! Zmaj poražen." },
+
     { "key": "ui.class_selection.title", "value": "Izaberi klasu" },
     { "key": "ui.class_selection.choose", "value": "Započni pohod" },
     { "key": "ui.class_selection.back", "value": "Nazad" },

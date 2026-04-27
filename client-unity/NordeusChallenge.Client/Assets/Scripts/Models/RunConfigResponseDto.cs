@@ -17,5 +17,7 @@ namespace NordeusChallenge.Client.Models
         public RulesConfigDto rules;
         public List<HeroClassDto> heroClasses;
         public string defaultHeroClassId;
+        public List<RunMapNodeDto> mapNodes;
+        public string startingMapNodeId;
     }
 }

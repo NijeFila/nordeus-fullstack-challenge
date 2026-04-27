@@ -31,5 +31,9 @@ namespace NordeusChallenge.Client.Runtime
 
         public bool UnlockedNextEncounter;
         public int NextUnlockedIndex = -1;
+
+        // True when the cleared map node was the Boss. The client uses this to
+        // surface the run-victory message and end the run flow.
+        public bool RunCompleted;
     }
 }
