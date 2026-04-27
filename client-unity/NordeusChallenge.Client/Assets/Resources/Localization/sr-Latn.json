@@ -9,6 +9,27 @@
     { "key": "ui.main_menu.loading", "value": "Učitavanje pohoda..." },
     { "key": "ui.main_menu.error", "value": "Pohod nije mogao da počne. {0}" },
 
+    { "key": "ui.class_selection.title", "value": "Izaberi klasu" },
+    { "key": "ui.class_selection.choose", "value": "Započni pohod" },
+    { "key": "ui.class_selection.back", "value": "Nazad" },
+
+    { "key": "class.knight.name", "value": "Vitez" },
+    { "key": "class.knight.description", "value": "Uravnotežen borac u bliskoj borbi. Pouzdana šteta, čvrsta odbrana i malo lečenje." },
+    { "key": "class.ranger.name", "value": "Strelac" },
+    { "key": "class.ranger.description", "value": "Okretan napadač. Manje ŽP-a u zamenu za veći napad i krvareće udarce." },
+    { "key": "class.mage.name", "value": "Mag" },
+    { "key": "class.mage.description", "value": "Eksplozivni čarobnjak. Visoka magija i maks. mana, slaba odbrana. Sve zavisi od pravog trenutka." },
+    { "key": "class.cleric.name", "value": "Sveštenik" },
+    { "key": "class.cleric.description", "value": "Izdržljiva podrška. Snažno lečenje i odbrambeni blagoslovi, umerena magijska šteta." },
+
+    { "key": "move.arcane_focus.name", "value": "Arkanski fokus" },
+    { "key": "move.arcane_focus.description", "value": "Sabira skrivenu energiju i diže magiju na 2 poteza." },
+    { "key": "move.blessed_mend.name", "value": "Blagosloveno isceljenje" },
+    { "key": "move.blessed_mend.description", "value": "Tiha molitva koja zatvara rane." },
+    { "key": "move.smite.name", "value": "Pravedna kazna" },
+    { "key": "move.smite.description", "value": "Stub blistave sile." },
+
+
     { "key": "ui.common.back", "value": "Nazad" },
     { "key": "ui.common.no_active_run", "value": "Nema aktivnog pohoda." },
     { "key": "ui.common.no_hero_data", "value": "Nema podataka o junaku." },

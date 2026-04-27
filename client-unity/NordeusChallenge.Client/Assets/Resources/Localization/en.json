@@ -9,6 +9,27 @@
     { "key": "ui.main_menu.loading", "value": "Loading run..." },
     { "key": "ui.main_menu.error", "value": "Could not start run. {0}" },
 
+    { "key": "ui.class_selection.title", "value": "Choose Your Class" },
+    { "key": "ui.class_selection.choose", "value": "Begin Run" },
+    { "key": "ui.class_selection.back", "value": "Back" },
+
+    { "key": "class.knight.name", "value": "Knight" },
+    { "key": "class.knight.description", "value": "Balanced melee fighter. Reliable damage, solid defense, and a small self-heal." },
+    { "key": "class.ranger.name", "value": "Ranger" },
+    { "key": "class.ranger.description", "value": "Agile striker. Trades raw HP for higher Attack and bleeding follow-ups." },
+    { "key": "class.mage.name", "value": "Mage" },
+    { "key": "class.mage.description", "value": "Burst caster. High Magic and Max Mana, low Defense. Lives or dies by spell timing." },
+    { "key": "class.cleric.name", "value": "Cleric" },
+    { "key": "class.cleric.description", "value": "Durable support. Strong heals and defensive blessings, modest magic damage." },
+
+    { "key": "move.arcane_focus.name", "value": "Arcane Focus" },
+    { "key": "move.arcane_focus.description", "value": "Gathers latent energy, raising Magic for 2 turns." },
+    { "key": "move.blessed_mend.name", "value": "Blessed Mend" },
+    { "key": "move.blessed_mend.description", "value": "A whispered prayer that knits wounds closed." },
+    { "key": "move.smite.name", "value": "Smite" },
+    { "key": "move.smite.description", "value": "A column of radiant force." },
+
+
     { "key": "ui.common.back", "value": "Back" },
     { "key": "ui.common.no_active_run", "value": "No active run." },
     { "key": "ui.common.no_hero_data", "value": "No hero data." },

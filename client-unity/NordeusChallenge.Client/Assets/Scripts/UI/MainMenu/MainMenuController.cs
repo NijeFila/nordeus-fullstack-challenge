@@ -85,7 +85,12 @@ namespace NordeusChallenge.Client.UI.MainMenu
             }
 
             GameSession.Instance.SetCurrentRun(run);
-            SceneManager.LoadScene(SceneNames.RunOverview);
+
+            // If the server returned hero classes, route to the picker. Older
+            // server payloads without classes go straight to the run overview
+            // using the legacy hero field already loaded by SetCurrentRun.
+            bool hasClasses = run != null && run.heroClasses != null && run.heroClasses.Count > 0;
+            SceneManager.LoadScene(hasClasses ? SceneNames.ClassSelection : SceneNames.RunOverview);
         }
 
         private void OnRunConfigError(string error)

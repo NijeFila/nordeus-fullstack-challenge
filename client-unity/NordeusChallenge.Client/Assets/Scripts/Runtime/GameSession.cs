@@ -12,6 +12,8 @@ namespace NordeusChallenge.Client.Runtime
 
         public HeroDto CurrentHero { get; private set; }
 
+        public string SelectedHeroClassId { get; private set; }
+
         public int SelectedEncounterIndex { get; private set; } = -1;
 
         public int HighestUnlockedEncounterIndex { get; private set; } = -1;
@@ -66,6 +68,7 @@ namespace NordeusChallenge.Client.Runtime
         {
             CurrentRun = run;
             CurrentHero = CloneHero(run != null ? run.hero : null);
+            SelectedHeroClassId = null;
             SelectedEncounterIndex = -1;
             HighestUnlockedEncounterIndex = (run != null && run.encounters != null && run.encounters.Count > 0) ? 0 : -1;
             _clearedEncounters.Clear();
@@ -78,12 +81,87 @@ namespace NordeusChallenge.Client.Runtime
         {
             CurrentRun = null;
             CurrentHero = null;
+            SelectedHeroClassId = null;
             SelectedEncounterIndex = -1;
             HighestUnlockedEncounterIndex = -1;
             _clearedEncounters.Clear();
             _pendingLevelUps = 0;
             _currentGold = 0;
             ResetInventory();
+        }
+
+        // Initializes the active hero from the chosen class. Replaces whatever
+        // hero the run was seeded with (typically the legacy default Knight).
+        // Inventory and run progression are reset so the class choice is the
+        // start of a clean run.
+        public void InitializeHeroFromClass(HeroClassDto heroClass)
+        {
+            if (heroClass == null)
+            {
+                Debug.LogWarning("InitializeHeroFromClass called with null class.");
+                return;
+            }
+
+            CurrentHero = HeroFromClass(heroClass);
+            SelectedHeroClassId = heroClass.id;
+
+            // Reset run-scoped progression so picking late doesn't carry stale state.
+            SelectedEncounterIndex = -1;
+            HighestUnlockedEncounterIndex = (CurrentRun != null && CurrentRun.encounters != null && CurrentRun.encounters.Count > 0) ? 0 : -1;
+            _clearedEncounters.Clear();
+            _pendingLevelUps = 0;
+            _currentGold = 0;
+            ResetInventory();
+        }
+
+        // Resolves a hero class from CurrentRun by id, or falls back to
+        // defaultHeroClassId when no id is supplied. Returns null only if the
+        // run has no class catalog at all.
+        public HeroClassDto GetHeroClassByIdOrDefault(string heroClassId)
+        {
+            if (CurrentRun == null || CurrentRun.heroClasses == null || CurrentRun.heroClasses.Count == 0)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrEmpty(heroClassId))
+            {
+                for (int i = 0; i < CurrentRun.heroClasses.Count; i++)
+                {
+                    if (CurrentRun.heroClasses[i] != null && CurrentRun.heroClasses[i].id == heroClassId)
+                    {
+                        return CurrentRun.heroClasses[i];
+                    }
+                }
+            }
+
+            string defaultId = CurrentRun.defaultHeroClassId;
+            if (!string.IsNullOrEmpty(defaultId))
+            {
+                for (int i = 0; i < CurrentRun.heroClasses.Count; i++)
+                {
+                    if (CurrentRun.heroClasses[i] != null && CurrentRun.heroClasses[i].id == defaultId)
+                    {
+                        return CurrentRun.heroClasses[i];
+                    }
+                }
+            }
+
+            return CurrentRun.heroClasses[0];
+        }
+
+        // Convenience used when transitioning to RunOverview without an
+        // explicit pick (e.g. a server response that has heroClasses but the
+        // client has not implemented the picker yet).
+        public void EnsureHeroInitialized()
+        {
+            if (CurrentHero != null) return;
+
+            var fallback = GetHeroClassByIdOrDefault(null);
+            if (fallback != null)
+            {
+                InitializeHeroFromClass(fallback);
+            }
         }
 
         public void ApplyLevelUpChoice(LevelUpChoiceDto choice)
@@ -586,6 +664,33 @@ namespace NordeusChallenge.Client.Runtime
         {
             if (offer == null || offer.type != "Item" || string.IsNullOrEmpty(offer.itemId)) return false;
             return _inventoryItemIds.Contains(offer.itemId);
+        }
+
+        private static HeroDto HeroFromClass(HeroClassDto source)
+        {
+            if (source == null) return null;
+
+            return new HeroDto
+            {
+                id = source.id,
+                name = source.name,
+                level = 1,
+                xp = 0,
+                stats = source.startingStats == null ? new StatsDto() : new StatsDto
+                {
+                    maxHealth = source.startingStats.maxHealth,
+                    maxMana = source.startingStats.maxMana,
+                    attack = source.startingStats.attack,
+                    defense = source.startingStats.defense,
+                    magic = source.startingStats.magic
+                },
+                equippedMoves = source.startingMoves != null
+                    ? new List<string>(source.startingMoves)
+                    : new List<string>(),
+                learnedMovePool = source.startingLearnedMoves != null
+                    ? new List<string>(source.startingLearnedMoves)
+                    : new List<string>()
+            };
         }
 
         private static HeroDto CloneHero(HeroDto source)

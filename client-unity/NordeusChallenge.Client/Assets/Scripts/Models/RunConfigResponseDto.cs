@@ -15,5 +15,7 @@ namespace NordeusChallenge.Client.Models
         public List<ItemDto> items;
         public List<ShopOfferDto> shopOffers;
         public RulesConfigDto rules;
+        public List<HeroClassDto> heroClasses;
+        public string defaultHeroClassId;
     }
 }

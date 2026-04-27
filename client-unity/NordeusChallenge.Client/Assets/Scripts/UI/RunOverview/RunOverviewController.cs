@@ -48,6 +48,10 @@ namespace NordeusChallenge.Client.UI.RunOverview
                 shopButton.onClick.AddListener(OnShopClicked);
             }
 
+            // Defensive fallback: if the player skipped the class picker for
+            // any reason, seed the hero from defaultHeroClassId before render.
+            if (GameSession.Instance != null) GameSession.Instance.EnsureHeroInitialized();
+
             if (GameSession.Instance == null || GameSession.Instance.CurrentRun == null)
             {
                 SetText(heroText, Loc.Tr("ui.common.no_active_run", "No active run."));

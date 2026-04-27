@@ -18,6 +18,12 @@ MonoBehaviour:
   heroPortraits:
   - id: knight
     sprite: {fileID: -5918137915363136097, guid: 953c1d6867dacec468afc8f8f0651b85, type: 3}
+  - id: ranger
+    sprite: {fileID: 1024069151341385491, guid: 953c1d6867dacec468afc8f8f0651b85, type: 3}
+  - id: mage
+    sprite: {fileID: -6502872108531726933, guid: 953c1d6867dacec468afc8f8f0651b85, type: 3}
+  - id: cleric
+    sprite: {fileID: -8582895898453060978, guid: 953c1d6867dacec468afc8f8f0651b85, type: 3}
   monsterPortraits:
   - id: goblin_warrior
     sprite: {fileID: 3891796401534313901, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
@@ -27,8 +33,14 @@ MonoBehaviour:
     sprite: {fileID: -2856217466817918920, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
   - id: witch
     sprite: {fileID: -5996608079194875224, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
+  - id: skeleton_knight
+    sprite: {fileID: 8377631560499595938, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
   - id: dragon
     sprite: {fileID: 118213427929379182, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
+  - id: forest_troll
+    sprite: {fileID: -6546070771089995561, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
+  - id: fire_elemental
+    sprite: {fileID: -4678270454940656224, guid: bf75e9fbc2ec7d8459b6e5fc1e8fdbb5, type: 3}
   moveIcons:
   - id: slash
     sprite: {fileID: -6064256052270767026, guid: 5198b1f8e902f2c41a9de7962423d558, type: 3}
@@ -78,6 +90,30 @@ MonoBehaviour:
     sprite: {fileID: -8188798609868112713, guid: 7962e76e5f537f7419f96fd67106bee2, type: 3}
   - id: hex_shield
     sprite: {fileID: -2192278396201434872, guid: 1cb71fb42e0e2564fab9e06df6f00264, type: 3}
+  - id: bone_slash
+    sprite: {fileID: 1967241872392510286, guid: 70bf5a5953b2a904eb34dafce384d242, type: 3}
+  - id: shield_wall
+    sprite: {fileID: 6404778677824247896, guid: ae4b207b8136bca498664d78c0d7fbf9, type: 3}
+  - id: grave_wound
+    sprite: {fileID: 5574085094699039763, guid: ed5f5169d3ed9044c8081f1e6a91c5f5, type: 3}
+  - id: death_rattle
+    sprite: {fileID: 1490122312239849419, guid: d40e9fc1aac01fb46a8ab750e121aa91, type: 3}
+  - id: heavy_club
+    sprite: {fileID: -2341002087250563726, guid: 4f97ca9392d4ad24b8320528e3e7b6a3, type: 3}
+  - id: regenerate
+    sprite: {fileID: -3450657354816585775, guid: 59872a256834491449ec97481bfb9b44, type: 3}
+  - id: toxic_spores
+    sprite: {fileID: 7540431213563001996, guid: 1950bbd50a633e64a8cd6e059b4a5797, type: 3}
+  - id: thick_hide
+    sprite: {fileID: -613358397063817586, guid: 33a20f82449d75144852f88e313597c2, type: 3}
+  - id: flame_burst
+    sprite: {fileID: -4147209725792766317, guid: cdac358ef5039384f85e3803fc61c2ba, type: 3}
+  - id: scorching_aura
+    sprite: {fileID: 5113190419209103205, guid: ebbe9c0eda318934588b3885effe1a1d, type: 3}
+  - id: ignite
+    sprite: {fileID: 8410109417593062605, guid: 2c1c6f8a9f91bcd4ca455ea9e16e15b5, type: 3}
+  - id: mana_flare
+    sprite: {fileID: -7057622138681851761, guid: ba3beabd4fc8d2548b92950e111df39d, type: 3}
   effectIcons:
   - id: BuffAttack
     sprite: {fileID: -1400734978927520801, guid: 4f55c33e0ee756546ab952a1a13155c1, type: 3}
