@@ -1,0 +1,27 @@
+{
+    "asset": "97a8af06e0a6f9d4da2ca5218960e47f",
+    "fileName": "019dd01d-09de-785d-bb7b-37707371b797.png",
+    "prompt": "A set of dark fantasy map icons: crossed swords, skull, treasure chest, gold bag, question mark, campfire, crown. Carved stone style, moody, dark fantasy. High contrast.",
+    "negativePrompt": "",
+    "model": "67bfd488-3588-4076-9d7b-14710382cf78",
+    "modelName": "Game UI Elements (Flux)",
+    "customSeed": -1,
+    "w3CTraceId": "459d463206ef3439ec4abdfb8c022a44",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

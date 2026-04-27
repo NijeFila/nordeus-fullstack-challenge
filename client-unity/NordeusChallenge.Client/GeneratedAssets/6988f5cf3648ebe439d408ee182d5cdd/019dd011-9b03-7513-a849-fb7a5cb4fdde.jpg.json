@@ -1,0 +1,27 @@
+{
+    "asset": "6988f5cf3648ebe439d408ee182d5cdd",
+    "fileName": "019dd011-9b03-7513-a849-fb7a5cb4fdde.jpg",
+    "prompt": "Dark fantasy stone token for a map node, ancient rune-etched stone, circular, dark grey, mossy, transparent background.",
+    "negativePrompt": "",
+    "model": "f722aea3-8760-4eb1-a516-e2fce6476303",
+    "modelName": "Seedream 4",
+    "customSeed": -1,
+    "w3CTraceId": "9058f2cc159ffc8211c301a9d9389e44",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

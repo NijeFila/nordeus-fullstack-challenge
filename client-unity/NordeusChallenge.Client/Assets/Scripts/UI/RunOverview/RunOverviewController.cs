@@ -35,8 +35,13 @@ namespace NordeusChallenge.Client.UI.RunOverview
         [Tooltip("Used when RunConfig.mapNodes is present. Leave empty to keep the linear list.")]
         [SerializeField] private Transform mapContainer;
         [SerializeField] private RunMapNodeView mapNodePrefab;
+        [SerializeField] private GameObject mapLinePrefab;
         [SerializeField] private TMP_Text mapTitleText;
         [SerializeField] private TMP_Text runVictoryText;
+        [SerializeField] private float mapVerticalSpacing = 180f;
+        [SerializeField] private float mapHorizontalSpacing = 120f;
+
+        private Dictionary<string, RunMapNodeView> _nodeViews = new Dictionary<string, RunMapNodeView>();
 
         [Header("Endless Mode (optional)")]
         [Tooltip("Root container for endless-mode UI. Hidden in standard runs.")]
@@ -328,6 +333,7 @@ namespace NordeusChallenge.Client.UI.RunOverview
         private void RenderMap()
         {
             ClearMapContainer();
+            _nodeViews.Clear();
 
             if (mapTitleText != null)
             {
@@ -348,28 +354,81 @@ namespace NordeusChallenge.Client.UI.RunOverview
                 }
             }
 
-            // Render in (depth, position) order so the layout group naturally
-            // groups nodes by layer. Group containers are intentionally not
-            // created here — a single Vertical/Grid Layout Group on the
-            // mapContainer is enough for a readable list.
-            var sorted = new List<RunMapNodeDto>(run.mapNodes);
-            sorted.Sort((a, b) =>
+            if (mapContainer != null)
             {
-                if (a == null) return 1;
-                if (b == null) return -1;
-                int c = a.depth.CompareTo(b.depth);
-                return c != 0 ? c : a.position.CompareTo(b.position);
-            });
+                var lg = mapContainer.GetComponent<LayoutGroup>();
+                if (lg != null) lg.enabled = false;
+                var csf = mapContainer.GetComponent<ContentSizeFitter>();
+                if (csf != null) csf.enabled = false;
 
-            for (int i = 0; i < sorted.Count; i++)
+                // Set container anchors to bottom center to scroll up
+                var rect = mapContainer.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0.5f, 0);
+                rect.anchorMax = new Vector2(0.5f, 0);
+                rect.pivot = new Vector2(0.5f, 0);
+            }
+
+            // 1. Spawn all nodes
+            foreach (var node in run.mapNodes)
             {
-                var node = sorted[i];
                 if (node == null) continue;
-                SpawnMapNode(node);
+                var view = SpawnMapNode(node);
+                _nodeViews[node.id] = view;
+            }
+
+            // 2. Position nodes
+            int maxDepth = 0;
+            foreach (var node in run.mapNodes)
+            {
+                if (node.depth > maxDepth) maxDepth = node.depth;
+                if (!_nodeViews.TryGetValue(node.id, out var view)) continue;
+
+                var rt = view.GetComponent<RectTransform>();
+                float y = node.depth * mapVerticalSpacing + (mapVerticalSpacing * 0.5f);
+                float x = (node.position - 2.5f) * mapHorizontalSpacing; // Assume ~6 lanes, center at 2.5
+                rt.anchoredPosition = new Vector2(x, y);
+            }
+
+            // 3. Draw Connections
+            if (mapLinePrefab != null)
+            {
+                foreach (var node in run.mapNodes)
+                {
+                    if (node.connectedTo == null) continue;
+                    if (!_nodeViews.TryGetValue(node.id, out var startView)) continue;
+
+                    foreach (var targetId in node.connectedTo)
+                    {
+                        if (!_nodeViews.TryGetValue(targetId, out var endView)) continue;
+                        DrawConnection(startView.GetComponent<RectTransform>(), endView.GetComponent<RectTransform>());
+                    }
+                }
+            }
+
+            // Resize container
+            if (mapContainer != null)
+            {
+                var rect = mapContainer.GetComponent<RectTransform>();
+                rect.sizeDelta = new Vector2(mapHorizontalSpacing * 6, (maxDepth + 1) * mapVerticalSpacing + 100);
             }
         }
 
-        private void SpawnMapNode(RunMapNodeDto node)
+        private void DrawConnection(RectTransform start, RectTransform end)
+        {
+            var lineObj = Instantiate(mapLinePrefab, mapContainer);
+            lineObj.transform.SetAsFirstSibling(); // Lines behind nodes
+            var rt = lineObj.GetComponent<RectTransform>();
+
+            Vector2 dir = end.anchoredPosition - start.anchoredPosition;
+            float distance = dir.magnitude;
+            float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+
+            rt.anchoredPosition = start.anchoredPosition + dir * 0.5f;
+            rt.sizeDelta = new Vector2(distance, 4f); // 4 pixels thick
+            rt.localRotation = Quaternion.Euler(0, 0, angle);
+        }
+
+        private RunMapNodeView SpawnMapNode(RunMapNodeDto node)
         {
             var session = GameSession.Instance;
 
@@ -384,9 +443,12 @@ namespace NordeusChallenge.Client.UI.RunOverview
                              : Loc.Tr("ui.map.status.locked", "Locked"));
             string label = BuildMapNodeLabel(node);
 
+            bool isCurrent = session.SelectedMapNodeId == node.id;
+
             var view = Instantiate(mapNodePrefab, mapContainer);
-            view.Bind(node.id, label, typeText, statusText, node.type, interactable, OnMapNodeSelected);
-        }
+            view.Bind(node.id, label, typeText, statusText, node.type, interactable, isCurrent, OnMapNodeSelected);
+            return view;
+            }
 
         private string BuildMapNodeLabel(RunMapNodeDto node)
         {

@@ -1,0 +1,27 @@
+{
+    "asset": "0db08af6d020e384f9c87d5306203634",
+    "fileName": "019dd00f-9026-75eb-9bc1-84a39d7e1b1b.jpg",
+    "prompt": "Dark fantasy parchment map background, laid out on a dark wooden table in a dimly lit room, atmospheric torchlight shadows, mystical ember particles, ancient journey feel, high detail, cinematic lighting, 16:9 aspect ratio.",
+    "negativePrompt": "",
+    "model": "f722aea3-8760-4eb1-a516-e2fce6476303",
+    "modelName": "Seedream 4",
+    "customSeed": -1,
+    "w3CTraceId": "1bef36a17be67aecf2c482e70d8414f8",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

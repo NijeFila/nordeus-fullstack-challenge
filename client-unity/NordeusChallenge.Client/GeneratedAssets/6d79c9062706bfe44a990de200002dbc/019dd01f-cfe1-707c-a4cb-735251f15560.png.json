@@ -1,0 +1,27 @@
+{
+    "asset": "6d79c9062706bfe44a990de200002dbc",
+    "fileName": "019dd01f-cfe1-707c-a4cb-735251f15560.png",
+    "prompt": "A single dark fantasy map icon: a gold bag. Carved stone style, stone-medallion token, moody, high contrast, transparent background.",
+    "negativePrompt": "",
+    "model": "67bfd488-3588-4076-9d7b-14710382cf78",
+    "modelName": "Game UI Elements (Flux)",
+    "customSeed": -1,
+    "w3CTraceId": "a3655c942b1a337c8cd13b8e07bf4f6e",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

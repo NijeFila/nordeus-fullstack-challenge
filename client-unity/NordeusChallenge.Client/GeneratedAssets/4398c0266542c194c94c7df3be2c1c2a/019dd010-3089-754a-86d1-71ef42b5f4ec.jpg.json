@@ -1,0 +1,27 @@
+{
+    "asset": "4398c0266542c194c94c7df3be2c1c2a",
+    "fileName": "019dd010-3089-754a-86d1-71ef42b5f4ec.jpg",
+    "prompt": "Dark fantasy parchment UI panel frame, ancient worn paper with burnt edges, stone/metal corner ornaments, dark shadows, high detail, suitable for a game menu, transparent background.",
+    "negativePrompt": "",
+    "model": "f722aea3-8760-4eb1-a516-e2fce6476303",
+    "modelName": "Seedream 4",
+    "customSeed": -1,
+    "w3CTraceId": "dfc4e5e14e6c15bf44f4c9bb8542153f",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

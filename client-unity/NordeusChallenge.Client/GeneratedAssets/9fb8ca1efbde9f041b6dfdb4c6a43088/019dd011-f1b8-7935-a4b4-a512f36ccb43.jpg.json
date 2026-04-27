@@ -1,0 +1,27 @@
+{
+    "asset": "9fb8ca1efbde9f041b6dfdb4c6a43088",
+    "fileName": "019dd011-f1b8-7935-a4b4-a512f36ccb43.jpg",
+    "prompt": "Dark fantasy gold coin icon, glowing slightly, ancient coin with a skull imprint, transparent background.",
+    "negativePrompt": "",
+    "model": "f722aea3-8760-4eb1-a516-e2fce6476303",
+    "modelName": "Seedream 4",
+    "customSeed": -1,
+    "w3CTraceId": "2699e2caa66381f04d8cdb3b469a58ae",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}
