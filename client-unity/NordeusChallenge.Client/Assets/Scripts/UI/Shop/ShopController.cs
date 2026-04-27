@@ -249,10 +249,18 @@ namespace NordeusChallenge.Client.UI.Shop
 
         private void OnBackClicked()
         {
+            var session = GameSession.Instance;
+
+            // Endless shop floors advance one floor on exit so the next floor
+            // (battle/elite/boss) is queued for RunOverview.
+            if (session != null && session.CurrentRunMode == RunMode.Endless && session.IsEndlessShopFloor)
+            {
+                session.AdvanceEndlessShopFloor();
+            }
+
             // If the player came from a Shop map node, clearing it on exit
             // unlocks the connected nodes. No-op when shop was reached from
             // the legacy "Shop" button on the run overview.
-            var session = GameSession.Instance;
             if (session != null && session.HasMap && !string.IsNullOrEmpty(session.SelectedMapNodeId))
             {
                 var node = session.GetMapNodeById(session.SelectedMapNodeId);

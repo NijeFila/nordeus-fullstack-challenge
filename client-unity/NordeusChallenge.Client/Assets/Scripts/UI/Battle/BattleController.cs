@@ -112,7 +112,10 @@ namespace NordeusChallenge.Client.UI.Battle
 
             var run = GameSession.Instance.CurrentRun;
             _hero = GameSession.Instance.CurrentHero ?? run.hero;
-            _encounter = GameSession.Instance.GetEncounterByIndex(GameSession.Instance.SelectedEncounterIndex);
+            // Endless mode synthesizes its encounter on the session; standard
+            // mode looks one up by SelectedEncounterIndex. ResolveCurrentEncounter
+            // hides the branch.
+            _encounter = GameSession.Instance.ResolveCurrentEncounter();
             if (_encounter == null)
             {
                 SetStatus("No encounter selected.");
@@ -860,8 +863,12 @@ namespace NordeusChallenge.Client.UI.Battle
                 string headline = string.Format(Loc.Tr("battle.victory_against", "Victory against {0}."), LocalizedNames.Name(_monster));
                 AppendLog(headline);
 
+                // Endless runs use a generated curve; standard runs use the
+                // fixed per-encounter rewards on RulesConfig.
                 var reward = GameSession.Instance != null
-                    ? GameSession.Instance.ApplyVictoryRewards(_encounter.index)
+                    ? (GameSession.Instance.CurrentRunMode == RunMode.Endless
+                        ? GameSession.Instance.ApplyEndlessVictoryRewards()
+                        : GameSession.Instance.ApplyVictoryRewards(_encounter.index))
                     : null;
 
                 SetStatus(BuildVictorySummary(headline, reward));
@@ -911,6 +918,13 @@ namespace NordeusChallenge.Client.UI.Battle
                 string message = string.Format(Loc.Tr("battle.defeated_by", "Defeated by {0}."), LocalizedNames.Name(_monster));
                 SetStatus(message);
                 AppendLog(message);
+
+                // Endless runs end on defeat; the standard run simply replays
+                // the same encounter, handled by the existing flow.
+                if (GameSession.Instance != null && GameSession.Instance.CurrentRunMode == RunMode.Endless)
+                {
+                    GameSession.Instance.EndEndlessRun();
+                }
             }
         }
 

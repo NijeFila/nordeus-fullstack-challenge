@@ -38,6 +38,19 @@ namespace NordeusChallenge.Client.UI.RunOverview
         [SerializeField] private TMP_Text mapTitleText;
         [SerializeField] private TMP_Text runVictoryText;
 
+        [Header("Endless Mode (optional)")]
+        [Tooltip("Root container for endless-mode UI. Hidden in standard runs.")]
+        [SerializeField] private GameObject endlessPanel;
+        [SerializeField] private TMP_Text endlessTitleText;
+        [SerializeField] private TMP_Text endlessFloorText;
+        [SerializeField] private TMP_Text endlessNextEnemyText;
+        [SerializeField] private TMP_Text endlessShopText;
+        [SerializeField] private TMP_Text endlessBestFloorText;
+        [SerializeField] private TMP_Text endlessDefeatText;
+        [SerializeField] private Button endlessStartFloorButton;
+        [SerializeField] private TMP_Text endlessStartFloorButtonLabel;
+        [SerializeField] private Button endlessReturnToMenuButton;
+
         private static readonly string[] ItemSlotOrder = { "weapon", "armor", "trinket" };
 
         private void Start()
@@ -79,12 +92,20 @@ namespace NordeusChallenge.Client.UI.RunOverview
             RenderInventory();
             RenderGold();
 
-            // Use the branching map renderer when the server returned one and
-            // the scene has a map container wired up. Otherwise fall back to
-            // the legacy linear encounter list so older scene wiring still works.
-            if (GameSession.Instance.HasMap && mapContainer != null && mapNodePrefab != null)
+            // Endless Mode takes precedence over the standard map / linear
+            // encounter list, since none of those apply to a generated floor.
+            if (GameSession.Instance.CurrentRunMode == RunMode.Endless)
             {
                 ClearEncountersContainer();
+                ClearMapContainer();
+                if (mapTitleText != null) mapTitleText.gameObject.SetActive(false);
+                if (runVictoryText != null) runVictoryText.gameObject.SetActive(false);
+                RenderEndless();
+            }
+            else if (GameSession.Instance.HasMap && mapContainer != null && mapNodePrefab != null)
+            {
+                ClearEncountersContainer();
+                if (endlessPanel != null) endlessPanel.SetActive(false);
                 RenderMap();
             }
             else
@@ -92,6 +113,7 @@ namespace NordeusChallenge.Client.UI.RunOverview
                 ClearMapContainer();
                 if (mapTitleText != null) mapTitleText.gameObject.SetActive(false);
                 if (runVictoryText != null) runVictoryText.gameObject.SetActive(false);
+                if (endlessPanel != null) endlessPanel.SetActive(false);
                 RenderEncounters(run);
             }
         }
@@ -445,6 +467,160 @@ namespace NordeusChallenge.Client.UI.RunOverview
             {
                 Destroy(mapContainer.GetChild(i).gameObject);
             }
+        }
+
+        // ---------- Endless Mode rendering ----------
+
+        private void RenderEndless()
+        {
+            if (endlessPanel != null) endlessPanel.SetActive(true);
+
+            var session = GameSession.Instance;
+            var cfg = session.CurrentRun != null ? session.CurrentRun.endlessMode : null;
+
+            if (endlessTitleText != null)
+            {
+                endlessTitleText.text = Loc.Tr("ui.endless.title", "Endless Mode");
+            }
+
+            if (endlessFloorText != null)
+            {
+                endlessFloorText.text = string.Format(Loc.Tr("ui.endless.floor", "Floor {0}"), session.EndlessFloor);
+            }
+
+            if (endlessBestFloorText != null)
+            {
+                if (session.EndlessBestFloor > 0)
+                {
+                    endlessBestFloorText.gameObject.SetActive(true);
+                    endlessBestFloorText.text = string.Format(Loc.Tr("ui.endless.best_floor", "Best floor: {0}"), session.EndlessBestFloor);
+                }
+                else
+                {
+                    endlessBestFloorText.gameObject.SetActive(false);
+                }
+            }
+
+            // Endless run is over (defeat). Show the summary, hide the start button.
+            if (session.EndlessRunOver)
+            {
+                if (endlessNextEnemyText != null) endlessNextEnemyText.text = string.Empty;
+                if (endlessShopText != null) endlessShopText.gameObject.SetActive(false);
+                if (endlessStartFloorButton != null) endlessStartFloorButton.gameObject.SetActive(false);
+                if (endlessDefeatText != null)
+                {
+                    endlessDefeatText.gameObject.SetActive(true);
+                    endlessDefeatText.text = string.Format(
+                        Loc.Tr("ui.endless.defeat_summary", "Endless run ended on floor {0}."),
+                        session.EndlessBestFloor);
+                }
+                if (endlessReturnToMenuButton != null)
+                {
+                    endlessReturnToMenuButton.gameObject.SetActive(true);
+                    endlessReturnToMenuButton.onClick.RemoveAllListeners();
+                    endlessReturnToMenuButton.onClick.AddListener(OnEndlessReturnToMenu);
+                }
+                return;
+            }
+
+            if (endlessDefeatText != null) endlessDefeatText.gameObject.SetActive(false);
+
+            string floorType = session.EndlessFloorType ?? string.Empty;
+            bool isShopFloor = floorType == "Shop";
+
+            if (endlessShopText != null)
+            {
+                endlessShopText.gameObject.SetActive(isShopFloor);
+                if (isShopFloor)
+                {
+                    endlessShopText.text = Loc.Tr("ui.endless.shop_available", "Shop floor — gear up before the next battle.");
+                }
+            }
+
+            if (endlessNextEnemyText != null)
+            {
+                endlessNextEnemyText.text = isShopFloor
+                    ? string.Empty
+                    : BuildEndlessEnemyLine(session);
+            }
+
+            if (endlessStartFloorButton != null)
+            {
+                endlessStartFloorButton.gameObject.SetActive(true);
+                endlessStartFloorButton.onClick.RemoveAllListeners();
+                endlessStartFloorButton.onClick.AddListener(OnEndlessStartFloor);
+            }
+
+            if (endlessStartFloorButtonLabel != null)
+            {
+                endlessStartFloorButtonLabel.text = isShopFloor
+                    ? Loc.Tr("ui.endless.continue", "Visit Shop")
+                    : Loc.Tr("ui.endless.start_floor", "Start Floor");
+            }
+
+            if (endlessReturnToMenuButton != null)
+            {
+                endlessReturnToMenuButton.gameObject.SetActive(false);
+            }
+
+            // Cfg is currently unused for rendering (all numbers come from
+            // session state) but keeping the local makes future tweaks obvious.
+            _ = cfg;
+        }
+
+        private string BuildEndlessEnemyLine(GameSession session)
+        {
+            var encounter = session.ResolveCurrentEncounter();
+            if (encounter == null) return string.Empty;
+
+            var monster = session.GetMonsterById(encounter.monsterId);
+            string monsterName = monster != null ? LocalizedNamesProxy(monster) : encounter.monsterId;
+
+            string envLine = string.Empty;
+            if (!string.IsNullOrEmpty(encounter.environmentId))
+            {
+                var env = session.GetEnvironmentById(encounter.environmentId);
+                if (env != null) envLine = LocalizedNamesProxy(env);
+            }
+
+            string lvShort = Loc.Tr("label.level_short", "Lv");
+            string typeLabel = LocalizeNodeType(session.EndlessFloorType);
+
+            string baseLine = string.Format(
+                Loc.Tr("ui.endless.next_enemy", "Next: {0} ({1} {2})"),
+                monsterName, lvShort, encounter.level);
+
+            if (!string.IsNullOrEmpty(envLine))
+            {
+                baseLine += $" — {envLine}";
+            }
+            if (!string.IsNullOrEmpty(typeLabel))
+            {
+                baseLine = $"[{typeLabel}] {baseLine}";
+            }
+            return baseLine;
+        }
+
+        private void OnEndlessStartFloor()
+        {
+            var session = GameSession.Instance;
+            if (session == null) return;
+            if (session.EndlessRunOver) return;
+
+            if (session.IsEndlessShopFloor)
+            {
+                SceneManager.LoadScene(SceneNames.Shop);
+                return;
+            }
+
+            // Battle / Elite / Boss all flow through the standard battle scene.
+            SceneManager.LoadScene(SceneNames.Battle);
+        }
+
+        private void OnEndlessReturnToMenu()
+        {
+            if (GameSession.Instance != null) GameSession.Instance.ClearCurrentRun();
+            SceneManager.LoadScene(SceneNames.MainMenu);
         }
 
         private void ClearEncountersContainer()

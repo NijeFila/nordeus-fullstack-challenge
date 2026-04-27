@@ -35,5 +35,10 @@ namespace NordeusChallenge.Client.Runtime
         // True when the cleared map node was the Boss. The client uses this to
         // surface the run-victory message and end the run flow.
         public bool RunCompleted;
+
+        // Endless Mode: floor that was just cleared, and the floor the player
+        // is now on (already advanced). 0 / 0 in standard runs.
+        public int EndlessFloorCleared;
+        public int EndlessFloorNext;
     }
 }

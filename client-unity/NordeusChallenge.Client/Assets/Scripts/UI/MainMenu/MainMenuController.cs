@@ -16,13 +16,19 @@ namespace NordeusChallenge.Client.UI.MainMenu
         [SerializeField] private string baseUrl = "http://localhost:5046";
 
         [Header("UI References")]
+        [Tooltip("Standard Run button. Wired to OnStartClicked.")]
         [SerializeField] private Button startButton;
+
+        [Tooltip("Optional Endless Run button. Wired to OnEndlessStartClicked. Hidden if endlessMode is disabled.")]
+        [SerializeField] private Button endlessButton;
+
         [SerializeField] private Button optionsButton;
         [SerializeField] private Button exitButton;
         [SerializeField] private TMP_Text statusText;
 
         private RunApiClient _apiClient;
         private bool _requestInFlight;
+        private RunMode _pendingMode = RunMode.Standard;
 
         private void Awake()
         {
@@ -40,7 +46,10 @@ namespace NordeusChallenge.Client.UI.MainMenu
             {
                 startButton.onClick.AddListener(OnStartClicked);
             }
-
+            if (endlessButton != null)
+            {
+                endlessButton.onClick.AddListener(OnEndlessStartClicked);
+            }
             if (exitButton != null)
             {
                 exitButton.onClick.AddListener(OnExitClicked);
@@ -53,22 +62,27 @@ namespace NordeusChallenge.Client.UI.MainMenu
             {
                 startButton.onClick.RemoveListener(OnStartClicked);
             }
-
+            if (endlessButton != null)
+            {
+                endlessButton.onClick.RemoveListener(OnEndlessStartClicked);
+            }
             if (exitButton != null)
             {
                 exitButton.onClick.RemoveListener(OnExitClicked);
             }
         }
 
-        private void OnStartClicked()
-        {
-            if (_requestInFlight)
-            {
-                return;
-            }
+        private void OnStartClicked() => BeginRunRequest(RunMode.Standard);
 
+        private void OnEndlessStartClicked() => BeginRunRequest(RunMode.Endless);
+
+        private void BeginRunRequest(RunMode mode)
+        {
+            if (_requestInFlight) return;
+
+            _pendingMode = mode;
             _requestInFlight = true;
-            SetStartInteractable(false);
+            SetButtonsInteractable(false);
             SetStatus(Loc.Tr("ui.main_menu.loading", "Loading run..."));
 
             StartCoroutine(_apiClient.GetRunConfig(OnRunConfigSuccess, OnRunConfigError));
@@ -84,7 +98,17 @@ namespace NordeusChallenge.Client.UI.MainMenu
                 return;
             }
 
+            // If the user chose Endless but the server has it disabled, fall
+            // back to Standard rather than dropping the player into an empty
+            // endless run.
+            if (_pendingMode == RunMode.Endless
+                && (run == null || run.endlessMode == null || !run.endlessMode.enabled))
+            {
+                _pendingMode = RunMode.Standard;
+            }
+
             GameSession.Instance.SetCurrentRun(run);
+            GameSession.Instance.SetRunMode(_pendingMode);
 
             // If the server returned hero classes, route to the picker. Older
             // server payloads without classes go straight to the run overview
@@ -97,7 +121,7 @@ namespace NordeusChallenge.Client.UI.MainMenu
         {
             _requestInFlight = false;
             SetStatus(string.Format(Loc.Tr("ui.main_menu.error", "Could not start run. {0}"), error));
-            SetStartInteractable(true);
+            SetButtonsInteractable(true);
         }
 
         private void OnExitClicked()
@@ -110,12 +134,10 @@ namespace NordeusChallenge.Client.UI.MainMenu
 #endif
         }
 
-        private void SetStartInteractable(bool value)
+        private void SetButtonsInteractable(bool value)
         {
-            if (startButton != null)
-            {
-                startButton.interactable = value;
-            }
+            if (startButton != null) startButton.interactable = value;
+            if (endlessButton != null) endlessButton.interactable = value;
         }
 
         private void SetStatus(string message)

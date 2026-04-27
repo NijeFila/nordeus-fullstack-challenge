@@ -19,5 +19,6 @@ namespace NordeusChallenge.Client.Models
         public string defaultHeroClassId;
         public List<RunMapNodeDto> mapNodes;
         public string startingMapNodeId;
+        public EndlessModeConfigDto endlessMode;
     }
 }

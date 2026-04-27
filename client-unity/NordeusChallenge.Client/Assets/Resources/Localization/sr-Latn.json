@@ -8,6 +8,18 @@
     { "key": "ui.main_menu.language", "value": "Jezik" },
     { "key": "ui.main_menu.loading", "value": "Učitavanje pohoda..." },
     { "key": "ui.main_menu.error", "value": "Pohod nije mogao da počne. {0}" },
+    { "key": "ui.main_menu.standard_run", "value": "Standardni pohod" },
+    { "key": "ui.main_menu.endless_run", "value": "Beskonačni pohod" },
+
+    { "key": "ui.endless.title", "value": "Beskonačni režim" },
+    { "key": "ui.endless.floor", "value": "Sprat {0}" },
+    { "key": "ui.endless.next_enemy", "value": "Sledeći: {0} ({1} {2})" },
+    { "key": "ui.endless.shop_available", "value": "Sprat radnje — opremi se pre sledeće borbe." },
+    { "key": "ui.endless.start_floor", "value": "Započni sprat" },
+    { "key": "ui.endless.continue", "value": "Poseti radnju" },
+    { "key": "ui.endless.defeat_summary", "value": "Beskonačni pohod završen na spratu {0}." },
+    { "key": "ui.endless.best_floor", "value": "Najbolji sprat: {0}" },
+
 
     { "key": "ui.map.title", "value": "Mapa pohoda" },
     { "key": "ui.map.node.battle", "value": "Borba" },

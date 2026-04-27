@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NordeusChallenge.Client.Models;
 using UnityEngine;
@@ -19,6 +20,29 @@ namespace NordeusChallenge.Client.Runtime
         public int HighestUnlockedEncounterIndex { get; private set; } = -1;
 
         private readonly HashSet<int> _clearedEncounters = new();
+
+        // ---------- Run mode ----------
+
+        public RunMode CurrentRunMode { get; private set; } = RunMode.Standard;
+
+        public void SetRunMode(RunMode mode) => CurrentRunMode = mode;
+
+        // ---------- Endless Mode state ----------
+
+        public int EndlessFloor { get; private set; }
+        public int EndlessBestFloor { get; private set; }
+        public bool EndlessRunOver { get; private set; }
+
+        // "Battle", "Elite", "Boss", or "Shop". Empty when no floor is queued.
+        public string EndlessFloorType { get; private set; }
+
+        // Synthesized encounter for the current endless floor. BattleController
+        // resolves it through ResolveCurrentEncounter() so the rest of the
+        // battle pipeline keeps using the same EncounterDto shape.
+        private EncounterDto _endlessEncounter;
+
+        public bool IsEndlessShopFloor =>
+            CurrentRunMode == RunMode.Endless && EndlessFloorType == "Shop";
 
         // ---------- Branching map state ----------
 
@@ -92,6 +116,7 @@ namespace NordeusChallenge.Client.Runtime
             _currentGold = 0;
             ResetInventory();
             ResetMapProgress();
+            ResetEndlessState();
         }
 
         public void ClearCurrentRun()
@@ -106,6 +131,8 @@ namespace NordeusChallenge.Client.Runtime
             _currentGold = 0;
             ResetInventory();
             ResetMapProgress();
+            ResetEndlessState();
+            CurrentRunMode = RunMode.Standard;
         }
 
         // Initializes the active hero from the chosen class. Replaces whatever
@@ -131,6 +158,14 @@ namespace NordeusChallenge.Client.Runtime
             _currentGold = 0;
             ResetInventory();
             ResetMapProgress();
+            ResetEndlessState();
+
+            // Endless runs need their first floor queued the moment the hero
+            // is initialized so RunOverview has something to display.
+            if (CurrentRunMode == RunMode.Endless)
+            {
+                GenerateNextEndlessFloor();
+            }
         }
 
         // Resolves a hero class from CurrentRun by id, or falls back to
@@ -536,6 +571,219 @@ namespace NordeusChallenge.Client.Runtime
                 var n = CurrentRun.mapNodes[i];
                 if (n != null && n.depth == 0) _availableNodeIds.Add(n.id);
             }
+        }
+
+        // ---------- Endless Mode ----------
+
+        // Returns the encounter the battle scene should resolve. Standard runs
+        // look it up by SelectedEncounterIndex; endless runs return the
+        // synthesized floor encounter built by GenerateNextEndlessFloor().
+        public EncounterDto ResolveCurrentEncounter()
+        {
+            if (CurrentRunMode == RunMode.Endless)
+            {
+                return _endlessEncounter;
+            }
+            return GetEncounterByIndex(SelectedEncounterIndex);
+        }
+
+        // Builds the next endless floor based on the server-provided periods.
+        // No-op when not in endless mode or when EndlessMode.Enabled is false.
+        public void GenerateNextEndlessFloor()
+        {
+            if (CurrentRunMode != RunMode.Endless) return;
+            if (CurrentRun == null || CurrentRun.endlessMode == null || !CurrentRun.endlessMode.enabled) return;
+            if (EndlessRunOver) return;
+
+            var cfg = CurrentRun.endlessMode;
+            if (EndlessFloor <= 0)
+            {
+                EndlessFloor = cfg.startingFloor > 0 ? cfg.startingFloor : 1;
+            }
+
+            string floorType = ResolveFloorType(cfg, EndlessFloor);
+            int level = ResolveFloorLevel(cfg, EndlessFloor);
+
+            EndlessFloorType = floorType;
+
+            if (floorType == "Shop")
+            {
+                _endlessEncounter = null;
+                return;
+            }
+
+            string monsterId = SamplePool(PoolForType(cfg, floorType)) ?? SamplePool(cfg.monsterPool);
+            string environmentId = SamplePool(cfg.environmentPool);
+
+            if (string.IsNullOrEmpty(monsterId))
+            {
+                Debug.LogWarning("Endless mode: no monster id available; ending run.");
+                EndlessRunOver = true;
+                _endlessEncounter = null;
+                return;
+            }
+
+            _endlessEncounter = new EncounterDto
+            {
+                index = -1, // not part of CurrentRun.encounters
+                monsterId = monsterId,
+                level = level,
+                environmentId = environmentId
+            };
+        }
+
+        // Awards XP and gold using the endless curves, processes drops/learns,
+        // and advances to the next floor. Called by BattleController on victory
+        // when CurrentRunMode == Endless. Returns the same VictoryRewardResult
+        // shape the standard victory hook produces, so the battle UI's reward
+        // log keeps working without further branches.
+        public VictoryRewardResult ApplyEndlessVictoryRewards()
+        {
+            var result = new VictoryRewardResult();
+            if (CurrentRun == null || CurrentHero == null || CurrentRun.endlessMode == null || _endlessEncounter == null)
+            {
+                return result;
+            }
+
+            var cfg = CurrentRun.endlessMode;
+            var rules = CurrentRun.rules;
+            int floor = EndlessFloor;
+
+            int gold = ScaleByBp(cfg.rewardGoldBase + (floor - 1) * Math.Max(0, cfg.rewardGoldPerFloor),
+                                 cfg.endlessGoldScalingBp);
+            int xp = ScaleByBp(cfg.xpBase + (floor - 1) * Math.Max(0, cfg.xpPerFloor),
+                               cfg.endlessXpScalingBp);
+
+            if (gold > 0)
+            {
+                _currentGold += gold;
+                result.GoldGained = gold;
+            }
+            result.CurrentGold = _currentGold;
+
+            result.XpGained = xp;
+            CurrentHero.xp += xp;
+
+            int pendingLevelUps = 0;
+            if (rules != null && rules.xpPerLevel > 0)
+            {
+                while (CurrentHero.xp >= rules.xpPerLevel)
+                {
+                    CurrentHero.xp -= rules.xpPerLevel;
+                    CurrentHero.level += 1;
+                    pendingLevelUps += 1;
+                }
+            }
+
+            if (pendingLevelUps > 0)
+            {
+                _pendingLevelUps += pendingLevelUps;
+                result.LeveledUp = true;
+                result.NewLevel = CurrentHero.level;
+                result.PendingLevelUps = _pendingLevelUps;
+            }
+
+            // Reuse the standard drop/learn helpers so endless monsters still
+            // award items and moves through the same code path.
+            var monster = GetMonsterById(_endlessEncounter.monsterId);
+            if (monster != null && rules != null)
+            {
+                TryLearnMove(monster, rules, result);
+                TryDropItem(monster, result);
+            }
+
+            result.EndlessFloorCleared = floor;
+
+            // Advance and queue up the next floor.
+            EndlessFloor = floor + 1;
+            if (EndlessFloor - 1 > EndlessBestFloor)
+            {
+                EndlessBestFloor = EndlessFloor - 1;
+            }
+
+            GenerateNextEndlessFloor();
+            result.EndlessFloorNext = EndlessFloor;
+            return result;
+        }
+
+        // Marks the current shop floor as visited and advances to the next one.
+        // Called by ShopController when the player exits a shop in endless mode.
+        public void AdvanceEndlessShopFloor()
+        {
+            if (CurrentRunMode != RunMode.Endless) return;
+            if (EndlessFloorType != "Shop") return;
+            EndlessFloor += 1;
+            GenerateNextEndlessFloor();
+        }
+
+        public void EndEndlessRun()
+        {
+            EndlessRunOver = true;
+            EndlessFloorType = string.Empty;
+            _endlessEncounter = null;
+        }
+
+        private void ResetEndlessState()
+        {
+            EndlessFloor = 0;
+            EndlessBestFloor = 0;
+            EndlessRunOver = false;
+            EndlessFloorType = string.Empty;
+            _endlessEncounter = null;
+        }
+
+        private static string ResolveFloorType(EndlessModeConfigDto cfg, int floor)
+        {
+            // Boss > Elite > Shop > Battle precedence.
+            if (cfg.bossEvery > 0 && floor % cfg.bossEvery == 0
+                && cfg.bossMonsterPool != null && cfg.bossMonsterPool.Count > 0)
+            {
+                return "Boss";
+            }
+            if (cfg.eliteEvery > 0 && floor % cfg.eliteEvery == 0
+                && cfg.eliteMonsterPool != null && cfg.eliteMonsterPool.Count > 0)
+            {
+                return "Elite";
+            }
+            if (cfg.shopEvery > 0 && floor % cfg.shopEvery == 0)
+            {
+                return "Shop";
+            }
+            return "Battle";
+        }
+
+        private static int ResolveFloorLevel(EndlessModeConfigDto cfg, int floor)
+        {
+            int baseLevel = cfg.baseLevel > 0 ? cfg.baseLevel : 1;
+            if (cfg.levelIncreaseEvery <= 0) return baseLevel;
+            return baseLevel + (floor - 1) / cfg.levelIncreaseEvery;
+        }
+
+        private static List<string> PoolForType(EndlessModeConfigDto cfg, string type)
+        {
+            switch (type)
+            {
+                case "Boss":  return cfg.bossMonsterPool;
+                case "Elite": return cfg.eliteMonsterPool;
+                default:      return cfg.monsterPool;
+            }
+        }
+
+        private string SamplePool(List<string> pool)
+        {
+            if (pool == null || pool.Count == 0) return null;
+            return pool[_random.Next(pool.Count)];
+        }
+
+        // bp = basis points; 100 = +1.00x. <= 0 means "no scaling".
+        private static int ScaleByBp(int value, int bp)
+        {
+            if (bp <= 0 || value <= 0) return value;
+            // value * (1 + bp/100)
+            long scaled = value + (long)value * bp / 100L;
+            if (scaled < 0) return value;
+            if (scaled > int.MaxValue) return int.MaxValue;
+            return (int)scaled;
         }
 
         // ---------- Victory rewards ----------

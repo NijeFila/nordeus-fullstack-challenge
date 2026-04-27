@@ -8,6 +8,18 @@
     { "key": "ui.main_menu.language", "value": "Language" },
     { "key": "ui.main_menu.loading", "value": "Loading run..." },
     { "key": "ui.main_menu.error", "value": "Could not start run. {0}" },
+    { "key": "ui.main_menu.standard_run", "value": "Standard Run" },
+    { "key": "ui.main_menu.endless_run", "value": "Endless Run" },
+
+    { "key": "ui.endless.title", "value": "Endless Mode" },
+    { "key": "ui.endless.floor", "value": "Floor {0}" },
+    { "key": "ui.endless.next_enemy", "value": "Next: {0} ({1} {2})" },
+    { "key": "ui.endless.shop_available", "value": "Shop floor — gear up before the next battle." },
+    { "key": "ui.endless.start_floor", "value": "Start Floor" },
+    { "key": "ui.endless.continue", "value": "Visit Shop" },
+    { "key": "ui.endless.defeat_summary", "value": "Endless run ended on floor {0}." },
+    { "key": "ui.endless.best_floor", "value": "Best floor: {0}" },
+
 
     { "key": "ui.map.title", "value": "Run Map" },
     { "key": "ui.map.node.battle", "value": "Battle" },
