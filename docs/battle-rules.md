@@ -2,6 +2,18 @@
 
 The rules the prototype follows. Formulas are kept simple, explicit, and integer-based so the client and server stay in lockstep.
 
+## Run Map
+
+The run is laid out as a small branching graph in `RunConfig.mapNodes`. The player begins on `RunConfig.startingMapNodeId` and, after clearing a node, may travel to any node listed in that node's `connectedTo`. Every path eventually converges on the unique `Boss` node — defeating it ends the run successfully.
+
+Node types:
+- **Battle** — opens the standard battle scene against the encounter at `encounterIndex`. Cleared on victory; the run is not lost on defeat (the node simply remains the current node and can be replayed).
+- **Elite** — same battle pipeline as Battle, just rendered differently on the client (different node icon, "Elite" label). The encounter, scaling, and reward formulas are unchanged. No new server logic.
+- **Shop** — opens the existing in-run shop scene. `encounterIndex` is `-1`; nothing happens in the battle pipeline. Leaving the shop counts as "clearing" the node and unlocks its connected nodes.
+- **Boss** — the run's final encounter. Always Dragon in the prototype. Victory ends the run; defeat behaves like any other battle defeat (the node stays current).
+
+The linear `encounters` list is still returned for backward compatibility. A client that has not adopted the map can keep walking it sequentially without breaking. None of the rules below differ between the linear and branching path; both consult the same `encounters` slot via `encounterIndex`.
+
 ## Hero Class Selection
 
 Before the run starts the client shows a class picker populated from `RunConfig.heroClasses`. Picking a class seeds the active hero's `stats`, `equippedMoves`, and `learnedMovePool` from the class's `startingStats`, `startingMoves`, and `startingLearnedMoves`. From that point on every rule below applies identically regardless of class — there are no class-only branches in the damage, healing, or effect pipeline.

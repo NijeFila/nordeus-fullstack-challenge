@@ -17,6 +17,7 @@ public class RunConfigService
         var shopOffers = BuildShopOffers();
         var rules = BuildRules();
         var heroClasses = BuildHeroClasses();
+        var mapNodes = BuildMapNodes();
 
         return new RunConfigResponse
         {
@@ -30,9 +31,136 @@ public class RunConfigService
             ShopOffers = shopOffers,
             Rules = rules,
             HeroClasses = heroClasses,
-            DefaultHeroClassId = "knight"
+            DefaultHeroClassId = "knight",
+            MapNodes = mapNodes,
+            StartingMapNodeId = "start_goblin_warrior"
         };
     }
+
+    // Branching run map. Encounter indices line up with BuildEncounters():
+    //   0 = goblin_warrior, 1 = goblin_mage, 2 = giant_spider,
+    //   3 = skeleton_knight, 4 = forest_troll, 5 = witch,
+    //   6 = fire_elemental, 7 = dragon
+    //
+    // Layout (left → right within each depth, depth increases downward):
+    //
+    //   D0:                         start_goblin_warrior
+    //                                 /              \
+    //   D1:               goblin_mage_path        spider_path
+    //                       /        \             /        \
+    //   D2:    skeleton_path     shop_early     forest_troll_path
+    //                  \             |              /
+    //                   \            |             /
+    //   D3:        witch_path     shop_late    fire_elemental_path
+    //                      \         |         /
+    //                       \        |        /
+    //   D4:                       dragon_peak  (Boss)
+    //
+    // Every path eventually reaches the boss. Shops are optional detours that
+    // sit between battle layers, so the player trades a battle slot for a
+    // chance to spend gold.
+    private static List<RunMapNode> BuildMapNodes() => new()
+    {
+        // Depth 0
+        new RunMapNode
+        {
+            Id = "start_goblin_warrior",
+            Depth = 0,
+            Position = 0,
+            Type = "Battle",
+            EncounterIndex = 0,
+            ConnectedTo = new List<string> { "goblin_mage_path", "spider_path" }
+        },
+
+        // Depth 1
+        new RunMapNode
+        {
+            Id = "goblin_mage_path",
+            Depth = 1,
+            Position = 0,
+            Type = "Battle",
+            EncounterIndex = 1,
+            ConnectedTo = new List<string> { "skeleton_path", "shop_early" }
+        },
+        new RunMapNode
+        {
+            Id = "spider_path",
+            Depth = 1,
+            Position = 1,
+            Type = "Battle",
+            EncounterIndex = 2,
+            ConnectedTo = new List<string> { "shop_early", "forest_troll_path" }
+        },
+
+        // Depth 2
+        new RunMapNode
+        {
+            Id = "skeleton_path",
+            Depth = 2,
+            Position = 0,
+            Type = "Elite",
+            EncounterIndex = 3,
+            ConnectedTo = new List<string> { "witch_path" }
+        },
+        new RunMapNode
+        {
+            Id = "shop_early",
+            Depth = 2,
+            Position = 1,
+            Type = "Shop",
+            EncounterIndex = -1,
+            ConnectedTo = new List<string> { "witch_path", "shop_late", "fire_elemental_path" }
+        },
+        new RunMapNode
+        {
+            Id = "forest_troll_path",
+            Depth = 2,
+            Position = 2,
+            Type = "Battle",
+            EncounterIndex = 4,
+            ConnectedTo = new List<string> { "fire_elemental_path" }
+        },
+
+        // Depth 3
+        new RunMapNode
+        {
+            Id = "witch_path",
+            Depth = 3,
+            Position = 0,
+            Type = "Elite",
+            EncounterIndex = 5,
+            ConnectedTo = new List<string> { "dragon_peak" }
+        },
+        new RunMapNode
+        {
+            Id = "shop_late",
+            Depth = 3,
+            Position = 1,
+            Type = "Shop",
+            EncounterIndex = -1,
+            ConnectedTo = new List<string> { "dragon_peak" }
+        },
+        new RunMapNode
+        {
+            Id = "fire_elemental_path",
+            Depth = 3,
+            Position = 2,
+            Type = "Elite",
+            EncounterIndex = 6,
+            ConnectedTo = new List<string> { "dragon_peak" }
+        },
+
+        // Depth 4 — boss
+        new RunMapNode
+        {
+            Id = "dragon_peak",
+            Depth = 4,
+            Position = 0,
+            Type = "Boss",
+            EncounterIndex = 7,
+            ConnectedTo = new List<string>()
+        }
+    };
 
     private static List<HeroClass> BuildHeroClasses() => new()
     {

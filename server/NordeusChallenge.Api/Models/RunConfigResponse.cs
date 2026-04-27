@@ -23,4 +23,12 @@ public class RunConfigResponse
     // Id of the class to highlight by default in the picker. Also matches the
     // archetype used to populate the legacy Hero field.
     public string DefaultHeroClassId { get; set; } = string.Empty;
+
+    // Branching run map. Nodes reference entries in Encounters by index.
+    // Clients that don't read this field can still walk Encounters linearly.
+    public List<RunMapNode> MapNodes { get; set; } = new();
+
+    // Id of the starting node on the map. The boss node is identified by
+    // having type == "Boss"; no separate field is needed for it.
+    public string StartingMapNodeId { get; set; } = string.Empty;
 }

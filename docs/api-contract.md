@@ -42,6 +42,19 @@ No parameters. No body.
     "equippedMoves": ["slash", "shield_up", "battle_cry", "second_wind"],
     "learnedMovePool": ["slash", "shield_up", "battle_cry", "second_wind"]
   },
+  "startingMapNodeId": "start_goblin_warrior",
+  "mapNodes": [
+    { "id": "start_goblin_warrior", "depth": 0, "position": 0, "type": "Battle", "encounterIndex": 0, "connectedTo": ["goblin_mage_path", "spider_path"] },
+    { "id": "goblin_mage_path",     "depth": 1, "position": 0, "type": "Battle", "encounterIndex": 1, "connectedTo": ["skeleton_path", "shop_early"] },
+    { "id": "spider_path",          "depth": 1, "position": 1, "type": "Battle", "encounterIndex": 2, "connectedTo": ["shop_early", "forest_troll_path"] },
+    { "id": "skeleton_path",        "depth": 2, "position": 0, "type": "Elite",  "encounterIndex": 3, "connectedTo": ["witch_path"] },
+    { "id": "shop_early",           "depth": 2, "position": 1, "type": "Shop",   "encounterIndex": -1, "connectedTo": ["witch_path", "shop_late", "fire_elemental_path"] },
+    { "id": "forest_troll_path",    "depth": 2, "position": 2, "type": "Battle", "encounterIndex": 4, "connectedTo": ["fire_elemental_path"] },
+    { "id": "witch_path",           "depth": 3, "position": 0, "type": "Elite",  "encounterIndex": 5, "connectedTo": ["dragon_peak"] },
+    { "id": "shop_late",            "depth": 3, "position": 1, "type": "Shop",   "encounterIndex": -1, "connectedTo": ["dragon_peak"] },
+    { "id": "fire_elemental_path",  "depth": 3, "position": 2, "type": "Elite",  "encounterIndex": 6, "connectedTo": ["dragon_peak"] },
+    { "id": "dragon_peak",          "depth": 4, "position": 0, "type": "Boss",   "encounterIndex": 7, "connectedTo": [] }
+  ],
   "defaultHeroClassId": "knight",
   "heroClasses": [
     {
@@ -268,6 +281,7 @@ No parameters. No body.
 **Notes**
 - `heroClasses` carries the selectable archetypes shown by the client's class picker. The client lets the player pick one before starting a run; the chosen class's `startingStats`, `startingMoves`, and `startingLearnedMoves` seed the active hero. `defaultHeroClassId` identifies the class the picker highlights by default.
 - The legacy `hero` field is preserved for backward compatibility and mirrors the class identified by `defaultHeroClassId`. Clients that have not been updated to read `heroClasses` continue to receive the original Knight starting state.
+- `mapNodes` describes a small branching run map. The player begins on the node identified by `startingMapNodeId` and unlocks every node listed in the cleared node's `connectedTo` after winning that battle (or leaving a Shop). `Battle`, `Elite`, and `Boss` nodes set `encounterIndex` to a slot in `encounters`; `Shop` nodes use `encounterIndex: -1` and route the player to the existing shop screen. Defeating the unique `Boss` node ends the run successfully. The linear `encounters` list is still emitted, so older clients can continue to walk encounters sequentially.
 - The full `moves` catalog is returned once so the client never has to look up a move by id out-of-band.
 - The example above shows a subset of monsters, moves, and environments for brevity. The real response includes every monster referenced by `encounters`, every move referenced by the hero or any monster, and every environment referenced by an encounter.
 - `encounters` is ordered; the client advances through it one battle at a time.

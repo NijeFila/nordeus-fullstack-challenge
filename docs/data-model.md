@@ -121,6 +121,20 @@ Fields:
 - `level` (int) — the level at which the monster is instantiated.
 - `environmentId` (string) — reference into the environment catalog. Selects the battlefield used for this encounter.
 
+## RunMapNode
+
+Role: a single node on the branching run map. The full set of nodes forms a small directed acyclic graph that fans out from a starting node and converges on the single Boss node.
+
+Fields:
+- `id` (string) — stable identifier referenced by other nodes' `connectedTo`.
+- `depth` (int) — layer index, `0` at the start, increasing toward the boss.
+- `position` (int) — horizontal slot within the layer (`0..N` left to right). Layout hint only; logic depends on `connectedTo`.
+- `type` (string) — one of `"Battle"`, `"Elite"`, `"Shop"`, `"Boss"`. Elite is rendered differently on the client but uses the same encounter pipeline as Battle.
+- `encounterIndex` (int) — index into `RunConfig.encounters` for `Battle` / `Elite` / `Boss` nodes. `Shop` nodes use `-1` since `JsonUtility` cannot deserialize a nullable int cleanly.
+- `connectedTo` (string[]) — node ids the player can travel to after clearing this node. Empty on the Boss node.
+
+The map's starting node is identified by `RunConfig.startingMapNodeId`; the boss node is identified by `type == "Boss"`. The linear `encounters` list is still emitted, so clients that have not adopted the map can keep walking the run sequentially without breaking.
+
 ## BattleEnvironment
 
 Role: a battlefield that flavors a single encounter with small, readable combat modifiers. Returned as part of `RunConfig` and looked up on the client by `Encounter.environmentId`.
@@ -150,6 +164,8 @@ Fields:
 - `hero` (Hero) — starting hero state. Mirrors the class identified by `defaultHeroClassId`; kept for clients that have not adopted the class picker.
 - `heroClasses` (HeroClass[]) — selectable archetypes shown by the client's class picker.
 - `defaultHeroClassId` (string) — id of the class to highlight in the picker by default.
+- `mapNodes` (RunMapNode[]) — branching run-map graph. Nodes reference encounters by index; clients that don't read this field continue to walk `encounters` linearly.
+- `startingMapNodeId` (string) — id of the node the player begins on. The boss node is the unique entry whose `type == "Boss"`.
 - `encounters` (Encounter[]) — ordered list of battles.
 - `monsters` (Monster[]) — catalog referenced by encounters.
 - `moves` (Move[]) — catalog referenced by hero and monsters.
