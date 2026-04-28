@@ -501,6 +501,13 @@ namespace NordeusChallenge.Client.Runtime
         // Stores the player's choice from the map screen. Battle and Shop nodes
         // both call this — Battle nodes also bind the encounter index so the
         // battle scene resolves the right monster from the existing pipeline.
+        //
+        // Selecting a node *commits* that depth in a Slay-the-Spire style:
+        // every other currently-available sibling is dropped from the
+        // available set so the player cannot back out and clear an
+        // alternate branch later. The chosen node remains the only
+        // available entry until it is cleared, at which point its
+        // connectedTo successors form the next row of choices.
         public void SetSelectedMapNode(string nodeId)
         {
             SelectedMapNodeId = nodeId;
@@ -509,6 +516,67 @@ namespace NordeusChallenge.Client.Runtime
             if (node != null && node.encounterIndex >= 0)
             {
                 SelectedEncounterIndex = node.encounterIndex;
+            }
+
+            if (string.IsNullOrEmpty(nodeId) || node == null) return;
+            if (_clearedNodeIds.Contains(nodeId)) return;
+
+            // Commit: collapse availability to the single chosen node.
+            _availableNodeIds.Clear();
+            _availableNodeIds.Add(nodeId);
+        }
+
+        // Defensive validator. Rebuilds _availableNodeIds from the current
+        // committed path so stale saves or out-of-band edits cannot leave
+        // sibling branches reachable. Only relevant for standard runs with a
+        // branching map; no-op otherwise.
+        public void RecalculateAvailableNodesFromCurrentPath()
+        {
+            if (CurrentRun == null || !HasMap) return;
+
+            _availableNodeIds.Clear();
+
+            // 1. A committed-but-not-yet-cleared selection is the only choice.
+            if (!string.IsNullOrEmpty(SelectedMapNodeId)
+                && !_clearedNodeIds.Contains(SelectedMapNodeId)
+                && GetMapNodeById(SelectedMapNodeId) != null)
+            {
+                _availableNodeIds.Add(SelectedMapNodeId);
+                return;
+            }
+
+            // 2. No commit yet and no clears → run start, depth 0 nodes.
+            if (_clearedNodeIds.Count == 0)
+            {
+                string startId = CurrentRun.startingMapNodeId;
+                if (!string.IsNullOrEmpty(startId) && GetMapNodeById(startId) != null)
+                {
+                    _availableNodeIds.Add(startId);
+                    return;
+                }
+
+                for (int i = 0; i < CurrentRun.mapNodes.Count; i++)
+                {
+                    var n = CurrentRun.mapNodes[i];
+                    if (n != null && n.depth == 0) _availableNodeIds.Add(n.id);
+                }
+                return;
+            }
+
+            // 3. Otherwise the available frontier is the union of connectedTo
+            //    of cleared nodes, minus any successor that is itself cleared.
+            foreach (var clearedId in _clearedNodeIds)
+            {
+                var cleared = GetMapNodeById(clearedId);
+                if (cleared == null || cleared.connectedTo == null) continue;
+                for (int i = 0; i < cleared.connectedTo.Count; i++)
+                {
+                    string next = cleared.connectedTo[i];
+                    if (string.IsNullOrEmpty(next)) continue;
+                    if (_clearedNodeIds.Contains(next)) continue;
+                    if (GetMapNodeById(next) == null) continue;
+                    _availableNodeIds.Add(next);
+                }
             }
         }
 
@@ -1271,6 +1339,10 @@ namespace NordeusChallenge.Client.Runtime
                     ? data.selectedMapNodeId
                     : null;
                 RunCompleted = data.runCompleted;
+
+                // Repair any stale availability from older saves so the
+                // committed-path rule holds after Continue.
+                RecalculateAvailableNodesFromCurrentPath();
             }
 
             // Linear fallback.

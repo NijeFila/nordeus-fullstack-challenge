@@ -366,7 +366,7 @@ public class RunConfigService
             Id = "shop_upgrade_health",
             Name = "+10 Max Health",
             Description = "Permanent: raises Max Health by 10.",
-            Price = 50,
+            Price = 40,
             Type = "StatUpgrade",
             Stat = "maxHealth",
             Amount = 10
@@ -376,7 +376,7 @@ public class RunConfigService
             Id = "shop_upgrade_mana",
             Name = "+5 Max Mana",
             Description = "Permanent: raises Max Mana by 5.",
-            Price = 50,
+            Price = 35,
             Type = "StatUpgrade",
             Stat = "maxMana",
             Amount = 5
@@ -1429,7 +1429,9 @@ public class RunConfigService
     {
         BuffDurationTurns = 2,
         XpPerVictory = 35,
-        XpPerLevel = 100,
+        // Tuned so two victories (70 XP) reach Lv 2 and the player feels a
+        // visible level-up early in a normal run.
+        XpPerLevel = 60,
         StatGainPerLevel = new Stats
         {
             MaxHealth = 10,
@@ -1439,7 +1441,9 @@ public class RunConfigService
             Magic = 2
         },
         EquippedMoveSlots = 4,
-        GoldPerVictory = 20,
+        // 25g/win lets the player afford the cheapest stat upgrades after the
+        // typical "two wins before first shop" rhythm.
+        GoldPerVictory = 25,
         EquippedItemSlots = new Dictionary<string, int>
         {
             { "weapon", 1 },
