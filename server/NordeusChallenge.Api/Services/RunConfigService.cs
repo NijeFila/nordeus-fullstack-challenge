@@ -240,17 +240,17 @@ public class RunConfigService
             Description = "Balanced melee fighter. Reliable damage, solid defense, and a small self-heal.",
             StartingStats = new Stats
             {
-                MaxHealth = 100,
-                MaxMana = 20,
-                Attack = 20,
-                Defense = 15,
-                Magic = 20
+                MaxHealth = 110,
+                MaxMana = 22,
+                Attack = 22,
+                Defense = 16,
+                Magic = 18
             },
-            StartingMoves = new List<string> { "slash", "shield_up", "battle_cry", "second_wind" },
+            StartingMoves = new List<string> { "slash", "rend", "battle_cry", "second_wind" },
             StartingLearnedMoves = new List<string>
             {
-                "slash", "shield_up", "battle_cry", "second_wind",
-                "power_stance", "iron_skin", "rend"
+                "slash", "rend", "battle_cry", "second_wind",
+                "shield_up", "power_stance", "iron_skin"
             }
         },
 
@@ -286,11 +286,11 @@ public class RunConfigService
             Description = "Burst caster. High Magic and Max Mana, low Defense. Lives or dies by spell timing.",
             StartingStats = new Stats
             {
-                MaxHealth = 80,
-                MaxMana = 35,
+                MaxHealth = 85,
+                MaxMana = 30,
                 Attack = 8,
-                Defense = 10,
-                Magic = 24
+                Defense = 11,
+                Magic = 22
             },
             // Uses existing moves: firebolt (magic dmg), mana_drain (debuff
             // magic), arcane_focus (new magic buff, see BuildMoves), hex_shield
@@ -311,11 +311,11 @@ public class RunConfigService
             Description = "Durable support. Strong heals and defensive blessings, modest magic damage.",
             StartingStats = new Stats
             {
-                MaxHealth = 110,
-                MaxMana = 28,
+                MaxHealth = 100,
+                MaxMana = 26,
                 Attack = 10,
-                Defense = 14,
-                Magic = 18
+                Defense = 13,
+                Magic = 16
             },
             // Uses existing moves: blessed_mend (new heal, see BuildMoves),
             // smite (new magic dmg, see BuildMoves), shield_up (BuffDefense),
@@ -418,7 +418,7 @@ public class RunConfigService
         var equipped = new List<string>
         {
             "slash",
-            "shield_up",
+            "rend",
             "battle_cry",
             "second_wind"
         };
@@ -427,9 +427,9 @@ public class RunConfigService
         // Management to demonstrate the new effect kinds.
         var pool = new List<string>(equipped)
         {
+            "shield_up",
             "power_stance",
-            "iron_skin",
-            "rend"
+            "iron_skin"
         };
 
         return new Hero
@@ -440,11 +440,11 @@ public class RunConfigService
             Xp = 0,
             Stats = new Stats
             {
-                MaxHealth = 100,
-                MaxMana = 20,
-                Attack = 20,
-                Defense = 15,
-                Magic = 20
+                MaxHealth = 110,
+                MaxMana = 22,
+                Attack = 22,
+                Defense = 16,
+                Magic = 18
             },
             EquippedMoves = equipped,
             LearnedMovePool = pool
